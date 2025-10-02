@@ -85,7 +85,7 @@ LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Bahia"
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # URLs/Wsgi
