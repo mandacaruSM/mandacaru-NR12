@@ -125,7 +125,7 @@ export default function EditarClientePage() {
                   value={formData.tipo_pessoa}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="PJ">Pessoa Jurídica</option>
                   <option value="PF">Pessoa Física</option>
@@ -142,7 +142,7 @@ export default function EditarClientePage() {
                   value={formData.nome_razao}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -155,7 +155,7 @@ export default function EditarClientePage() {
                   name="documento"
                   value={formData.documento}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -169,7 +169,7 @@ export default function EditarClientePage() {
                     name="inscricao_estadual"
                     value={formData.inscricao_estadual}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -189,7 +189,7 @@ export default function EditarClientePage() {
                   name="email_financeiro"
                   value={formData.email_financeiro}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export default function EditarClientePage() {
                   name="telefone"
                   value={formData.telefone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function EditarClientePage() {
                     name="cep"
                     value={formData.cep}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -233,7 +233,7 @@ export default function EditarClientePage() {
                     name="logradouro"
                     value={formData.logradouro}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -243,7 +243,7 @@ export default function EditarClientePage() {
                     name="numero"
                     value={formData.numero}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -256,7 +256,7 @@ export default function EditarClientePage() {
                     name="complemento"
                     value={formData.complemento}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -266,7 +266,7 @@ export default function EditarClientePage() {
                     name="bairro"
                     value={formData.bairro}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -279,7 +279,7 @@ export default function EditarClientePage() {
                     name="cidade"
                     value={formData.cidade}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -288,7 +288,7 @@ export default function EditarClientePage() {
                     name="uf"
                     value={formData.uf}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   >
                     <option value="">Selecione...</option>
                     {UF_OPTIONS.map(uf => (
@@ -319,7 +319,7 @@ export default function EditarClientePage() {
         <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
           <Link
             href="/dashboard/clientes"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-900"
           >
             Cancelar
           </Link>

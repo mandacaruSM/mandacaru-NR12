@@ -28,6 +28,13 @@ class Cliente(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    documento = models.CharField(
+        max_length=20, 
+        blank=True, 
+        default="",
+        db_index=True
+    )
+
     class Meta:
         ordering = ["nome_razao"]
 

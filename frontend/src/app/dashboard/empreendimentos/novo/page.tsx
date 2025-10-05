@@ -130,7 +130,7 @@ export default function NovoEmpreendimentoPage() {
                   value={formData.cliente || ''}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Selecione um cliente...</option>
                   {clientes.map(cliente => (
@@ -152,7 +152,7 @@ export default function NovoEmpreendimentoPage() {
                   value={formData.nome}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   placeholder="Ex: Shopping Center Salvador"
                 />
               </div>
@@ -167,7 +167,7 @@ export default function NovoEmpreendimentoPage() {
                   value={formData.tipo}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   {TIPO_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>
@@ -189,7 +189,7 @@ export default function NovoEmpreendimentoPage() {
                   onChange={handleChange}
                   step="0.01"
                   min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   placeholder="0.00"
                 />
               </div>
@@ -211,7 +211,7 @@ export default function NovoEmpreendimentoPage() {
                   value={formData.latitude || ''}
                   onChange={handleChange}
                   step="0.000001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   placeholder="Ex: -12.971891"
                 />
               </div>
@@ -227,7 +227,7 @@ export default function NovoEmpreendimentoPage() {
                   value={formData.longitude || ''}
                   onChange={handleChange}
                   step="0.000001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                   placeholder="Ex: -38.501617"
                 />
               </div>

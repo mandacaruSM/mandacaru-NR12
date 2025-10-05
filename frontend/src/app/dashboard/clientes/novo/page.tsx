@@ -95,7 +95,7 @@ export default function NovoClientePage() {
                   value={formData.tipo_pessoa}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="PJ">Pessoa Jurídica</option>
                   <option value="PF">Pessoa Física</option>
@@ -113,7 +113,7 @@ export default function NovoClientePage() {
                   value={formData.nome_razao}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder={formData.tipo_pessoa === 'PJ' ? 'Ex: Empresa ABC Ltda' : 'Ex: João da Silva'}
                 />
               </div>
@@ -128,7 +128,7 @@ export default function NovoClientePage() {
                   name="documento"
                   value={formData.documento}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder={formData.tipo_pessoa === 'PJ' ? '00.000.000/0000-00' : '000.000.000-00'}
                 />
               </div>
@@ -144,7 +144,7 @@ export default function NovoClientePage() {
                     name="inscricao_estadual"
                     value={formData.inscricao_estadual}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900"
                   />
                 </div>
               )}
@@ -165,7 +165,7 @@ export default function NovoClientePage() {
                   name="email_financeiro"
                   value={formData.email_financeiro}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder="contato@empresa.com"
                 />
               </div>
@@ -180,7 +180,7 @@ export default function NovoClientePage() {
                   name="telefone"
                   value={formData.telefone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder="(00) 00000-0000"
                 />
               </div>
@@ -202,7 +202,7 @@ export default function NovoClientePage() {
                     name="cep"
                     value={formData.cep}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                     placeholder="00000-000"
                   />
                 </div>
@@ -219,7 +219,7 @@ export default function NovoClientePage() {
                     name="logradouro"
                     value={formData.logradouro}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                     placeholder="Rua, Avenida..."
                   />
                 </div>
@@ -232,7 +232,7 @@ export default function NovoClientePage() {
                     name="numero"
                     value={formData.numero}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                     placeholder="123"
                   />
                 </div>
@@ -249,7 +249,7 @@ export default function NovoClientePage() {
                     name="complemento"
                     value={formData.complemento}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                     placeholder="Sala, Andar..."
                   />
                 </div>
@@ -262,7 +262,7 @@ export default function NovoClientePage() {
                     name="bairro"
                     value={formData.bairro}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900"
                   />
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function NovoClientePage() {
                     name="cidade"
                     value={formData.cidade}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900"
                   />
                 </div>
                 <div>
@@ -289,7 +289,7 @@ export default function NovoClientePage() {
                     name="uf"
                     value={formData.uf}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 text-gray-900"
                   >
                     <option value="">Selecione...</option>
                     {UF_OPTIONS.map(uf => (

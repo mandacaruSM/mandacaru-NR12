@@ -1,4 +1,4 @@
-// frontend/src/app/dashboard/layout.tsx
+// frontend/src/app/dashboard/layout.tsx (ATUALIZADO)
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ const menuItems: MenuItem[] = [
   { name: 'Clientes', href: '/dashboard/clientes', module: 'clientes', icon: '👥' },
   { name: 'Empreendimentos', href: '/dashboard/empreendimentos', module: 'empreendimentos', icon: '🏗️' },
   { name: 'Equipamentos', href: '/dashboard/equipamentos', module: 'equipamentos', icon: '🚜' },
+  { name: 'Tipos de Equipamento', href: '/dashboard/tipos-equipamento', module: 'equipamentos', icon: '🏷️' }, // ✅ NOVO
   { name: 'NR12', href: '/dashboard/nr12', module: 'nr12', icon: '📋' },
   { name: 'Manutenções', href: '/dashboard/manutencoes', module: 'manutencoes', icon: '🔧' },
   { name: 'Abastecimentos', href: '/dashboard/abastecimentos', module: 'abastecimentos', icon: '⛽' },

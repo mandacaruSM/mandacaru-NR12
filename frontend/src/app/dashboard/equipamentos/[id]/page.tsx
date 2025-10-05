@@ -151,7 +151,7 @@ export default function EditarEquipamentoPage() {
                   value={formData.cliente || ''}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Selecione um cliente...</option>
                   {clientes.map(cliente => (
@@ -168,7 +168,7 @@ export default function EditarEquipamentoPage() {
                   onChange={handleChange}
                   required
                   disabled={!formData.cliente}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 disabled:bg-gray-100"
                 >
                   <option value="">Selecione um empreendimento...</option>
                   {empreendimentos.map(emp => (
@@ -186,13 +186,13 @@ export default function EditarEquipamentoPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
                 <input type="text" name="codigo" value={formData.codigo} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
                 <select name="tipo" value={formData.tipo || ''} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
                   <option value="">Selecione um tipo...</option>
                   {tipos.map(tipo => (
                     <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>
@@ -203,7 +203,7 @@ export default function EditarEquipamentoPage() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                 <input type="text" name="descricao" value={formData.descricao} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
             </div>
           </div>
@@ -215,25 +215,25 @@ export default function EditarEquipamentoPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fabricante</label>
                 <input type="text" name="fabricante" value={formData.fabricante} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
                 <input type="text" name="modelo" value={formData.modelo} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ano</label>
                 <input type="number" name="ano_fabricacao" value={formData.ano_fabricacao || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número de Série</label>
                 <input type="text" name="numero_serie" value={formData.numero_serie} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
             </div>
           </div>
@@ -245,7 +245,7 @@ export default function EditarEquipamentoPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Medição *</label>
                 <select name="tipo_medicao" value={formData.tipo_medicao} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
                   <option value="HORA">Horímetro</option>
                   <option value="KM">Quilômetro</option>
                 </select>
@@ -256,7 +256,7 @@ export default function EditarEquipamentoPage() {
                   Leitura Atual ({formData.tipo_medicao === 'KM' ? 'km' : 'horas'})
                 </label>
                 <input type="number" name="leitura_atual" value={formData.leitura_atual} onChange={handleChange} step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
             </div>
           </div>
