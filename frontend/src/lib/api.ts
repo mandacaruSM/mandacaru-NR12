@@ -1,12 +1,54 @@
-// frontend/src/lib/api.ts - ARQUIVO COMPLETO
+// frontend/src/lib/api.ts - VERSÃO COMPLETA
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
 /**
- * Wrapper para fetch com tratamento de erros e autenticação automática
+ * Tenta renovar o token de acesso usando o refresh token
+ */
+async function refreshAccessToken(): Promise<boolean> {
+  // Se já está renovando, aguarda a renovação em andamento
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  
+  refreshPromise = (async () => {
+    try {
+      console.log('🔄 Tentando renovar token...');
+      
+      const response = await fetch(`${API_BASE}/auth/refresh/`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        console.log('✅ Token renovado com sucesso');
+        return true;
+      }
+
+      console.log('❌ Falha ao renovar token:', response.status);
+      return false;
+    } catch (error) {
+      console.error('❌ Erro ao renovar token:', error);
+      return false;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+/**
+ * Wrapper para fetch com tratamento de erros e renovação automática de tokens
  */
 async function apiFetch<T>(
   endpoint: string,
@@ -26,7 +68,33 @@ async function apiFetch<T>(
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, config);
 
-    if (response.status === 401 && requireAuth) {
+    // Se recebeu 401 e não é o próprio endpoint de refresh
+    if (response.status === 401 && requireAuth && endpoint !== '/auth/refresh/') {
+      console.log('🔒 Token expirado (401), tentando renovar...');
+      
+      // Tenta renovar o token
+      const refreshed = await refreshAccessToken();
+      
+      if (refreshed) {
+        console.log('🔄 Repetindo requisição após renovação...');
+        
+        // Tenta novamente a requisição original
+        const retryResponse = await fetch(`${API_BASE}${endpoint}`, config);
+        
+        if (retryResponse.ok) {
+          const contentType = retryResponse.headers.get('content-type');
+          if (contentType?.includes('application/json')) {
+            return await retryResponse.json();
+          }
+          return null as T;
+        }
+        
+        // Se ainda falhou após renovação, redireciona
+        console.log('❌ Requisição falhou mesmo após renovar token');
+      }
+      
+      // Se falhou ao renovar ou a segunda tentativa falhou, redireciona para login
+      console.log('🚪 Redirecionando para login...');
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
@@ -34,14 +102,17 @@ async function apiFetch<T>(
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
+      const error = await response.json().catch(() => ({ 
+        detail: `Erro ${response.status}` 
+      }));
       throw new Error(error.detail || `Erro ${response.status}`);
     }
 
     const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType?.includes('application/json')) {
       return await response.json();
     }
+    
     return null as T;
   } catch (error) {
     console.error('API Error:', error);
@@ -72,7 +143,7 @@ export interface User {
 
 export const authApi = {
   login: async (credentials: LoginCredentials) => {
-    return apiFetch<{ detail: string }>('/auth/login/', {
+    return apiFetch<{ detail: string; user: User }>('/auth/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
       requireAuth: false,
@@ -87,6 +158,13 @@ export const authApi = {
 
   me: async () => {
     return apiFetch<User>('/users/me/');
+  },
+
+  refresh: async () => {
+    return apiFetch<{ detail: string }>('/auth/refresh/', {
+      method: 'POST',
+      requireAuth: false,
+    });
   },
 
   health: async () => {
@@ -378,107 +456,86 @@ export interface RespostaItemChecklist {
 }
 
 export const nr12Api = {
-  // MODELOS
+  // MODELOS DE CHECKLIST
   modelos: {
-    list: async (filters?: { tipo_equipamento?: number; ativo?: boolean; search?: string }) => {
+    list: async (filters?: { tipo_equipamento?: number; search?: string }) => {
       const params = new URLSearchParams();
       if (filters?.tipo_equipamento) params.append('tipo_equipamento', filters.tipo_equipamento.toString());
-      if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
       if (filters?.search) params.append('search', filters.search);
       
       const query = params.toString() ? `?${params.toString()}` : '';
-      return apiFetch<{ results: ModeloChecklist[]; count: number }>(`/nr12/modelos-checklist/${query}`);
+      return apiFetch<{ results: ModeloChecklist[]; count: number }>(`/nr12/modelos/${query}`);
     },
 
     get: async (id: number) => {
-      return apiFetch<ModeloChecklist & { itens: ItemChecklist[] }>(`/nr12/modelos-checklist/${id}/`);
+      return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/`);
     },
 
     create: async (data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist/', {
+      return apiFetch<ModeloChecklist>('/nr12/modelos/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     update: async (id: number, data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/`, {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
     delete: async (id: number) => {
-      return apiFetch<void>(`/nr12/modelos-checklist/${id}/`, {
+      return apiFetch<void>(`/nr12/modelos/${id}/`, {
         method: 'DELETE',
-      });
-    },
-
-    duplicar: async (id: number) => {
-      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/duplicar/`, {
-        method: 'POST',
       });
     },
   },
 
-  // ITENS
+  // ITENS DE CHECKLIST
   itens: {
-    list: async (filters?: { modelo?: number; categoria?: string }) => {
-      const params = new URLSearchParams();
-      if (filters?.modelo) params.append('modelo', filters.modelo.toString());
-      if (filters?.categoria) params.append('categoria', filters.categoria);
-      
-      const query = params.toString() ? `?${params.toString()}` : '';
-      return apiFetch<{ results: ItemChecklist[]; count: number }>(`/nr12/itens-checklist/${query}`);
+    list: async (modeloId: number) => {
+      return apiFetch<{ results: ItemChecklist[]; count: number }>(`/nr12/modelos/${modeloId}/itens/`);
     },
 
-    get: async (id: number) => {
-      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`);
+    get: async (modeloId: number, itemId: number) => {
+      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`);
     },
 
-    create: async (data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>('/nr12/itens-checklist/', {
+    create: async (modeloId: number, data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
-    update: async (id: number, data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`, {
+    update: async (modeloId: number, itemId: number, data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
-    delete: async (id: number) => {
-      return apiFetch<void>(`/nr12/itens-checklist/${id}/`, {
+    delete: async (modeloId: number, itemId: number) => {
+      return apiFetch<void>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
         method: 'DELETE',
       });
     },
 
-    reordenar: async (itens: { id: number; ordem: number }[]) => {
-      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar/', {
+    reorder: async (modeloId: number, itemIds: number[]) => {
+      return apiFetch<{ detail: string }>(`/nr12/modelos/${modeloId}/itens/reordenar/`, {
         method: 'POST',
-        body: JSON.stringify({ itens }),
+        body: JSON.stringify({ ordem: itemIds }),
       });
     },
   },
 
-  // CHECKLISTS
+  // CHECKLISTS REALIZADOS
   checklists: {
-    list: async (filters?: { 
-      equipamento?: number; 
-      modelo?: number;
-      status?: string;
-      resultado?: string;
-      data_inicio?: string;
-      data_fim?: string;
-    }) => {
+    list: async (filters?: { equipamento?: number; status?: string; data_inicio?: string; data_fim?: string }) => {
       const params = new URLSearchParams();
       if (filters?.equipamento) params.append('equipamento', filters.equipamento.toString());
-      if (filters?.modelo) params.append('modelo', filters.modelo.toString());
       if (filters?.status) params.append('status', filters.status);
-      if (filters?.resultado) params.append('resultado', filters.resultado);
       if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
       if (filters?.data_fim) params.append('data_fim', filters.data_fim);
       
@@ -487,7 +544,7 @@ export const nr12Api = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ChecklistRealizado & { respostas: RespostaItemChecklist[] }>(`/nr12/checklists/${id}/`);
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/`);
     },
 
     create: async (data: Partial<ChecklistRealizado>) => {
@@ -497,45 +554,46 @@ export const nr12Api = {
       });
     },
 
-    finalizar: async (id: number, observacoes?: string) => {
+    update: async (id: number, data: Partial<ChecklistRealizado>) => {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    finalizar: async (id: number, data: { observacoes_gerais?: string }) => {
       return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/finalizar/`, {
         method: 'POST',
-        body: JSON.stringify({ observacoes_gerais: observacoes }),
+        body: JSON.stringify(data),
       });
     },
 
-    cancelar: async (id: number, motivo?: string) => {
+    cancelar: async (id: number, motivo: string) => {
       return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/cancelar/`, {
         method: 'POST',
-        body: JSON.stringify({ motivo_cancelamento: motivo }),
+        body: JSON.stringify({ motivo }),
       });
-    },
-
-    estatisticas: async (filters?: { data_inicio?: string; data_fim?: string }) => {
-      const params = new URLSearchParams();
-      if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
-      if (filters?.data_fim) params.append('data_fim', filters.data_fim);
-      
-      const query = params.toString() ? `?${params.toString()}` : '';
-      return apiFetch<any>(`/nr12/checklists/estatisticas/${query}`);
     },
   },
 
   // RESPOSTAS
   respostas: {
     list: async (checklistId: number) => {
-      return apiFetch<{ results: RespostaItemChecklist[]; count: number }>(
-        `/nr12/respostas-checklist/?checklist=${checklistId}`
-      );
+      return apiFetch<{ results: RespostaItemChecklist[]; count: number }>(`/nr12/checklists/${checklistId}/respostas/`);
     },
 
-    create: async (data: Partial<RespostaItemChecklist>) => {
-      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist/', {
+    create: async (checklistId: number, data: Partial<RespostaItemChecklist>) => {
+      return apiFetch<RespostaItemChecklist>(`/nr12/checklists/${checklistId}/respostas/`, {
         method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (checklistId: number, respostaId: number, data: Partial<RespostaItemChecklist>) => {
+      return apiFetch<RespostaItemChecklist>(`/nr12/checklists/${checklistId}/respostas/${respostaId}/`, {
+        method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
   },
 };
-
-export default apiFetch;
