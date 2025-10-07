@@ -101,9 +101,15 @@ class ItemChecklistViewSet(BaseAuthViewSet):
     ordering = ['modelo', 'ordem']
 
     def get_queryset(self):
+        """Filtra itens por modelo quando acessado via rota aninhada"""
         qs = super().get_queryset()
         
-        # Filtro por modelo
+        # Suporte para rota aninhada: /modelos/{modelo_pk}/itens/
+        modelo_pk = self.kwargs.get('modelo_pk')
+        if modelo_pk:
+            qs = qs.filter(modelo_id=modelo_pk)
+        
+        # Filtro por modelo via query param (compatibilidade)
         modelo_id = self.request.query_params.get('modelo')
         if modelo_id:
             qs = qs.filter(modelo_id=modelo_id)
@@ -115,15 +121,30 @@ class ItemChecklistViewSet(BaseAuthViewSet):
         
         return qs
 
+    def perform_create(self, serializer):
+        """Define o modelo automaticamente quando criado via rota aninhada"""
+        modelo_pk = self.kwargs.get('modelo_pk')
+        if modelo_pk:
+            serializer.save(modelo_id=modelo_pk)
+        else:
+            serializer.save()
+
     @action(detail=False, methods=['post'])
     def reordenar(self, request):
         """Reordena itens de um modelo"""
         itens_ordem = request.data.get('itens', [])
         
         for item_data in itens_ordem:
-            ItemChecklist.objects.filter(id=item_data['id']).update(
-                ordem=item_data['ordem']
-            )
+            item_id = item_data.get('id')
+            nova_ordem = item_data.get('ordem')
+            
+            if item_id and nova_ordem is not None:
+                try:
+                    item = ItemChecklist.objects.get(id=item_id)
+                    item.ordem = nova_ordem
+                    item.save(update_fields=['ordem'])
+                except ItemChecklist.DoesNotExist:
+                    pass
         
         return Response({'detail': 'Itens reordenados com sucesso'})
 

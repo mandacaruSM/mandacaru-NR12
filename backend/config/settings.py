@@ -1,4 +1,4 @@
-# config/settings.py
+# backend/config/settings.py
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -59,7 +59,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),  # ← AUMENTADO de 30min para 2h
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -71,7 +71,7 @@ SIMPLE_JWT = {
 # Origens padrão em dev (se a env estiver vazia)
 _DEV_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
-_raw = os.environ.get("DJANGO_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000", "")
+_raw = os.environ.get("DJANGO_CORS_ORIGINS", "")
 # filtra strings vazias e exige scheme (http:// ou https://)
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in _raw.split(",")
