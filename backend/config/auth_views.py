@@ -27,7 +27,7 @@ def _set_auth_cookies(resp: JsonResponse, access: str, refresh: str):
         "samesite": "Lax" if settings.DEBUG else "None",
         "path": "/",
     }
-    resp.set_cookie(COOKIE_ACCESS, access, **cookie_args, max_age=60*60*2)       # 2h
+    resp.set_cookie(COOKIE_ACCESS, access, **cookie_args, max_age=60*60*2)       # 2h (AUMENTADO)
     resp.set_cookie(COOKIE_REFRESH, refresh, **cookie_args, max_age=60*60*24*7) # 7d
 
 
@@ -94,7 +94,7 @@ def login(request):
 @permission_classes([AllowAny])
 def refresh_token(request):
     """
-    Renova o access token usando o refresh token do cookie
+    ✅ NOVO - Renova o access token usando o refresh token do cookie
     POST /api/v1/auth/refresh/
     """
     refresh_cookie = request.COOKIES.get(COOKIE_REFRESH)

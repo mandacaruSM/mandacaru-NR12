@@ -95,13 +95,19 @@ class ModeloChecklistViewSet(BaseAuthViewSet):
 
 
 class ItemChecklistViewSet(BaseAuthViewSet):
+    """
+    ViewSet para itens de checklist
+    Suporta rotas aninhadas: /modelos/{modelo_pk}/itens/
+    """
     queryset = ItemChecklist.objects.select_related('modelo').all()
     serializer_class = ItemChecklistSerializer
     search_fields = ['pergunta', 'descricao_ajuda']
     ordering = ['modelo', 'ordem']
 
     def get_queryset(self):
-        """Filtra itens por modelo quando acessado via rota aninhada"""
+        """
+        ✅ ATUALIZADO - Filtra itens por modelo quando acessado via rota aninhada
+        """
         qs = super().get_queryset()
         
         # Suporte para rota aninhada: /modelos/{modelo_pk}/itens/
@@ -109,7 +115,7 @@ class ItemChecklistViewSet(BaseAuthViewSet):
         if modelo_pk:
             qs = qs.filter(modelo_id=modelo_pk)
         
-        # Filtro por modelo via query param (compatibilidade)
+        # Filtro por modelo via query param (compatibilidade com código antigo)
         modelo_id = self.request.query_params.get('modelo')
         if modelo_id:
             qs = qs.filter(modelo_id=modelo_id)
@@ -122,7 +128,9 @@ class ItemChecklistViewSet(BaseAuthViewSet):
         return qs
 
     def perform_create(self, serializer):
-        """Define o modelo automaticamente quando criado via rota aninhada"""
+        """
+        ✅ NOVO - Define o modelo automaticamente quando criado via rota aninhada
+        """
         modelo_pk = self.kwargs.get('modelo_pk')
         if modelo_pk:
             serializer.save(modelo_id=modelo_pk)

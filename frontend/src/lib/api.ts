@@ -2,6 +2,7 @@
 /**
  * Cliente API com autenticação por cookies
  * Inclui renovação automática de tokens
+ * VERSÃO COMPLETA - FASE 2
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -31,14 +32,14 @@ async function refreshAccessToken(): Promise<boolean> {
       });
 
       if (response.ok) {
-        console.log('Token renovado com sucesso');
+        console.log('✅ Token renovado com sucesso');
         return true;
       }
 
-      console.error('Falha ao renovar token:', response.status);
+      console.error('❌ Falha ao renovar token:', response.status);
       return false;
     } catch (error) {
-      console.error('Erro ao renovar token:', error);
+      console.error('❌ Erro ao renovar token:', error);
       return false;
     } finally {
       isRefreshing = false;
@@ -73,7 +74,7 @@ async function apiFetch<T>(
 
   // Se receber 401 e precisar de auth, tenta renovar o token
   if (response.status === 401 && requireAuth) {
-    console.log('Token expirado, tentando renovar...');
+    console.log('🔄 Token expirado, tentando renovar...');
     
     const refreshed = await refreshAccessToken();
 
@@ -111,14 +112,22 @@ export interface User {
 // Clientes
 export interface Cliente {
   id: number;
-  nome: string;
-  cpf_cnpj: string;
+  tipo_pessoa: 'PF' | 'PJ';
+  nome_razao: string;
+  documento: string;
+  inscricao_estadual?: string;
+  email_financeiro?: string;
   telefone?: string;
-  email?: string;
-  endereco?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // Empreendimentos
@@ -127,12 +136,13 @@ export interface Empreendimento {
   cliente: number;
   cliente_nome?: string;
   nome: string;
-  endereco: string;
-  cidade: string;
-  estado: string;
+  tipo: 'LAVRA' | 'OBRA' | 'PLANTA' | 'OUTRO';
+  distancia_km?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // Tipos de Equipamento
@@ -141,31 +151,36 @@ export interface TipoEquipamento {
   nome: string;
   descricao?: string;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // Equipamentos
 export interface Equipamento {
   id: number;
+  cliente: number;
+  cliente_nome?: string;
   empreendimento: number;
   empreendimento_nome?: string;
-  tipo_equipamento: number;
-  tipo_equipamento_nome?: string;
-  tag: string;
+  tipo: number;
+  tipo_nome?: string;
+  codigo: string;
   descricao?: string;
   fabricante?: string;
   modelo?: string;
+  ano_fabricacao?: number | null;
   numero_serie?: string;
-  ano_fabricacao?: number;
+  tipo_medicao: 'KM' | 'HORA';
+  leitura_atual: string;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // NR12 - Itens de Checklist
 export interface ItemChecklist {
   id?: number;
+  modelo?: number;
   ordem: number;
   categoria: 'VISUAL' | 'FUNCIONAL' | 'MEDICAO' | 'LIMPEZA' | 'LUBRIFICACAO' | 'DOCUMENTACAO' | 'SEGURANCA' | 'OUTROS';
   pergunta: string;
@@ -173,20 +188,24 @@ export interface ItemChecklist {
   tipo_resposta: 'SIM_NAO' | 'CONFORME' | 'NUMERO' | 'TEXTO';
   obrigatorio: boolean;
   requer_observacao_nao_conforme: boolean;
+  ativo?: boolean;
+  criado_em?: string;
+  atualizado_em?: string;
 }
 
 // NR12 - Modelos de Checklist
 export interface ModeloChecklist {
   id: number;
-  nome: string;
-  descricao?: string;
   tipo_equipamento: number;
   tipo_equipamento_nome?: string;
-  periodicidade: 'DIARIA' | 'SEMANAL' | 'MENSAL' | 'TRIMESTRAL' | 'SEMESTRAL' | 'ANUAL';
+  nome: string;
+  descricao?: string;
+  periodicidade: 'DIARIO' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL';
   itens?: ItemChecklist[];
+  total_itens?: number;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // NR12 - Respostas
@@ -199,17 +218,26 @@ export interface RespostaItem {
 // NR12 - Checklists Realizados
 export interface ChecklistRealizado {
   id: number;
-  modelo_checklist: number;
-  modelo_checklist_nome?: string;
+  modelo: number;
+  modelo_nome?: string;
   equipamento: number;
-  equipamento_tag?: string;
-  data_inspecao: string;
-  inspetor: string;
-  status: 'em_andamento' | 'concluido' | 'aprovado' | 'reprovado';
+  equipamento_codigo?: string;
+  equipamento_descricao?: string;
+  operador?: number | null;
+  operador_nome?: string;
+  usuario?: number | null;
+  origem: 'WEB' | 'BOT' | 'MOBILE';
+  data_hora_inicio: string;
+  data_hora_fim?: string | null;
+  leitura_equipamento?: string | null;
+  status: 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
+  resultado_geral?: 'APROVADO' | 'APROVADO_RESTRICAO' | 'REPROVADO' | null;
   observacoes_gerais?: string;
-  respostas: RespostaItem[];
-  created_at: string;
-  updated_at: string;
+  respostas?: RespostaItem[];
+  total_respostas?: number;
+  total_nao_conformidades?: number;
+  criado_em: string;
+  atualizado_em: string;
 }
 
 // Response paginada
@@ -243,14 +271,19 @@ export const authApi = {
   refresh: async () => {
     return refreshAccessToken();
   },
-};
 
+  me: async () => {
+    return apiFetch<{ user: User }>('/users/me/', {
+      method: 'GET',
+    });
+  },
+};
 // ==================== CLIENTES ====================
 
 export const clientesApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<Cliente[]>(`/clientes/${query}`);
+    return apiFetch<PaginatedResponse<Cliente>>(`/clientes/${query}`);
   },
 
   get: async (id: number) => {
@@ -258,7 +291,7 @@ export const clientesApi = {
   },
 
   create: async (data: Partial<Cliente>) => {
-    return apiFetch<Cliente>(`/clientes/`, {
+    return apiFetch<Cliente>('/clientes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -266,7 +299,7 @@ export const clientesApi = {
 
   update: async (id: number, data: Partial<Cliente>) => {
     return apiFetch<Cliente>(`/clientes/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -283,7 +316,7 @@ export const clientesApi = {
 export const empreendimentosApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<Empreendimento[]>(`/empreendimentos/${query}`);
+    return apiFetch<PaginatedResponse<Empreendimento>>(`/empreendimentos/${query}`);
   },
 
   get: async (id: number) => {
@@ -291,7 +324,7 @@ export const empreendimentosApi = {
   },
 
   create: async (data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>(`/empreendimentos/`, {
+    return apiFetch<Empreendimento>('/empreendimentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -299,7 +332,7 @@ export const empreendimentosApi = {
 
   update: async (id: number, data: Partial<Empreendimento>) => {
     return apiFetch<Empreendimento>(`/empreendimentos/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -316,7 +349,7 @@ export const empreendimentosApi = {
 export const tiposEquipamentoApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<TipoEquipamento[]>(`/tipos-equipamento/${query}`);
+    return apiFetch<PaginatedResponse<TipoEquipamento>>(`/tipos-equipamento/${query}`);
   },
 
   get: async (id: number) => {
@@ -324,7 +357,7 @@ export const tiposEquipamentoApi = {
   },
 
   create: async (data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>(`/tipos-equipamento/`, {
+    return apiFetch<TipoEquipamento>('/tipos-equipamento/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -332,7 +365,7 @@ export const tiposEquipamentoApi = {
 
   update: async (id: number, data: Partial<TipoEquipamento>) => {
     return apiFetch<TipoEquipamento>(`/tipos-equipamento/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -349,7 +382,7 @@ export const tiposEquipamentoApi = {
 export const equipamentosApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<Equipamento[]>(`/equipamentos/${query}`);
+    return apiFetch<PaginatedResponse<Equipamento>>(`/equipamentos/${query}`);
   },
 
   get: async (id: number) => {
@@ -357,7 +390,7 @@ export const equipamentosApi = {
   },
 
   create: async (data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>(`/equipamentos/`, {
+    return apiFetch<Equipamento>('/equipamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -365,7 +398,7 @@ export const equipamentosApi = {
 
   update: async (id: number, data: Partial<Equipamento>) => {
     return apiFetch<Equipamento>(`/equipamentos/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -398,7 +431,7 @@ const modelosApi = {
 
   update: async (id: number, data: Partial<ModeloChecklist>) => {
     return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -406,6 +439,12 @@ const modelosApi = {
   delete: async (id: number) => {
     return apiFetch<void>(`/nr12/modelos/${id}/`, {
       method: 'DELETE',
+    });
+  },
+
+  duplicar: async (id: number) => {
+    return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/duplicar/`, {
+      method: 'POST',
     });
   },
 };
@@ -430,7 +469,7 @@ const itensApi = {
 
   update: async (modeloId: number, itemId: number, data: Partial<ItemChecklist>) => {
     return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
@@ -494,10 +533,6 @@ export const nr12Api = {
   itens: itensApi,
   checklists: checklistsApi,
 };
-
-// Exportações individuais (alternativa)
-export const modelosNR12Api = modelosApi;
-export const checklistsNR12Api = checklistsApi;
 
 // Exportação default
 export default {
