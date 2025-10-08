@@ -13,7 +13,7 @@ urlpatterns = [
     path("api/v1/", include("core.urls")),
     path("api/v1/", include("cadastro.urls")),
     path("api/v1/", include("equipamentos.urls")),
-    path("api/v1/nr12/", include("nr12.urls")),
+    path("api/v1/", include("nr12.urls")),
 
     # JWT "clássico" (opcional, para testes/integrações)
     path("api/v1/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

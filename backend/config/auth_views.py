@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import authenticate
 from django.conf import settings
 
@@ -20,15 +21,20 @@ def _set_auth_cookies(resp: JsonResponse, access: str, refresh: str):
     """
     Define os cookies de autenticação na resposta
     """
-    # Em produção: secure=True e samesite="None" (se front/back forem domínios diferentes)
+    # Configuração dos cookies baseada no ambiente
+    is_dev = settings.DEBUG
+    
     cookie_args = {
-        "httponly": True,
-        "secure": False if settings.DEBUG else True,
-        "samesite": "Lax" if settings.DEBUG else "None",
+        "httponly": True,  # Protege contra XSS
+        "secure": not is_dev,  # HTTPS obrigatório em produção
+        "samesite": "Lax" if is_dev else "None",  # Cross-site em prod
         "path": "/",
     }
-    resp.set_cookie(COOKIE_ACCESS, access, **cookie_args, max_age=60*60*2)       # 2h (AUMENTADO)
-    resp.set_cookie(COOKIE_REFRESH, refresh, **cookie_args, max_age=60*60*24*7) # 7d
+    
+    # Access token - 2 horas
+    resp.set_cookie(COOKIE_ACCESS, access, **cookie_args, max_age=60*60*2)
+    # Refresh token - 7 dias
+    resp.set_cookie(COOKIE_REFRESH, refresh, **cookie_args, max_age=60*60*24*7)
 
 
 def _clear_auth_cookies(resp: JsonResponse):
@@ -44,9 +50,17 @@ def _clear_auth_cookies(resp: JsonResponse):
 @permission_classes([AllowAny])
 def login(request):
     """
-    Endpoint de login com cookies
-    POST /api/v1/auth/login/
-    Body: {"username": "...", "password": "..."}
+    Autentica usuário e retorna tokens em cookies HTTP-only
+    
+    Espera JSON:
+    {
+        "username": "usuario",
+        "password": "senha"
+    }
+    
+    Retorna:
+    - 200: Login bem-sucedido (cookies definidos)
+    - 401: Credenciais inválidas
     """
     data = request.data or {}
     username = data.get("username")
@@ -54,37 +68,57 @@ def login(request):
     
     if not username or not password:
         return JsonResponse(
-            {"detail": "Username e password são obrigatórios."}, 
+            {"detail": "Username e password são obrigatórios."},
             status=400
         )
     
-    # Autentica o usuário
-    user = authenticate(request, username=username, password=password)
-    
+    user = authenticate(username=username, password=password)
     if not user:
         return JsonResponse(
-            {"detail": "Credenciais inválidas."}, 
+            {"detail": "Credenciais inválidas."},
             status=401
         )
     
-    # Gera os tokens
+    # Gerar tokens JWT
     refresh = RefreshToken.for_user(user)
     access = str(refresh.access_token)
     
-    # Cria resposta com dados do usuário
+    # Criar resposta e definir cookies
     resp = JsonResponse({
-        "detail": "Login realizado com sucesso",
+        "detail": "Login realizado com sucesso.",
         "user": {
             "id": user.id,
             "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "email": user.email or "",
         }
     })
+    _set_auth_cookies(resp, access=access, refresh=str(refresh))
     
-    # Define os cookies
-    _set_auth_cookies(resp, access, str(refresh))
+    return resp
+
+
+@api_view(["POST"])
+def logout(request):
+    """
+    Faz logout do usuário
+    
+    - Tenta blacklistar o refresh token (se existir)
+    - Remove os cookies de autenticação
+    
+    Retorna:
+    - 200: Logout bem-sucedido
+    """
+    try:
+        refresh_cookie = request.COOKIES.get(COOKIE_REFRESH)
+        if refresh_cookie:
+            token = RefreshToken(refresh_cookie)
+            token.blacklist()
+    except Exception as e:
+        # Se falhar ao blacklistar, continua mesmo assim
+        pass
+    
+    resp = JsonResponse({"detail": "Logout realizado com sucesso."})
+    _clear_auth_cookies(resp)
     
     return resp
 
@@ -94,61 +128,48 @@ def login(request):
 @permission_classes([AllowAny])
 def refresh_token(request):
     """
-    ✅ NOVO - Renova o access token usando o refresh token do cookie
-    POST /api/v1/auth/refresh/
+    Renova o access token usando o refresh token do cookie
+    
+    Retorna:
+    - 200: Novo access token (cookie atualizado)
+    - 401: Refresh token inválido ou expirado
     """
     refresh_cookie = request.COOKIES.get(COOKIE_REFRESH)
     
     if not refresh_cookie:
         return JsonResponse(
-            {"detail": "Refresh token não encontrado."}, 
+            {"detail": "Refresh token não encontrado."},
             status=401
         )
     
     try:
-        # Valida e gera novo access token
+        # Validar e renovar o refresh token
         refresh = RefreshToken(refresh_cookie)
-        access = str(refresh.access_token)
         
-        resp = JsonResponse({"detail": "Token renovado com sucesso"})
+        # Gerar novo access token
+        new_access = str(refresh.access_token)
         
-        # Atualiza apenas o access token
-        cookie_args = {
-            "httponly": True,
-            "secure": not settings.DEBUG,
-            "samesite": "Lax" if settings.DEBUG else "None",
-            "path": "/",
-        }
-        resp.set_cookie(COOKIE_ACCESS, access, **cookie_args, max_age=60*60*2)
+        # Se ROTATE_REFRESH_TOKENS estiver ativo, gera novo refresh também
+        if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS", False):
+            refresh.set_jti()
+            refresh.set_exp()
+            new_refresh = str(refresh)
+        else:
+            new_refresh = refresh_cookie
+        
+        # Criar resposta e atualizar cookies
+        resp = JsonResponse({"detail": "Token renovado com sucesso."})
+        _set_auth_cookies(resp, access=new_access, refresh=new_refresh)
         
         return resp
         
-    except Exception as e:
+    except TokenError as e:
         return JsonResponse(
-            {"detail": f"Token inválido ou expirado: {str(e)}"}, 
+            {"detail": f"Token inválido ou expirado: {str(e)}"},
             status=401
         )
-
-
-@csrf_exempt
-@api_view(["POST"])
-def logout(request):
-    """
-    Endpoint de logout
-    POST /api/v1/auth/logout/
-    Remove os cookies de autenticação
-    """
-    refresh_cookie = request.COOKIES.get(COOKIE_REFRESH)
-    
-    # Tenta invalidar o refresh token no backend
-    if refresh_cookie:
-        try:
-            token = RefreshToken(refresh_cookie)
-            token.blacklist()  # Requer django-rest-framework-simplejwt[blacklist]
-        except Exception:
-            pass  # Ignora erros ao invalidar
-    
-    resp = JsonResponse({"detail": "Logout realizado com sucesso"})
-    _clear_auth_cookies(resp)
-    
-    return resp
+    except Exception as e:
+        return JsonResponse(
+            {"detail": f"Erro ao renovar token: {str(e)}"},
+            status=500
+        )

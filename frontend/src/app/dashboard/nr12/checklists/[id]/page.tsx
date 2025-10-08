@@ -1,269 +1,351 @@
-'use client';
+// frontend/src/app/dashboard/nr12/checklists/[id]/page.tsx
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { checklistsNR12Api, ChecklistRealizado } from '@/lib/api';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileText,
+  Printer,
+  Download,
+} from "lucide-react";
+
+interface ItemResposta {
+  id: number;
+  ordem: number;
+  pergunta: string;
+  tipo_resposta: string;
+  resposta_texto: string | null;
+  resposta_conforme: boolean | null;
+  observacao: string;
+}
+
+interface Checklist {
+  id: number;
+  modelo: {
+    id: number;
+    nome: string;
+    tipo_equipamento: string;
+  };
+  veiculo: {
+    id: number;
+    identificacao: string;
+    placa: string;
+    tipo: string;
+  };
+  operador_nome: string;
+  data_hora: string;
+  conforme: number;
+  nao_conforme: number;
+  observacoes: string;
+  itens: ItemResposta[];
+}
 
 export default function ChecklistDetailPage() {
-  const params = useParams();
   const router = useRouter();
-  const checklistId = Number(params.id);
+  const params = useParams();
+  const checklistId = params?.id as string;
 
-  const [checklist, setChecklist] = useState<ChecklistRealizado | null>(null);
+  const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (checklistId) {
-      loadChecklist();
+      carregarChecklist();
     }
   }, [checklistId]);
 
-  const loadChecklist = async () => {
+  const carregarChecklist = async () => {
     try {
-      setLoading(true);
-      const data = await checklistsNR12Api.get(checklistId);
-      setChecklist(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar checklist');
+      const res = await fetch(`/api/nr12/checklists/${checklistId}/`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChecklist(data);
+      } else {
+        router.push("/dashboard/nr12/checklists");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar checklist:", error);
+      router.push("/dashboard/nr12/checklists");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFinalizar = async () => {
-    if (!confirm('Tem certeza que deseja finalizar este checklist?')) return;
+  const formatarData = (dataISO: string) => {
+    const data = new Date(dataISO);
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(data);
+  };
 
+  const handleImprimir = () => {
+    window.print();
+  };
+
+  const handleExportar = async () => {
     try {
-      await checklistsNR12Api.finalizar(checklistId);
-      alert('Checklist finalizado com sucesso!');
-      loadChecklist();
-    } catch (err: any) {
-      alert('Erro ao finalizar: ' + err.message);
+      const res = await fetch(`/api/nr12/checklists/${checklistId}/exportar/`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `checklist_${checklistId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Erro ao exportar:", error);
     }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este checklist?')) return;
-
-    try {
-      await checklistsNR12Api.delete(checklistId);
-      alert('Checklist excluído com sucesso!');
-      router.push('/dashboard/nr12/checklists');
-    } catch (err: any) {
-      alert('Erro ao excluir: ' + err.message);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, string> = {
-      em_andamento: 'bg-blue-100 text-blue-800',
-      concluido: 'bg-green-100 text-green-800',
-      aprovado: 'bg-emerald-100 text-emerald-800',
-      reprovado: 'bg-red-100 text-red-800',
-    };
-
-    const labels: Record<string, string> = {
-      em_andamento: 'Em Andamento',
-      concluido: 'Concluído',
-      aprovado: 'Aprovado',
-      reprovado: 'Reprovado',
-    };
-
-    return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badges[status] || 'bg-gray-100 text-gray-800'}`}>
-        {labels[status] || status}
-      </span>
-    );
-  };
-
-  const getRespostaBadge = (resposta: string) => {
-    const badges: Record<string, { bg: string; icon: string; label: string }> = {
-      conforme: { bg: 'bg-green-100 text-green-800', icon: '✓', label: 'Conforme' },
-      nao_conforme: { bg: 'bg-red-100 text-red-800', icon: '✗', label: 'Não Conforme' },
-      nao_aplicavel: { bg: 'bg-gray-100 text-gray-800', icon: '—', label: 'Não Aplicável' },
-    };
-
-    const config = badges[resposta];
-    if (!config) {
-      return <span className="text-sm text-gray-600">{resposta}</span>;
-    }
-
-    return (
-      <span className={`px-2 py-1 rounded text-sm font-medium ${config.bg}`}>
-        {config.icon} {config.label}
-      </span>
-    );
   };
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Clock className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Carregando checklist...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !checklist) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error || 'Checklist não encontrado'}
-        </div>
-        <Link
-          href="/dashboard/nr12/checklists"
-          className="text-blue-600 hover:text-blue-700 mt-4 inline-block"
-        >
-          ← Voltar para lista
-        </Link>
-      </div>
-    );
+  if (!checklist) {
+    return null;
   }
 
-  // Calcula estatísticas
-  const totalItens = checklist.respostas.length;
-  const conformes = checklist.respostas.filter(r => r.resposta === 'conforme').length;
-  const naoConformes = checklist.respostas.filter(r => r.resposta === 'nao_conforme').length;
-  const naoAplicaveis = checklist.respostas.filter(r => r.resposta === 'nao_aplicavel').length;
-  const percentualConformidade = totalItens > 0 ? Math.round((conformes / (totalItens - naoAplicaveis)) * 100) : 0;
+  const statusGeral = checklist.nao_conforme === 0 ? "CONFORME" : "NÃO CONFORME";
+  const statusColor =
+    statusGeral === "CONFORME"
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Checklist NR12 #{checklist.id}</h1>
-          <p className="text-gray-600 mt-1">
-            {checklist.modelo_checklist_nome} - {checklist.equipamento_tag || `Equipamento ${checklist.equipamento}`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {checklist.status === 'em_andamento' && (
-            <>
-              <button
-                onClick={handleFinalizar}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              >
-                Finalizar
-              </button>
-              <Link
-                href={`/dashboard/nr12/checklists/${checklist.id}/editar`}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                Editar
-              </Link>
-            </>
-          )}
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            Excluir
-          </button>
-        </div>
-      </div>
+    <div className="p-6 max-w-5xl mx-auto">
+      {/* Botão Voltar (não imprimir) */}
+      <button
+        onClick={() => router.push("/dashboard/nr12/checklists")}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 print:hidden"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        Voltar para Lista
+      </button>
 
-      {/* Informações Gerais */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Informações da Inspeção</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Status</label>
-            <div className="mt-1">{getStatusBadge(checklist.status)}</div>
+      {/* Cabeçalho */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <FileText className="w-8 h-8 text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Checklist NR12 #{checklist.id}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {checklist.modelo.nome}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor}`}
+              >
+                {statusGeral}
+              </span>
+              <span className="text-sm text-gray-500">
+                {checklist.conforme} conformes / {checklist.nao_conforme} não
+                conformes
+              </span>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Data da Inspeção</label>
-            <p className="mt-1 text-gray-900">{new Date(checklist.data_inspecao).toLocaleDateString('pt-BR')}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Inspetor</label>
-            <p className="mt-1 text-gray-900">{checklist.inspetor}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Criado em</label>
-            <p className="mt-1 text-gray-900">{new Date(checklist.created_at).toLocaleString('pt-BR')}</p>
+
+          {/* Ações (não imprimir) */}
+          <div className="flex gap-2 print:hidden">
+            <button
+              onClick={handleImprimir}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              title="Imprimir"
+            >
+              <Printer className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={handleExportar}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              title="Exportar PDF"
+            >
+              <Download className="w-5 h-5 text-gray-600" />
+            </button>
           </div>
         </div>
 
-        {checklist.observacoes_gerais && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-500">Observações Gerais</label>
-            <p className="mt-1 text-gray-900 whitespace-pre-wrap">{checklist.observacoes_gerais}</p>
+        {/* Informações do Checklist */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Veículo</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {checklist.veiculo.identificacao}
+            </p>
+            <p className="text-xs text-gray-500">
+              Placa: {checklist.veiculo.placa}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Operador</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {checklist.operador_nome}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Data/Hora</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {formatarData(checklist.data_hora)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Tipo Equipamento</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {checklist.modelo.tipo_equipamento}
+            </p>
+          </div>
+        </div>
+
+        {/* Observações Gerais */}
+        {checklist.observacoes && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 mb-2">Observações Gerais</p>
+            <p className="text-sm text-gray-700 bg-gray-50 rounded p-3">
+              {checklist.observacoes}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-3xl font-bold text-blue-600">{totalItens}</div>
-          <div className="text-sm text-gray-600">Total de Itens</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-3xl font-bold text-green-600">{conformes}</div>
-          <div className="text-sm text-gray-600">Conformes</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-3xl font-bold text-red-600">{naoConformes}</div>
-          <div className="text-sm text-gray-600">Não Conformes</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-3xl font-bold text-purple-600">{percentualConformidade}%</div>
-          <div className="text-sm text-gray-600">Conformidade</div>
-        </div>
-      </div>
+      {/* Lista de Itens */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Itens do Checklist
+        </h2>
 
-      {/* Respostas */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Respostas do Checklist</h2>
-        
         <div className="space-y-4">
-          {checklist.respostas.map((resposta, index) => (
-            <div key={index} className="border-b border-gray-200 pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-start">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded mr-2">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <p className="font-medium text-gray-900">Item {resposta.item_checklist}</p>
-                      {resposta.observacao && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          <strong>Obs:</strong> {resposta.observacao}
+          {checklist.itens.map((item) => {
+            const isConforme =
+              item.tipo_resposta === "CONFORME"
+                ? item.resposta_conforme === true
+                : false;
+            const isNaoConforme =
+              item.tipo_resposta === "CONFORME"
+                ? item.resposta_conforme === false
+                : false;
+
+            return (
+              <div
+                key={item.id}
+                className={`border rounded-lg p-4 ${
+                  isNaoConforme
+                    ? "border-red-200 bg-red-50"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Ícone Status */}
+                  <div className="flex-shrink-0 mt-1">
+                    {isConforme && (
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    )}
+                    {isNaoConforme && (
+                      <XCircle className="w-6 h-6 text-red-600" />
+                    )}
+                    {!isConforme && !isNaoConforme && (
+                      <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                    )}
+                  </div>
+
+                  {/* Conteúdo */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <p className="font-medium text-gray-900">
+                        {item.ordem}. {item.pergunta}
+                      </p>
+                    </div>
+
+                    {/* Resposta */}
+                    <div className="text-sm">
+                      {item.tipo_resposta === "CONFORME" && (
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Resposta:</span>{" "}
+                          {item.resposta_conforme === true
+                            ? "Conforme"
+                            : item.resposta_conforme === false
+                            ? "Não Conforme"
+                            : "Não respondido"}
+                        </p>
+                      )}
+                      {item.tipo_resposta === "TEXTO" && (
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Resposta:</span>{" "}
+                          {item.resposta_texto || "Não respondido"}
                         </p>
                       )}
                     </div>
+
+                    {/* Observação do Item */}
+                    {item.observacao && (
+                      <div className="mt-2 text-sm">
+                        <p className="text-gray-500 font-semibold">
+                          Observação:
+                        </p>
+                        <p className="text-gray-700 bg-white rounded p-2 mt-1">
+                          {item.observacao}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="ml-4">
-                  {getRespostaBadge(resposta.resposta)}
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Botões de Ação */}
-      <div className="mt-6 flex justify-between">
-        <Link
-          href="/dashboard/nr12/checklists"
-          className="text-blue-600 hover:text-blue-700"
-        >
-          ← Voltar para lista
-        </Link>
-        <button
-          onClick={() => window.print()}
-          className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition"
-        >
-          🖨️ Imprimir
-        </button>
+      {/* Resumo Final */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Resumo da Inspeção
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <p className="text-3xl font-bold text-gray-900">
+              {checklist.itens.length}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">Total de Itens</p>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <p className="text-3xl font-bold text-green-600">
+              {checklist.conforme}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">Conformes</p>
+          </div>
+          <div className="text-center p-4 bg-red-50 rounded-lg">
+            <p className="text-3xl font-bold text-red-600">
+              {checklist.nao_conforme}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">Não Conformes</p>
+          </div>
+        </div>
       </div>
     </div>
   );
