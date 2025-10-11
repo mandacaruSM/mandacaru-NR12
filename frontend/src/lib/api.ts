@@ -2,7 +2,7 @@
 /**
  * Cliente API com autenticação por cookies
  * Inclui renovação automática de tokens
- * VERSÃO COMPLETA - FASE 2
+ * VERSÃO CORRIGIDA
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -63,7 +63,7 @@ async function apiFetch<T>(
 
   const config: RequestInit = {
     ...fetchOptions,
-    credentials: 'include', // Envia cookies automaticamente
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...fetchOptions.headers,
@@ -79,10 +79,8 @@ async function apiFetch<T>(
     const refreshed = await refreshAccessToken();
 
     if (refreshed) {
-      // Tenta a requisição novamente
       response = await fetch(url, config);
     } else {
-      // Se não conseguiu renovar, redireciona para login
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
@@ -278,6 +276,7 @@ export const authApi = {
     });
   },
 };
+
 // ==================== CLIENTES ====================
 
 export const clientesApi = {
@@ -415,7 +414,7 @@ export const equipamentosApi = {
 const modelosApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<ModeloChecklist[]>(`/nr12/modelos/${query}`);
+    return apiFetch<PaginatedResponse<ModeloChecklist>>(`/nr12/modelos/${query}`);
   },
 
   get: async (id: number) => {
@@ -447,37 +446,39 @@ const modelosApi = {
       method: 'POST',
     });
   },
-};
 
-// ==================== NR12 - ITENS DE CHECKLIST ====================
+  // ✅ MÉTODO ADICIONADO: Gerenciar itens dentro do modelo
+  itens: {
+    list: async (modeloId: number) => {
+      return apiFetch<ItemChecklist[]>(`/nr12/modelos/${modeloId}/itens/`);
+    },
 
-const itensApi = {
-  list: async (modeloId: number) => {
-    return apiFetch<PaginatedResponse<ItemChecklist>>(`/nr12/modelos/${modeloId}/itens/`);
-  },
+    create: async (modeloId: number, data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
 
-  get: async (modeloId: number, itemId: number) => {
-    return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`);
-  },
+    update: async (modeloId: number, itemId: number, data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
 
-  create: async (modeloId: number, data: Partial<ItemChecklist>) => {
-    return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+    delete: async (modeloId: number, itemId: number) => {
+      return apiFetch<void>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
+        method: 'DELETE',
+      });
+    },
 
-  update: async (modeloId: number, itemId: number, data: Partial<ItemChecklist>) => {
-    return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
-  delete: async (modeloId: number, itemId: number) => {
-    return apiFetch<void>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
-      method: 'DELETE',
-    });
+    reordenar: async (modeloId: number, ordens: { id: number; ordem: number }[]) => {
+      return apiFetch<{ detail: string }>(`/nr12/modelos/${modeloId}/itens/reordenar/`, {
+        method: 'POST',
+        body: JSON.stringify({ ordens }),
+      });
+    },
   },
 };
 
@@ -486,7 +487,7 @@ const itensApi = {
 const checklistsApi = {
   list: async (params?: Record<string, any>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<ChecklistRealizado[]>(`/nr12/checklists/${query}`);
+    return apiFetch<PaginatedResponse<ChecklistRealizado>>(`/nr12/checklists/${query}`);
   },
 
   get: async (id: number) => {
@@ -527,10 +528,9 @@ const checklistsApi = {
 
 // ==================== EXPORTAÇÕES ====================
 
-// Exportação agrupada NR12 (para compatibilidade com código existente)
+// Exportação agrupada NR12
 export const nr12Api = {
   modelos: modelosApi,
-  itens: itensApi,
   checklists: checklistsApi,
 };
 
