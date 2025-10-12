@@ -1,121 +1,170 @@
 // frontend/src/app/dashboard/nr12/modelos/[id]/page.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { nr12Api } from '@/lib/api';
-import type { ModeloChecklist, ItemChecklist } from '@/lib/api';
-import { useToast } from '@/contexts/ToastContext';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Plus, Trash2, GripVertical, Edit2, Save, X } from "lucide-react";
+import { nr12Api, ModeloChecklist, ItemChecklist } from "@/lib/api";
+import { useToast } from "@/contexts/ToastContext";
 
-const CATEGORIA_LABELS = {
-  'VISUAL': 'Inspeção Visual',
-  'FUNCIONAL': 'Teste Funcional',
-  'MEDICAO': 'Medição',
-  'LIMPEZA': 'Limpeza',
-  'LUBRIFICACAO': 'Lubrificação',
-  'DOCUMENTACAO': 'Documentação',
-  'SEGURANCA': 'Segurança',
-  'OUTROS': 'Outros',
+const CATEGORIAS = [
+  { value: "VISUAL", label: "Visual", color: "bg-purple-100 text-purple-800" },
+  { value: "FUNCIONAL", label: "Funcional", color: "bg-blue-100 text-blue-800" },
+  { value: "MEDICAO", label: "Medição", color: "bg-green-100 text-green-800" },
+  { value: "LIMPEZA", label: "Limpeza", color: "bg-cyan-100 text-cyan-800" },
+  { value: "LUBRIFICACAO", label: "Lubrificação", color: "bg-orange-100 text-orange-800" },
+  { value: "DOCUMENTACAO", label: "Documentação", color: "bg-gray-100 text-gray-800" },
+  { value: "SEGURANCA", label: "Segurança", color: "bg-red-100 text-red-800" },
+  { value: "OUTROS", label: "Outros", color: "bg-pink-100 text-pink-800" },
+];
+
+const TIPOS_RESPOSTA = [
+  { value: "SIM_NAO", label: "Sim/Não" },
+  { value: "CONFORME", label: "Conforme/Não Conforme" },
+  { value: "NUMERO", label: "Número" },
+  { value: "TEXTO", label: "Texto" },
+];
+
+const PERIODICIDADE_LABELS: Record<string, string> = {
+  DIARIO: "Diário",
+  SEMANAL: "Semanal",
+  QUINZENAL: "Quinzenal",
+  MENSAL: "Mensal",
 };
 
-const TIPO_RESPOSTA_LABELS = {
-  'SIM_NAO': 'Sim/Não',
-  'CONFORME': 'Conforme/Não Conforme',
-  'NUMERO': 'Valor Numérico',
-  'TEXTO': 'Texto Livre',
-};
-
-export default function DetalhesModeloPage() {
-  const params = useParams();
+export default function ModeloDetailPage() {
   const router = useRouter();
+  const params = useParams();
   const toast = useToast();
-  const modeloId = Number(params.id);
+  const id = params?.id as string;
 
-  const [loading, setLoading] = useState(true);
   const [modelo, setModelo] = useState<ModeloChecklist | null>(null);
   const [itens, setItens] = useState<ItemChecklist[]>([]);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [editandoItem, setEditandoItem] = useState<number | null>(null);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  const [newItem, setNewItem] = useState({
+  // Form state
+  const [formData, setFormData] = useState<Partial<ItemChecklist>>({
     ordem: 1,
-    categoria: 'VISUAL' as any,
-    pergunta: '',
-    descricao_ajuda: '',
-    tipo_resposta: 'CONFORME' as any,
+    categoria: "VISUAL",
+    pergunta: "",
+    descricao_ajuda: "",
+    tipo_resposta: "CONFORME",
     obrigatorio: true,
     requer_observacao_nao_conforme: true,
+    ativo: true,
   });
 
   useEffect(() => {
-    loadModelo();
-  }, [modeloId]);
+    if (id) {
+      carregarModelo();
+    }
+  }, [id]);
 
-  const loadModelo = async () => {
+  const carregarModelo = async () => {
     try {
       setLoading(true);
-      const data = await nr12Api.modelos.get(modeloId);
+      const data = await nr12Api.modelos.get(Number(id));
       setModelo(data);
-      
-      // Carregar itens separadamente
-      const itensData = await nr12Api.itens.list(modeloId);
-      setItens(itensData.results);
-      
-      // Definir próxima ordem
-      if (itensData.results.length > 0) {
-        const maxOrdem = Math.max(...itensData.results.map((i: any) => i.ordem));
-        setNewItem(prev => ({ ...prev, ordem: maxOrdem + 1 }));
-      }
-    } catch (err: any) {
-      toast.error('Erro ao carregar modelo');
-      router.push('/dashboard/nr12/modelos');
+      setItens(data.itens || []);
+    } catch (error) {
+      console.error("Erro ao carregar modelo:", error);
+      toast.error("Erro ao carregar modelo");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddItem = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setSaving(true);
-      await nr12Api.itens.create(modeloId, newItem);
+    if (!formData.pergunta?.trim()) {
+      toast.error("Pergunta é obrigatória");
+      return;
+    }
 
-      toast.success('Item adicionado com sucesso!');
-      setShowAddItem(false);
-      setNewItem({
-        ordem: newItem.ordem + 1,
-        categoria: 'VISUAL' as any,
-        pergunta: '',
-        descricao_ajuda: '',
-        tipo_resposta: 'CONFORME' as any,
-        obrigatorio: true,
-        requer_observacao_nao_conforme: true,
-      });
-      loadModelo();
-    } catch (err: any) {
-      toast.error('Erro ao adicionar item');
-    } finally {
-      setSaving(false);
+    try {
+      // Preparar dados para envio (SEM o campo modelo, pois é definido pelo backend)
+      const novaOrdem = itens.length > 0 ? Math.max(...itens.map((i) => i.ordem)) + 1 : 1;
+      
+      const dadosLimpos = {
+        ordem: editandoItem ? formData.ordem : novaOrdem,
+        categoria: formData.categoria,
+        pergunta: formData.pergunta.trim(),
+        tipo_resposta: formData.tipo_resposta,
+        obrigatorio: formData.obrigatorio ?? true,
+        requer_observacao_nao_conforme: formData.requer_observacao_nao_conforme ?? true,
+        ativo: true,
+      };
+
+      // Adicionar descricao_ajuda apenas se tiver conteúdo
+      if (formData.descricao_ajuda?.trim()) {
+        dadosLimpos.descricao_ajuda = formData.descricao_ajuda.trim();
+      }
+
+      if (editandoItem) {
+        // Atualizar item existente
+        console.log("Atualizando item:", dadosLimpos);
+        await nr12Api.modelos.itens.update(Number(id), editandoItem, dadosLimpos);
+        toast.success("Item atualizado com sucesso!");
+      } else {
+        // Criar novo item
+        console.log("Criando item:", dadosLimpos);
+        await nr12Api.modelos.itens.create(Number(id), dadosLimpos);
+        toast.success("Item adicionado com sucesso!");
+      }
+
+      carregarModelo();
+      resetForm();
+    } catch (error: any) {
+      console.error("Erro detalhado ao salvar item:", error);
+      const mensagemErro = error?.message || "Erro ao salvar item";
+      toast.error(mensagemErro);
     }
   };
 
-  const handleDeleteItem = async (itemId: number, pergunta: string) => {
-    if (!confirm(`Deseja excluir o item "${pergunta}"?`)) return;
+  const handleEdit = (item: ItemChecklist) => {
+    setFormData(item);
+    setEditandoItem(item.id || null);
+    setMostrarFormulario(true);
+  };
+
+  const handleDelete = async (itemId: number) => {
+    if (!confirm("Deseja excluir este item?")) return;
 
     try {
-      await nr12Api.itens.delete(modeloId, itemId);
-      toast.success('Item excluído!');
-      loadModelo();
-    } catch (err: any) {
-      toast.error('Erro ao excluir item');
+      await nr12Api.modelos.itens.delete(Number(id), itemId);
+      toast.success("Item excluído com sucesso!");
+      carregarModelo();
+    } catch (error) {
+      console.error("Erro ao excluir item:", error);
+      toast.error("Erro ao excluir item");
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      ordem: 1,
+      categoria: "VISUAL",
+      pergunta: "",
+      descricao_ajuda: "",
+      tipo_resposta: "CONFORME",
+      obrigatorio: true,
+      requer_observacao_nao_conforme: true,
+      ativo: true,
+    });
+    setEditandoItem(null);
+    setMostrarFormulario(false);
+  };
+
+  const getCategoriaColor = (categoria: string) => {
+    return CATEGORIAS.find((c) => c.value === categoria)?.color || "bg-gray-100 text-gray-800";
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando modelo...</p>
@@ -127,256 +176,267 @@ export default function DetalhesModeloPage() {
   if (!modelo) {
     return (
       <div className="text-center py-12">
-        <span className="text-6xl">❌</span>
-        <p className="text-gray-600 mt-4">Modelo não encontrado</p>
-        <Link
-          href="/dashboard/nr12/modelos"
-          className="inline-block mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Modelo não encontrado</h2>
+        <button
+          onClick={() => router.push("/dashboard/nr12/modelos")}
+          className="mt-4 text-purple-600 hover:text-purple-800"
         >
-          ← Voltar para Modelos
-        </Link>
+          Voltar para lista
+        </button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/nr12/modelos"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Voltar
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{modelo.nome}</h1>
-              <p className="text-gray-600 mt-1">
-                {modelo.tipo_equipamento_nome} • {modelo.periodicidade}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <span className={`px-4 py-2 rounded-lg font-semibold ${
-              modelo.ativo 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {modelo.ativo ? '✓ Ativo' : '✕ Inativo'}
-            </span>
-            <Link
-              href={`/dashboard/nr12/modelos/${modelo.id}/editar`}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            >
-              ✏️ Editar
-            </Link>
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push("/dashboard/nr12/modelos")}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{modelo.nome}</h1>
+            <p className="text-gray-600 mt-1">
+              {modelo.tipo_equipamento_nome} • {PERIODICIDADE_LABELS[modelo.periodicidade]} • {itens.length} itens
+            </p>
           </div>
         </div>
-
-        {modelo.descricao && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700">{modelo.descricao}</p>
-          </div>
-        )}
+        <button
+          onClick={() => setMostrarFormulario(!mostrarFormulario)}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+        >
+          {mostrarFormulario ? (
+            <>
+              <X className="w-5 h-5" />
+              Cancelar
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5" />
+              Novo Item
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Itens do Checklist */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Itens do Checklist ({modelo.itens?.length || 0})
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Items que serão verificados durante a inspeção
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAddItem(!showAddItem)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              {showAddItem ? '✕ Cancelar' : '➕ Adicionar Item'}
-            </button>
-          </div>
-        </div>
-
-        {/* Formulário Adicionar Item */}
-        {showAddItem && (
-          <form onSubmit={handleAddItem} className="p-6 bg-gray-50 border-b">
+      {/* Formulário de Item */}
+      {mostrarFormulario && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {editandoItem ? "Editar Item" : "Novo Item"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Pergunta */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pergunta *
-                </label>
-                <input
-                  type="text"
-                  value={newItem.pergunta}
-                  onChange={(e) => setNewItem({...newItem, pergunta: e.target.value})}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500"
-                  placeholder="Ex: Verificar estado das proteções"
-                />
-              </div>
-
-              {/* Ordem */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ordem
-                </label>
-                <input
-                  type="number"
-                  value={newItem.ordem}
-                  onChange={(e) => setNewItem({...newItem, ordem: Number(e.target.value)})}
-                  min="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 focus:ring-purple-500"
-                />
-              </div>
-
               {/* Categoria */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoria *
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Categoria <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={newItem.categoria}
-                  onChange={(e) => setNewItem({...newItem, categoria: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 focus:ring-purple-500"
+                  value={formData.categoria}
+                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value as any })}
+                  className="w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  required
                 >
-                  {Object.entries(CATEGORIA_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                  {CATEGORIAS.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Tipo de Resposta */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Resposta *
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Resposta <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={newItem.tipo_resposta}
-                  onChange={(e) => setNewItem({...newItem, tipo_resposta: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 focus:ring-purple-500"
+                  value={formData.tipo_resposta}
+                  onChange={(e) => setFormData({ ...formData, tipo_resposta: e.target.value as any })}
+                  className="w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  required
                 >
-                  {Object.entries(TIPO_RESPOSTA_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                  {TIPOS_RESPOSTA.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
                   ))}
                 </select>
               </div>
-
-              {/* Descrição Ajuda */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição/Ajuda
-                </label>
-                <textarea
-                  value={newItem.descricao_ajuda}
-                  onChange={(e) => setNewItem({...newItem, descricao_ajuda: e.target.value})}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500"
-                  placeholder="Instruções adicionais para o operador..."
-                />
-              </div>
-
-              {/* Checkboxes */}
-              <div className="md:col-span-2 flex gap-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={newItem.obrigatorio}
-                    onChange={(e) => setNewItem({...newItem, obrigatorio: e.target.checked})}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Obrigatório</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={newItem.requer_observacao_nao_conforme}
-                    onChange={(e) => setNewItem({...newItem, requer_observacao_nao_conforme: e.target.checked})}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Obs. obrigatória se não conforme</span>
-                </label>
-              </div>
             </div>
 
-            <div className="mt-4 flex justify-end gap-3">
+            {/* Pergunta */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Pergunta <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.pergunta}
+                onChange={(e) => setFormData({ ...formData, pergunta: e.target.value })}
+                placeholder="Ex: O equipamento está em boas condições?"
+                className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            {/* Descrição de Ajuda */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição de Ajuda (Opcional)
+              </label>
+              <textarea
+                value={formData.descricao_ajuda}
+                onChange={(e) => setFormData({ ...formData, descricao_ajuda: e.target.value })}
+                placeholder="Informações adicionais para ajudar no preenchimento..."
+                rows={2}
+                className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Checkboxes */}
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.obrigatorio}
+                  onChange={(e) => setFormData({ ...formData, obrigatorio: e.target.checked })}
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-700">Item obrigatório</span>
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.requer_observacao_nao_conforme}
+                  onChange={(e) =>
+                    setFormData({ ...formData, requer_observacao_nao_conforme: e.target.checked })
+                  }
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-700">Exigir observação em não conformidade</span>
+              </label>
+            </div>
+
+            {/* Botões */}
+            <div className="flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowAddItem(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                onClick={resetForm}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                disabled={saving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                {saving ? 'Salvando...' : 'Adicionar Item'}
+                <Save className="w-4 h-4" />
+                {editandoItem ? "Atualizar" : "Adicionar"}
               </button>
             </div>
           </form>
-        )}
+        </div>
+      )}
 
-        {/* Lista de Itens */}
-        <div className="divide-y">
-          {modelo.itens && modelo.itens.length > 0 ? (
-            modelo.itens.map((item: any) => (
-              <div key={item.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm font-bold text-gray-500">#{item.ordem}</span>
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                        {CATEGORIA_LABELS[item.categoria as keyof typeof CATEGORIA_LABELS]}
-                      </span>
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {TIPO_RESPOSTA_LABELS[item.tipo_resposta as keyof typeof TIPO_RESPOSTA_LABELS]}
-                      </span>
-                      {item.obrigatorio && (
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          Obrigatório
+      {/* Lista de Itens */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Itens do Checklist ({itens.length})
+          </h2>
+        </div>
+
+        {itens.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📝</div>
+            <p className="text-gray-500 text-lg mb-4">Nenhum item cadastrado</p>
+            <button
+              onClick={() => setMostrarFormulario(true)}
+              className="text-purple-600 hover:text-purple-800 font-medium"
+            >
+              Adicione o primeiro item
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {itens
+              .sort((a, b) => a.ordem - b.ordem)
+              .map((item) => (
+                <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start gap-4">
+                    {/* Número de Ordem */}
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="text-purple-600 font-bold">{item.ordem}</span>
+                      </div>
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoriaColor(item.categoria)}`}>
+                          {CATEGORIAS.find((c) => c.value === item.categoria)?.label}
                         </span>
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {TIPOS_RESPOSTA.find((t) => t.value === item.tipo_resposta)?.label}
+                        </span>
+                        {item.obrigatorio && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                            Obrigatório
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-medium text-gray-900 mb-1">{item.pergunta}</p>
+                      {item.descricao_ajuda && (
+                        <p className="text-sm text-gray-600">{item.descricao_ajuda}</p>
                       )}
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {item.pergunta}
-                    </h3>
-                    {item.descricao_ajuda && (
-                      <p className="text-sm text-gray-600">{item.descricao_ajuda}</p>
-                    )}
+
+                    {/* Ações */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => item.id && handleDelete(item.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteItem(item.id, item.pergunta)}
-                    className="ml-4 text-red-600 hover:text-red-900"
-                    title="Excluir item"
-                  >
-                    🗑️
-                  </button>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <span className="text-6xl">📝</span>
-              <p className="text-gray-600 mt-4">Nenhum item cadastrado</p>
-              <button
-                onClick={() => setShowAddItem(true)}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                ➕ Adicionar Primeiro Item
-              </button>
-            </div>
-          )}
-        </div>
+              ))}
+          </div>
+        )}
       </div>
+
+      {/* Info */}
+      {itens.length > 0 && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+          <div className="flex">
+            <span className="text-2xl mr-3">💡</span>
+            <div>
+              <h3 className="text-sm font-medium text-blue-800">Dica</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                Os itens são apresentados na ordem definida. Você pode reordenar os itens editando o número de ordem.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,47 +3,44 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle, Clock, Filter, Search, Plus } from "lucide-react";
-
-interface Checklist {
-  id: number;
-  modelo: {
-    id: number;
-    nome: string;
-    tipo_equipamento: string;
-  };
-  veiculo: {
-    id: number;
-    identificacao: string;
-    placa: string;
-  };
-  operador_nome: string;
-  data_hora: string;
-  conforme: number;
-  nao_conforme: number;
-  observacoes: string;
-}
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  AlertTriangle,
+  Plus, 
+  Search,
+  Filter,
+  Eye
+} from "lucide-react";
+import { nr12Api, ChecklistRealizado } from "@/lib/api";
 
 export default function ChecklistsPage() {
   const router = useRouter();
-  const [checklists, setChecklists] = useState<Checklist[]>([]);
+  const [checklists, setChecklists] = useState<ChecklistRealizado[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("");
-  const [statusFiltro, setStatusFiltro] = useState<"TODOS" | "CONFORME" | "NAO_CONFORME">("TODOS");
+  const [statusFiltro, setStatusFiltro] = useState<string>("TODOS");
+  const [resultadoFiltro, setResultadoFiltro] = useState<string>("TODOS");
 
   useEffect(() => {
     carregarChecklists();
-  }, []);
+  }, [statusFiltro, resultadoFiltro]);
 
   const carregarChecklists = async () => {
     try {
-      const res = await fetch("/api/nr12/checklists/", {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setChecklists(data);
+      setLoading(true);
+      const params: any = {};
+      
+      if (statusFiltro !== "TODOS") {
+        params.status = statusFiltro;
       }
+      if (resultadoFiltro !== "TODOS") {
+        params.resultado = resultadoFiltro;
+      }
+
+      const response = await nr12Api.checklists.list(params);
+      setChecklists(response.results || []);
     } catch (error) {
       console.error("Erro ao carregar checklists:", error);
     } finally {
@@ -51,66 +48,70 @@ export default function ChecklistsPage() {
     }
   };
 
-  const checklistsFiltrados = checklists.filter((c) => {
-    const matchFiltro =
-      c.veiculo.identificacao.toLowerCase().includes(filtro.toLowerCase()) ||
-      c.veiculo.placa.toLowerCase().includes(filtro.toLowerCase()) ||
-      c.operador_nome.toLowerCase().includes(filtro.toLowerCase());
+  const checklistsFiltrados = checklists.filter((checklist) =>
+    (checklist.equipamento_codigo?.toLowerCase() || "").includes(filtro.toLowerCase()) ||
+    (checklist.modelo_nome?.toLowerCase() || "").includes(filtro.toLowerCase()) ||
+    (checklist.operador_nome?.toLowerCase() || "").includes(filtro.toLowerCase())
+  );
 
-    const matchStatus =
-      statusFiltro === "TODOS" ||
-      (statusFiltro === "CONFORME" && c.nao_conforme === 0) ||
-      (statusFiltro === "NAO_CONFORME" && c.nao_conforme > 0);
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      EM_ANDAMENTO: { color: "bg-blue-100 text-blue-800", icon: Clock, label: "Em Andamento" },
+      CONCLUIDO: { color: "bg-green-100 text-green-800", icon: CheckCircle2, label: "Concluído" },
+      CANCELADO: { color: "bg-gray-100 text-gray-800", icon: XCircle, label: "Cancelado" },
+    };
+    const badge = badges[status as keyof typeof badges] || badges.EM_ANDAMENTO;
+    const Icon = badge.icon;
 
-    return matchFiltro && matchStatus;
-  });
-
-  const getStatusColor = (checklist: Checklist) => {
-    if (checklist.nao_conforme === 0) return "text-green-600 bg-green-50";
-    return "text-red-600 bg-red-50";
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${badge.color}`}>
+        <Icon className="w-3 h-3" />
+        {badge.label}
+      </span>
+    );
   };
 
-  const getStatusIcon = (checklist: Checklist) => {
-    if (checklist.nao_conforme === 0)
-      return <CheckCircle2 className="w-5 h-5" />;
-    return <XCircle className="w-5 h-5" />;
+  const getResultadoBadge = (resultado: string | null | undefined) => {
+    if (!resultado) return null;
+
+    const badges = {
+      APROVADO: { color: "bg-green-100 text-green-800", icon: CheckCircle2, label: "Aprovado" },
+      APROVADO_RESTRICAO: { color: "bg-yellow-100 text-yellow-800", icon: AlertTriangle, label: "Aprovado c/ Restrição" },
+      REPROVADO: { color: "bg-red-100 text-red-800", icon: XCircle, label: "Reprovado" },
+    };
+    const badge = badges[resultado as keyof typeof badges];
+    if (!badge) return null;
+
+    const Icon = badge.icon;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${badge.color}`}>
+        <Icon className="w-3 h-3" />
+        {badge.label}
+      </span>
+    );
   };
 
-  const formatarData = (dataISO: string) => {
-    const data = new Date(dataISO);
-    return new Intl.DateTimeFormat("pt-BR", {
+  const formatarData = (data: string) => {
+    return new Date(data).toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(data);
+    });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Clock className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Carregando checklists...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Checklists NR12</h1>
-          <p className="text-gray-600 mt-1">
-            {checklists.length} checklist(s) registrado(s)
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Checklists NR12</h1>
+          <p className="text-gray-600 mt-1">Gerenciar checklists realizados</p>
         </div>
         <button
           onClick={() => router.push("/dashboard/nr12/checklists/novo")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Novo Checklist
@@ -118,145 +119,174 @@ export default function ChecklistsPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Busca */}
-          <div className="flex-1">
+          <div className="md:col-span-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Buscar por veículo, placa ou operador..."
+                placeholder="Buscar por equipamento, modelo ou operador..."
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Filtro Status */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setStatusFiltro("TODOS")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                statusFiltro === "TODOS"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+          <div>
+            <select
+              value={statusFiltro}
+              onChange={(e) => setStatusFiltro(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              Todos
-            </button>
-            <button
-              onClick={() => setStatusFiltro("CONFORME")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                statusFiltro === "CONFORME"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              <option value="TODOS">Todos os Status</option>
+              <option value="EM_ANDAMENTO">Em Andamento</option>
+              <option value="CONCLUIDO">Concluído</option>
+              <option value="CANCELADO">Cancelado</option>
+            </select>
+          </div>
+
+          {/* Filtro Resultado */}
+          <div>
+            <select
+              value={resultadoFiltro}
+              onChange={(e) => setResultadoFiltro(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              Conformes
-            </button>
-            <button
-              onClick={() => setStatusFiltro("NAO_CONFORME")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                statusFiltro === "NAO_CONFORME"
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Não Conformes
-            </button>
+              <option value="TODOS">Todos os Resultados</option>
+              <option value="APROVADO">Aprovado</option>
+              <option value="APROVADO_RESTRICAO">Aprovado c/ Restrição</option>
+              <option value="REPROVADO">Reprovado</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Lista de Checklists */}
-      {checklistsFiltrados.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Filter className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+      {/* Lista */}
+      {loading ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando checklists...</p>
+        </div>
+      ) : checklistsFiltrados.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <Filter className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
             Nenhum checklist encontrado
           </h3>
-          <p className="text-gray-500">
-            {filtro || statusFiltro !== "TODOS"
+          <p className="text-gray-600 mb-4">
+            {filtro
               ? "Tente ajustar os filtros de busca"
-              : "Clique em 'Novo Checklist' para começar"}
+              : "Comece criando um novo checklist"}
           </p>
+          {!filtro && (
+            <button
+              onClick={() => router.push("/dashboard/nr12/checklists/novo")}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-5 h-5" />
+              Criar Primeiro Checklist
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-4">
-          {checklistsFiltrados.map((checklist) => (
-            <div
-              key={checklist.id}
-              onClick={() =>
-                router.push(`/dashboard/nr12/checklists/${checklist.id}`)
-              }
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {/* Cabeçalho */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`p-2 rounded-lg ${getStatusColor(checklist)}`}>
-                      {getStatusIcon(checklist)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {checklist.veiculo.identificacao}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Placa: {checklist.veiculo.placa}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Informações */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Modelo</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {checklist.modelo.nome}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Operador</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {checklist.operador_nome}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Data/Hora</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {formatarData(checklist.data_hora)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Resultado</p>
-                      <p className="text-sm font-medium">
-                        <span className="text-green-600">
-                          {checklist.conforme} ✓
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Equipamento
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Modelo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Operador
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Data/Hora
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Resultado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Não Conformidades
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {checklistsFiltrados.map((checklist) => (
+                  <tr key={checklist.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {checklist.equipamento_codigo || "N/A"}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {checklist.equipamento_descricao || "-"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{checklist.modelo_nome || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{checklist.operador_nome || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {formatarData(checklist.data_hora_inicio)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(checklist.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getResultadoBadge(checklist.resultado_geral)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {(checklist.total_nao_conformidades || 0) > 0 ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          {checklist.total_nao_conformidades}
                         </span>
-                        {" / "}
-                        <span className="text-red-600">
-                          {checklist.nao_conforme} ✗
-                        </span>
-                      </p>
-                    </div>
-                  </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        onClick={() => router.push(`/dashboard/nr12/checklists/${checklist.id}`)}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Ver Detalhes
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-                  {/* Observações */}
-                  {checklist.observacoes && (
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-xs text-gray-500 mb-1">Observações</p>
-                      <p className="text-sm text-gray-700">
-                        {checklist.observacoes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* Rodapé com contadores */}
+      {!loading && checklistsFiltrados.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>
+              Mostrando <strong>{checklistsFiltrados.length}</strong> de{" "}
+              <strong>{checklists.length}</strong> checklists
+            </span>
+          </div>
         </div>
       )}
     </div>

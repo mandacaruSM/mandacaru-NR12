@@ -6,60 +6,56 @@ import {
   BarChart3,
   TrendingUp,
   AlertTriangle,
-  CheckCircle,
+  CheckCircle2,
+  FileText,
   Calendar,
-  Download,
-  Filter,
 } from "lucide-react";
+import { nr12Api } from "@/lib/api";
 
-interface EstatisticasGerais {
-  total_checklists: number;
-  total_conformes: number;
-  total_nao_conformes: number;
-  percentual_conformidade: number;
-  checklists_por_periodo: { periodo: string; total: number }[];
-}
-
-interface VeiculoEstatistica {
-  veiculo: string;
-  total_checklists: number;
-  nao_conformidades: number;
-  percentual: number;
+interface Estatisticas {
+  total: number;
+  concluidos: number;
+  em_andamento: number;
+  cancelados: number;
+  aprovados: number;
+  aprovados_restricao: number;
+  reprovados: number;
+  por_equipamento: Array<{
+    equipamento__codigo: string;
+    equipamento__descricao: string;
+    total: number;
+  }>;
+  por_modelo: Array<{
+    modelo__nome: string;
+    total: number;
+  }>;
 }
 
 export default function RelatoriosPage() {
-  const [estatisticas, setEstatisticas] = useState<EstatisticasGerais | null>(
-    null
-  );
-  const [veiculosTop, setVeiculosTop] = useState<VeiculoEstatistica[]>([]);
-  const [periodo, setPeriodo] = useState("7"); // dias
+  const [stats, setStats] = useState<Estatisticas | null>(null);
   const [loading, setLoading] = useState(true);
+  const [periodo, setPeriodo] = useState("30"); // dias
 
   useEffect(() => {
     carregarEstatisticas();
   }, [periodo]);
 
   const carregarEstatisticas = async () => {
-    setLoading(true);
     try {
-      const [resGerais, resVeiculos] = await Promise.all([
-        fetch(`/api/nr12/relatorios/estatisticas/?periodo=${periodo}`, {
-          credentials: "include",
-        }),
-        fetch(`/api/nr12/relatorios/veiculos-top/?periodo=${periodo}&limit=5`, {
-          credentials: "include",
-        }),
-      ]);
+      setLoading(true);
+      
+      // Calcular datas
+      const dataFim = new Date();
+      const dataInicio = new Date();
+      dataInicio.setDate(dataInicio.getDate() - Number(periodo));
 
-      if (resGerais.ok) {
-        const data = await resGerais.json();
-        setEstatisticas(data);
-      }
+      const params = {
+        data_inicio: dataInicio.toISOString(),
+        data_fim: dataFim.toISOString(),
+      };
 
-      if (resVeiculos.ok) {
-        const data = await resVeiculos.json();
-        setVeiculosTop(data);
-      }
+      const data = await nr12Api.checklists.estatisticas(params);
+      setStats(data);
     } catch (error) {
       console.error("Erro ao carregar estatísticas:", error);
     } finally {
@@ -67,246 +63,357 @@ export default function RelatoriosPage() {
     }
   };
 
-  const handleExportar = async () => {
-    try {
-      const res = await fetch(
-        `/api/nr12/relatorios/exportar/?periodo=${periodo}`,
-        {
-          credentials: "include",
-        }
-      );
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `relatorio_nr12_${periodo}dias.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }
-    } catch (error) {
-      console.error("Erro ao exportar:", error);
-    }
+  const calcularPercentual = (valor: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.round((valor / total) * 100);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Carregando relatórios...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando estatísticas...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Relatórios NR12
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Análise e estatísticas dos checklists
-          </p>
-        </div>
+  if (!stats) {
+    return (
+      <div className="text-center py-12">
+        <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Erro ao carregar estatísticas
+        </h2>
         <button
-          onClick={handleExportar}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          onClick={carregarEstatisticas}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <Download className="w-5 h-5" />
-          Exportar Excel
+          Tentar Novamente
         </button>
       </div>
+    );
+  }
 
-      {/* Filtro de Período */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Período:</span>
-          <div className="flex gap-2">
-            {["7", "30", "90", "365"].map((dias) => (
-              <button
-                key={dias}
-                onClick={() => setPeriodo(dias)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  periodo === dias
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {dias === "7"
-                  ? "7 dias"
-                  : dias === "30"
-                  ? "30 dias"
-                  : dias === "90"
-                  ? "90 dias"
-                  : "1 ano"}
-              </button>
-            ))}
+  const taxaConformidade = stats.total > 0
+    ? calcularPercentual(stats.aprovados, stats.total)
+    : 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Relatórios NR12</h1>
+          <p className="text-gray-600 mt-1">Indicadores e estatísticas dos checklists</p>
+        </div>
+
+        {/* Filtro de Período */}
+        <div className="flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-gray-400" />
+          <select
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+            className="px-4 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="7">Últimos 7 dias</option>
+            <option value="15">Últimos 15 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="60">Últimos 60 dias</option>
+            <option value="90">Últimos 90 dias</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total de Checklists */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total de Checklists</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <FileText className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Taxa de Conformidade */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Taxa de Conformidade</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">{taxaConformidade}%</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats.aprovados} aprovados
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Não Conformidades */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Com Restrições</p>
+              <p className="text-3xl font-bold text-yellow-600 mt-2">
+                {stats.aprovados_restricao}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {calcularPercentual(stats.aprovados_restricao, stats.total)}% do total
+              </p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <AlertTriangle className="w-8 h-8 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Reprovados */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Reprovados</p>
+              <p className="text-3xl font-bold text-red-600 mt-2">{stats.reprovados}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {calcularPercentual(stats.reprovados, stats.total)}% do total
+              </p>
+            </div>
+            <div className="p-3 bg-red-100 rounded-lg">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        {/* Total Checklists */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <BarChart3 className="w-8 h-8 text-blue-600" />
-          </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {estatisticas?.total_checklists || 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Total de Checklists</p>
-        </div>
-
-        {/* Conformes */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-          <p className="text-3xl font-bold text-green-600">
-            {estatisticas?.total_conformes || 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Itens Conformes</p>
-        </div>
-
-        {/* Não Conformes */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-3xl font-bold text-red-600">
-            {estatisticas?.total_nao_conformes || 0}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Não Conformidades</p>
-        </div>
-
-        {/* Percentual Conformidade */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="w-8 h-8 text-purple-600" />
-          </div>
-          <p className="text-3xl font-bold text-purple-600">
-            {estatisticas?.percentual_conformidade.toFixed(1) || 0}%
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Taxa de Conformidade</p>
-        </div>
-      </div>
-
-      {/* Gráfico de Evolução */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          Evolução de Checklists
-        </h2>
-        {estatisticas?.checklists_por_periodo &&
-        estatisticas.checklists_por_periodo.length > 0 ? (
-          <div className="space-y-3">
-            {estatisticas.checklists_por_periodo.map((item, index) => {
-              const maxTotal = Math.max(
-                ...estatisticas.checklists_por_periodo.map((i) => i.total)
-              );
-              const largura = (item.total / maxTotal) * 100;
-
-              return (
-                <div key={index} className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-700 w-32">
-                    {item.periodo}
-                  </span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-8 relative">
-                    <div
-                      className="bg-blue-600 h-8 rounded-full flex items-center justify-end pr-3 transition-all"
-                      style={{ width: `${largura}%` }}
-                    >
-                      <span className="text-sm font-semibold text-white">
-                        {item.total}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">
-            Nenhum dado disponível para o período selecionado
-          </p>
-        )}
-      </div>
-
-      {/* Top Veículos com Não Conformidades */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          Veículos com Mais Não Conformidades
-        </h2>
-        {veiculosTop.length > 0 ? (
-          <div className="space-y-4">
-            {veiculosTop.map((veiculo, index) => (
+      {/* Status dos Checklists */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">Status dos Checklists</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Concluídos */}
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-green-800">Concluídos</span>
+              <span className="text-2xl font-bold text-green-600">{stats.concluidos}</span>
+            </div>
+            <div className="w-full bg-green-200 rounded-full h-2">
               <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className="flex-shrink-0 w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {veiculo.veiculo}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {veiculo.total_checklists} checklist(s) realizados
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-red-600">
-                      {veiculo.nao_conformidades}
-                    </p>
-                    <p className="text-xs text-gray-500">não conformidades</p>
-                  </div>
-                </div>
+                className="bg-green-600 h-2 rounded-full"
+                style={{
+                  width: `${calcularPercentual(stats.concluidos, stats.total)}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-green-700 mt-1">
+              {calcularPercentual(stats.concluidos, stats.total)}% do total
+            </p>
+          </div>
 
-                {/* Barra de Progresso */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-red-500 h-2 rounded-full transition-all"
-                    style={{ width: `${veiculo.percentual}%` }}
-                  />
+          {/* Em Andamento */}
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-800">Em Andamento</span>
+              <span className="text-2xl font-bold text-blue-600">{stats.em_andamento}</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{
+                  width: `${calcularPercentual(stats.em_andamento, stats.total)}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              {calcularPercentual(stats.em_andamento, stats.total)}% do total
+            </p>
+          </div>
+
+          {/* Cancelados */}
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-800">Cancelados</span>
+              <span className="text-2xl font-bold text-gray-600">{stats.cancelados}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-gray-600 h-2 rounded-full"
+                style={{
+                  width: `${calcularPercentual(stats.cancelados, stats.total)}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-700 mt-1">
+              {calcularPercentual(stats.cancelados, stats.total)}% do total
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Resultados dos Checklists */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+          Distribuição de Resultados
+        </h2>
+        <div className="space-y-4">
+          {/* Aprovados */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-gray-700">Aprovados</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">
+                {stats.aprovados} ({calcularPercentual(stats.aprovados, stats.total)}%)
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                style={{
+                  width: `${calcularPercentual(stats.aprovados, stats.total)}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Aprovados com Restrição */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  Aprovados com Restrição
+                </span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">
+                {stats.aprovados_restricao} (
+                {calcularPercentual(stats.aprovados_restricao, stats.total)}%)
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-yellow-600 h-3 rounded-full transition-all duration-300"
+                style={{
+                  width: `${calcularPercentual(stats.aprovados_restricao, stats.total)}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Reprovados */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <span className="text-sm font-medium text-gray-700">Reprovados</span>
+              </div>
+              <span className="text-sm font-bold text-gray-900">
+                {stats.reprovados} ({calcularPercentual(stats.reprovados, stats.total)}%)
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-red-600 h-3 rounded-full transition-all duration-300"
+                style={{
+                  width: `${calcularPercentual(stats.reprovados, stats.total)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Equipamentos e Modelos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Equipamentos */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              Top 10 Equipamentos
+            </h2>
+          </div>
+          <div className="space-y-3">
+            {stats.por_equipamento.slice(0, 10).map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {item.equipamento__codigo}
+                  </p>
+                  <p className="text-xs text-gray-500">{item.equipamento__descricao}</p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 text-right">
-                  {veiculo.percentual.toFixed(1)}% de não conformidade
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{
+                        width: `${calcularPercentual(
+                          item.total,
+                          stats.por_equipamento[0].total
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 w-8 text-right">
+                    {item.total}
+                  </span>
+                </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">
-            Nenhum dado disponível para o período selecionado
-          </p>
-        )}
-      </div>
-
-      {/* Indicadores de Alerta */}
-      {estatisticas && estatisticas.percentual_conformidade < 80 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6 flex items-start gap-3">
-          <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-yellow-800 mb-1">
-              Atenção: Taxa de conformidade abaixo do ideal
-            </p>
-            <p className="text-sm text-yellow-700">
-              A taxa de conformidade está em{" "}
-              {estatisticas.percentual_conformidade.toFixed(1)}%. Recomenda-se
-              investigar os veículos com maior índice de não conformidades e
-              implementar ações corretivas.
-            </p>
+            {stats.por_equipamento.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">
+                Nenhum dado disponível
+              </p>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Top Modelos */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-5 h-5 text-purple-600" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              Top 10 Modelos de Checklist
+            </h2>
+          </div>
+          <div className="space-y-3">
+            {stats.por_modelo.slice(0, 10).map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{item.modelo__nome}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-purple-600 h-2 rounded-full"
+                      style={{
+                        width: `${calcularPercentual(
+                          item.total,
+                          stats.por_modelo[0].total
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 w-8 text-right">
+                    {item.total}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {stats.por_modelo.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">
+                Nenhum dado disponível
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

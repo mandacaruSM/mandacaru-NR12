@@ -31,7 +31,7 @@ export default function ModelosChecklistPage() {
   const loadTipos = async () => {
     try {
       const response = await tiposEquipamentoApi.list();
-      setTipos(response.results);
+      setTipos(response.results || []);
     } catch (err: any) {
       console.error('Erro ao carregar tipos:', err);
     }
@@ -46,7 +46,7 @@ export default function ModelosChecklistPage() {
       if (searchTerm) filters.search = searchTerm;
 
       const response = await nr12Api.modelos.list(filters);
-      setModelos(response.results);
+      setModelos(response.results || []);
     } catch (err: any) {
       toast.error('Erro ao carregar modelos');
     } finally {
@@ -96,7 +96,7 @@ export default function ModelosChecklistPage() {
 
   const filteredModelos = modelos.filter(modelo => {
     const matchSearch = modelo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       modelo.tipo_equipamento_nome.toLowerCase().includes(searchTerm.toLowerCase());
+                       (modelo.tipo_equipamento_nome?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     return matchSearch;
   });
 
@@ -144,7 +144,7 @@ export default function ModelosChecklistPage() {
           <select
             value={filterTipo}
             onChange={(e) => setFilterTipo(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 focus:ring-purple-500"
           >
             <option value="">Todos os tipos</option>
             {tipos.map(tipo => (
@@ -157,7 +157,7 @@ export default function ModelosChecklistPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 focus:ring-purple-500"
           >
             <option value="all">Todos os status</option>
             <option value="active">Somente ativos</option>
@@ -249,7 +249,7 @@ export default function ModelosChecklistPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {modelo.tipo_equipamento_nome}
+                        {modelo.tipo_equipamento_nome || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -261,7 +261,7 @@ export default function ModelosChecklistPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">📄</span>
                         <span className="text-lg font-bold text-gray-900">
-                          {modelo.total_itens}
+                          {modelo.total_itens || 0}
                         </span>
                         <span className="text-sm text-gray-500">itens</span>
                       </div>
