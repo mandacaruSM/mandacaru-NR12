@@ -1,65 +1,20 @@
-// frontend/src/lib/api.ts
-/**
- * Cliente API com autenticação por cookies
- * Inclui renovação automática de tokens
- * VERSÃO CORRIGIDA
- */
-
+// frontend/src/lib/api.ts - CORRIGIDO
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
-}
-
-// Flag para evitar múltiplas renovações simultâneas
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-/**
- * Renova o access token usando o refresh token do cookie
- */
-async function refreshAccessToken(): Promise<boolean> {
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise;
-  }
-
-  isRefreshing = true;
-  refreshPromise = (async () => {
-    try {
-      const response = await fetch(`${API_BASE}/auth/refresh/`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        console.log('✅ Token renovado com sucesso');
-        return true;
-      }
-
-      console.error('❌ Falha ao renovar token:', response.status);
-      return false;
-    } catch (error) {
-      console.error('❌ Erro ao renovar token:', error);
-      return false;
-    } finally {
-      isRefreshing = false;
-      refreshPromise = null;
-    }
-  })();
-
-  return refreshPromise;
+  skipRedirect?: boolean; // ✅ NOVO: permite desabilitar redirect automático
 }
 
 /**
- * Função auxiliar para fazer requisições com autenticação
+ * Wrapper para fetch com tratamento de erros e autenticação automática
+ * ✅ CORRIGIDO: Não faz mais redirect automático no 401
  */
 async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { requireAuth = true, ...fetchOptions } = options;
-
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+  const { requireAuth = true, skipRedirect = false, ...fetchOptions } = options;
 
   const config: RequestInit = {
     ...fetchOptions,
@@ -70,192 +25,57 @@ async function apiFetch<T>(
     },
   };
 
-  let response = await fetch(url, config);
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, config);
 
-  // Se receber 401 e precisar de auth, tenta renovar o token
-  if (response.status === 401 && requireAuth) {
-    console.log('🔄 Token expirado, tentando renovar...');
-    
-    const refreshed = await refreshAccessToken();
-
-    if (refreshed) {
-      response = await fetch(url, config);
-    } else {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-      throw new Error('Sessão expirada');
+    // ✅ CORREÇÃO: Apenas lança erro, NÃO faz redirect
+    if (response.status === 401 && requireAuth) {
+      // Deixa o AuthContext decidir o que fazer com o erro
+      throw new Error('Não autenticado');
     }
-  }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Erro ${response.status}`);
-  }
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
+      throw new Error(error.detail || `Erro ${response.status}`);
+    }
 
-  return response.json();
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+    return null as T;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 }
 
-// ==================== TIPOS ====================
+// ============================================
+// AUTH API
+// ============================================
 
-// Autenticação
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface UserProfile {
+  role: string;
+  modules_enabled: string[];
+}
+
 export interface User {
   id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  profile: UserProfile;
 }
-
-// Clientes
-export interface Cliente {
-  id: number;
-  tipo_pessoa: 'PF' | 'PJ';
-  nome_razao: string;
-  documento: string;
-  inscricao_estadual?: string;
-  email_financeiro?: string;
-  telefone?: string;
-  logradouro?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
-  cep?: string;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// Empreendimentos
-export interface Empreendimento {
-  id: number;
-  cliente: number;
-  cliente_nome?: string;
-  nome: string;
-  tipo: 'LAVRA' | 'OBRA' | 'PLANTA' | 'OUTRO';
-  distancia_km?: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// Tipos de Equipamento
-export interface TipoEquipamento {
-  id: number;
-  nome: string;
-  descricao?: string;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// Equipamentos
-export interface Equipamento {
-  id: number;
-  cliente: number;
-  cliente_nome?: string;
-  empreendimento: number;
-  empreendimento_nome?: string;
-  tipo: number;
-  tipo_nome?: string;
-  codigo: string;
-  descricao?: string;
-  fabricante?: string;
-  modelo?: string;
-  ano_fabricacao?: number | null;
-  numero_serie?: string;
-  tipo_medicao: 'KM' | 'HORA';
-  leitura_atual: string;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// NR12 - Itens de Checklist
-export interface ItemChecklist {
-  id?: number;
-  modelo?: number;
-  ordem: number;
-  categoria: 'VISUAL' | 'FUNCIONAL' | 'MEDICAO' | 'LIMPEZA' | 'LUBRIFICACAO' | 'DOCUMENTACAO' | 'SEGURANCA' | 'OUTROS';
-  pergunta: string;
-  descricao_ajuda?: string;
-  tipo_resposta: 'SIM_NAO' | 'CONFORME' | 'NUMERO' | 'TEXTO';
-  obrigatorio: boolean;
-  requer_observacao_nao_conforme: boolean;
-  ativo?: boolean;
-  criado_em?: string;
-  atualizado_em?: string;
-}
-
-// NR12 - Modelos de Checklist
-export interface ModeloChecklist {
-  id: number;
-  tipo_equipamento: number;
-  tipo_equipamento_nome?: string;
-  nome: string;
-  descricao?: string;
-  periodicidade: 'DIARIO' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL';
-  itens?: ItemChecklist[];
-  total_itens?: number;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// NR12 - Respostas
-export interface RespostaItem {
-  item_checklist: number;
-  resposta: string;
-  observacao?: string;
-}
-
-// NR12 - Checklists Realizados
-export interface ChecklistRealizado {
-  id: number;
-  modelo: number;
-  modelo_nome?: string;
-  equipamento: number;
-  equipamento_codigo?: string;
-  equipamento_descricao?: string;
-  operador?: number | null;
-  operador_nome?: string;
-  usuario?: number | null;
-  origem: 'WEB' | 'BOT' | 'MOBILE';
-  data_hora_inicio: string;
-  data_hora_fim?: string | null;
-  leitura_equipamento?: string | null;
-  status: 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
-  resultado_geral?: 'APROVADO' | 'APROVADO_RESTRICAO' | 'REPROVADO' | null;
-  observacoes_gerais?: string;
-  respostas?: RespostaItem[];
-  total_respostas?: number;
-  total_nao_conformidades?: number;
-  criado_em: string;
-  atualizado_em: string;
-}
-
-// Response paginada
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
-
-// ==================== AUTENTICAÇÃO ====================
 
 export const authApi = {
-  login: async (username: string, password: string) => {
-    return apiFetch<{
-      detail: string;
-      user: User;
-    }>('/auth/login/', {
+  login: async (credentials: LoginCredentials) => {
+    return apiFetch<{ detail: string }>('/auth/login/', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify(credentials),
       requireAuth: false,
     });
   },
@@ -266,23 +86,45 @@ export const authApi = {
     });
   },
 
-  refresh: async () => {
-    return refreshAccessToken();
+  me: async () => {
+    return apiFetch<User>('/users/me/');
   },
 
-  me: async () => {
-    return apiFetch<{ user: User }>('/users/me/', {
-      method: 'GET',
+  health: async () => {
+    return apiFetch<{ status: string }>('/health/', {
+      requireAuth: false,
     });
   },
 };
 
-// ==================== CLIENTES ====================
+// ============================================
+// CLIENTES API
+// ============================================
+
+export interface Cliente {
+  id: number;
+  tipo_pessoa: 'PJ' | 'PF';
+  nome_razao: string;
+  documento: string;
+  inscricao_estadual: string;
+  email_financeiro: string;
+  telefone: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export const clientesApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<Cliente>>(`/clientes/${query}`);
+  list: async (search?: string) => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return apiFetch<{ results: Cliente[]; count: number }>(`/clientes/${params}`);
   },
 
   get: async (id: number) => {
@@ -310,12 +152,32 @@ export const clientesApi = {
   },
 };
 
-// ==================== EMPREENDIMENTOS ====================
+// ============================================
+// EMPREENDIMENTOS API
+// ============================================
+
+export interface Empreendimento {
+  id: number;
+  cliente: number;
+  cliente_nome: string;
+  nome: string;
+  tipo: 'LAVRA' | 'OBRA' | 'PLANTA' | 'OUTRO';
+  distancia_km: string;
+  latitude: string | null;
+  longitude: string | null;
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export const empreendimentosApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<Empreendimento>>(`/empreendimentos/${query}`);
+  list: async (filters?: { cliente?: number; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+    if (filters?.search) params.append('search', filters.search);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ results: Empreendimento[]; count: number }>(`/empreendimentos/${query}`);
   },
 
   get: async (id: number) => {
@@ -343,12 +205,22 @@ export const empreendimentosApi = {
   },
 };
 
-// ==================== TIPOS DE EQUIPAMENTO ====================
+// ============================================
+// TIPOS DE EQUIPAMENTO API
+// ============================================
+
+export interface TipoEquipamento {
+  id: number;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export const tiposEquipamentoApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<TipoEquipamento>>(`/tipos-equipamento/${query}`);
+  list: async () => {
+    return apiFetch<{ results: TipoEquipamento[]; count: number }>('/tipos-equipamento/');
   },
 
   get: async (id: number) => {
@@ -376,12 +248,40 @@ export const tiposEquipamentoApi = {
   },
 };
 
-// ==================== EQUIPAMENTOS ====================
+// ============================================
+// EQUIPAMENTOS API
+// ============================================
+
+export interface Equipamento {
+  id: number;
+  cliente: number;
+  cliente_nome: string;
+  empreendimento: number;
+  empreendimento_nome: string;
+  tipo: number;
+  tipo_nome: string;
+  codigo: string;
+  descricao: string;
+  fabricante: string;
+  modelo: string;
+  ano_fabricacao: number | null;
+  numero_serie: string;
+  tipo_medicao: 'KM' | 'HORA';
+  leitura_atual: string;
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export const equipamentosApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<Equipamento>>(`/equipamentos/${query}`);
+  list: async (filters?: { cliente?: number; empreendimento?: number; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    if (filters?.search) params.append('search', filters.search);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ results: Equipamento[]; count: number }>(`/equipamentos/${query}`);
   },
 
   get: async (id: number) => {
@@ -409,137 +309,234 @@ export const equipamentosApi = {
   },
 };
 
-// ==================== NR12 - MODELOS DE CHECKLIST ====================
+// ============================================
+// NR12 API
+// ============================================
 
-const modelosApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<ModeloChecklist>>(`/nr12/modelos/${query}`);
-  },
+export interface ModeloChecklist {
+  id: number;
+  tipo_equipamento: number;
+  tipo_equipamento_nome: string;
+  nome: string;
+  descricao: string;
+  periodicidade: 'DIARIO' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL';
+  ativo: boolean;
+  total_itens: number;
+  criado_em: string;
+  atualizado_em: string;
+}
 
-  get: async (id: number) => {
-    return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/`);
-  },
+export interface ItemChecklist {
+  id: number;
+  modelo: number;
+  ordem: number;
+  categoria: 'VISUAL' | 'FUNCIONAL' | 'MEDICAO' | 'LIMPEZA' | 'LUBRIFICACAO' | 'DOCUMENTACAO' | 'SEGURANCA' | 'OUTROS';
+  pergunta: string;
+  descricao_ajuda: string;
+  tipo_resposta: 'SIM_NAO' | 'CONFORME' | 'NUMERO' | 'TEXTO';
+  obrigatorio: boolean;
+  requer_observacao_nao_conforme: boolean;
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
 
-  create: async (data: Partial<ModeloChecklist>) => {
-    return apiFetch<ModeloChecklist>(`/nr12/modelos/`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+export interface ChecklistRealizado {
+  id: number;
+  modelo: number;
+  modelo_nome: string;
+  equipamento: number;
+  equipamento_codigo: string;
+  equipamento_descricao: string;
+  operador: number | null;
+  operador_nome: string;
+  usuario: number | null;
+  origem: 'WEB' | 'BOT' | 'MOBILE';
+  data_hora_inicio: string;
+  data_hora_fim: string | null;
+  leitura_equipamento: string | null;
+  status: 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
+  resultado_geral: 'APROVADO' | 'APROVADO_RESTRICAO' | 'REPROVADO' | null;
+  observacoes_gerais: string;
+  total_respostas: number;
+  total_nao_conformidades: number;
+  criado_em: string;
+  atualizado_em: string;
+}
 
-  update: async (id: number, data: Partial<ModeloChecklist>) => {
-    return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
+export interface RespostaItemChecklist {
+  id: number;
+  checklist: number;
+  item: number;
+  item_pergunta: string;
+  item_categoria: string;
+  resposta: 'CONFORME' | 'NAO_CONFORME' | 'SIM' | 'NAO' | 'NA' | null;
+  valor_numerico: string | null;
+  valor_texto: string;
+  observacao: string;
+  foto: string | null;
+  data_hora_resposta: string;
+}
 
-  delete: async (id: number) => {
-    return apiFetch<void>(`/nr12/modelos/${id}/`, {
-      method: 'DELETE',
-    });
-  },
-
-  duplicar: async (id: number) => {
-    return apiFetch<ModeloChecklist>(`/nr12/modelos/${id}/duplicar/`, {
-      method: 'POST',
-    });
-  },
-
-  // ✅ MÉTODO ADICIONADO: Gerenciar itens dentro do modelo
-  itens: {
-    list: async (modeloId: number) => {
-      return apiFetch<ItemChecklist[]>(`/nr12/modelos/${modeloId}/itens/`);
+export const nr12Api = {
+  // MODELOS
+  modelos: {
+    list: async (filters?: { tipo_equipamento?: number; ativo?: boolean; search?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.tipo_equipamento) params.append('tipo_equipamento', filters.tipo_equipamento.toString());
+      if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+      if (filters?.search) params.append('search', filters.search);
+      
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: ModeloChecklist[]; count: number }>(`/nr12/modelos-checklist/${query}`);
     },
 
-    create: async (modeloId: number, data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/`, {
+    get: async (id: number) => {
+      return apiFetch<ModeloChecklist & { itens: ItemChecklist[] }>(`/nr12/modelos-checklist/${id}/`);
+    },
+
+    create: async (data: Partial<ModeloChecklist>) => {
+      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
-    update: async (modeloId: number, itemId: number, data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
+    update: async (id: number, data: Partial<ModeloChecklist>) => {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
-    delete: async (modeloId: number, itemId: number) => {
-      return apiFetch<void>(`/nr12/modelos/${modeloId}/itens/${itemId}/`, {
+    delete: async (id: number) => {
+      return apiFetch<void>(`/nr12/modelos-checklist/${id}/`, {
         method: 'DELETE',
       });
     },
 
-    reordenar: async (modeloId: number, ordens: { id: number; ordem: number }[]) => {
-      return apiFetch<{ detail: string }>(`/nr12/modelos/${modeloId}/itens/reordenar/`, {
+    duplicar: async (id: number) => {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/duplicar/`, {
         method: 'POST',
-        body: JSON.stringify({ ordens }),
+      });
+    },
+  },
+
+  // ITENS
+  itens: {
+    list: async (filters?: { modelo?: number; categoria?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.modelo) params.append('modelo', filters.modelo.toString());
+      if (filters?.categoria) params.append('categoria', filters.categoria);
+      
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: ItemChecklist[]; count: number }>(`/nr12/itens-checklist/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`);
+    },
+
+    create: async (data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>('/nr12/itens-checklist/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<ItemChecklist>) => {
+      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: number) => {
+      return apiFetch<void>(`/nr12/itens-checklist/${id}/`, {
+        method: 'DELETE',
+      });
+    },
+
+    reordenar: async (itens: { id: number; ordem: number }[]) => {
+      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar/', {
+        method: 'POST',
+        body: JSON.stringify({ itens }),
+      });
+    },
+  },
+
+  // CHECKLISTS
+  checklists: {
+    list: async (filters?: { 
+      equipamento?: number; 
+      modelo?: number;
+      status?: string;
+      resultado?: string;
+      data_inicio?: string;
+      data_fim?: string;
+    }) => {
+      const params = new URLSearchParams();
+      if (filters?.equipamento) params.append('equipamento', filters.equipamento.toString());
+      if (filters?.modelo) params.append('modelo', filters.modelo.toString());
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.resultado) params.append('resultado', filters.resultado);
+      if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+      if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+      
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: ChecklistRealizado[]; count: number }>(`/nr12/checklists/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<ChecklistRealizado & { respostas: RespostaItemChecklist[] }>(`/nr12/checklists/${id}/`);
+    },
+
+    create: async (data: Partial<ChecklistRealizado>) => {
+      return apiFetch<ChecklistRealizado>('/nr12/checklists/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    finalizar: async (id: number, observacoes?: string) => {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/finalizar/`, {
+        method: 'POST',
+        body: JSON.stringify({ observacoes_gerais: observacoes }),
+      });
+    },
+
+    cancelar: async (id: number, motivo?: string) => {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/cancelar/`, {
+        method: 'POST',
+        body: JSON.stringify({ motivo_cancelamento: motivo }),
+      });
+    },
+
+    estatisticas: async (filters?: { data_inicio?: string; data_fim?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+      if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+      
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<any>(`/nr12/checklists/estatisticas/${query}`);
+    },
+  },
+
+  // RESPOSTAS
+  respostas: {
+    list: async (checklistId: number) => {
+      return apiFetch<{ results: RespostaItemChecklist[]; count: number }>(
+        `/nr12/respostas-checklist/?checklist=${checklistId}`
+      );
+    },
+
+    create: async (data: Partial<RespostaItemChecklist>) => {
+      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist/', {
+        method: 'POST',
+        body: JSON.stringify(data),
       });
     },
   },
 };
 
-// ==================== NR12 - CHECKLISTS REALIZADOS ====================
-
-const checklistsApi = {
-  list: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<PaginatedResponse<ChecklistRealizado>>(`/nr12/checklists/${query}`);
-  },
-
-  get: async (id: number) => {
-    return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/`);
-  },
-
-  create: async (data: Partial<ChecklistRealizado>) => {
-    return apiFetch<ChecklistRealizado>(`/nr12/checklists/`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  update: async (id: number, data: Partial<ChecklistRealizado>) => {
-    return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
-  delete: async (id: number) => {
-    return apiFetch<void>(`/nr12/checklists/${id}/`, {
-      method: 'DELETE',
-    });
-  },
-
-  finalizar: async (id: number) => {
-    return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/finalizar/`, {
-      method: 'POST',
-    });
-  },
-
-  estatisticas: async (params?: Record<string, any>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiFetch<any>(`/nr12/checklists/estatisticas/${query}`);
-  },
-};
-
-// ==================== EXPORTAÇÕES ====================
-
-// Exportação agrupada NR12
-export const nr12Api = {
-  modelos: modelosApi,
-  checklists: checklistsApi,
-};
-
-// Exportação default
-export default {
-  auth: authApi,
-  clientes: clientesApi,
-  empreendimentos: empreendimentosApi,
-  tiposEquipamento: tiposEquipamentoApi,
-  equipamentos: equipamentosApi,
-  nr12: nr12Api,
-};
+export default apiFetch;

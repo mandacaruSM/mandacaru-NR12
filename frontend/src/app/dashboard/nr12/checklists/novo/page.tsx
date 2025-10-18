@@ -1,475 +1,464 @@
 // frontend/src/app/dashboard/nr12/checklists/novo/page.tsx
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, CheckCircle2 } from "lucide-react";
-import {
-  nr12Api,
-  equipamentosApi,
-  ModeloChecklist,
-  Equipamento,
-  ItemChecklist,
-  RespostaItem,
-} from "@/lib/api";
+import { useState, useEffect, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  nr12Api, 
+  equipamentosApi, 
+  ModeloChecklist, 
+  Equipamento, 
+  RespostaItemChecklist, // ✅ CORRIGIDO: Nome correto do tipo
+  ItemChecklist 
+} from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
+import Link from 'next/link';
+
+interface RespostaTemp {
+  item_id: number;
+  pergunta: string;
+  tipo_resposta: string;
+  categoria: string;
+  resposta: 'CONFORME' | 'NAO_CONFORME' | 'SIM' | 'NAO' | 'NA' | null;
+  valor_numerico: string;
+  valor_texto: string;
+  observacao: string;
+}
 
 export default function NovoChecklistPage() {
   const router = useRouter();
-
-  // Estados
-  const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
-  const [modelos, setModelos] = useState<ModeloChecklist[]>([]);
-  const [itens, setItens] = useState<ItemChecklist[]>([]);
-
-  const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<number | null>(null);
-  const [modeloSelecionado, setModeloSelecionado] = useState<number | null>(null);
-  const [leituraEquipamento, setLeituraEquipamento] = useState("");
-  const [respostas, setRespostas] = useState<Record<number, RespostaItem>>({});
-  const [observacoesGerais, setObservacoesGerais] = useState("");
+  const toast = useToast();
 
   const [loading, setLoading] = useState(false);
-  const [salvando, setSalvando] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
-  // Carregar equipamentos e modelos
+  const [modelos, setModelos] = useState<ModeloChecklist[]>([]);
+  const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
+  const [itensChecklist, setItensChecklist] = useState<ItemChecklist[]>([]);
+
+  const [modeloSelecionado, setModeloSelecionado] = useState<number | null>(null);
+  const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<number | null>(null);
+  const [leituraEquipamento, setLeituraEquipamento] = useState('');
+  const [operadorNome, setOperadorNome] = useState('');
+
+  const [respostas, setRespostas] = useState<RespostaTemp[]>([]);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
+
   useEffect(() => {
-    carregarDados();
+    loadInitialData();
   }, []);
 
-  // Carregar itens quando selecionar modelo
   useEffect(() => {
     if (modeloSelecionado) {
-      carregarItens();
+      loadItensModelo(modeloSelecionado);
     }
   }, [modeloSelecionado]);
 
-  const carregarDados = async () => {
+  const loadInitialData = async () => {
     try {
-      setLoading(true);
-      const [eqResponse, modResponse] = await Promise.all([
-        equipamentosApi.list({ ativo: true }),
+      setLoadingData(true);
+      const [modelosRes, equipamentosRes] = await Promise.all([
         nr12Api.modelos.list({ ativo: true }),
+        equipamentosApi.list(), // ✅ CORRIGIDO: Sem filtro 'ativo'
       ]);
+      setModelos(modelosRes.results);
+      // Filtrar equipamentos ativos manualmente
+      setEquipamentos(equipamentosRes.results.filter(eq => eq.ativo));
+    } catch (err: any) {
+      toast.error('Erro ao carregar dados iniciais');
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
-      setEquipamentos(eqResponse.results || []);
-      setModelos(modResponse.results || []);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      alert("Erro ao carregar dados. Tente novamente.");
+  const loadItensModelo = async (modeloId: number) => {
+    try {
+      const response = await nr12Api.itens.list({ modelo: modeloId });
+      const itens = response.results.filter(item => item.ativo).sort((a, b) => a.ordem - b.ordem);
+      setItensChecklist(itens);
+      
+      // Inicializar respostas vazias
+      const respostasVazias: RespostaTemp[] = itens.map(item => ({
+        item_id: item.id,
+        pergunta: item.pergunta,
+        tipo_resposta: item.tipo_resposta,
+        categoria: item.categoria,
+        resposta: null,
+        valor_numerico: '',
+        valor_texto: '',
+        observacao: '',
+      }));
+      setRespostas(respostasVazias);
+      setCurrentItemIndex(0);
+    } catch (err: any) {
+      toast.error('Erro ao carregar itens do checklist');
+    }
+  };
+
+  const handleRespostaChange = (field: keyof RespostaTemp, value: any) => {
+    const novasRespostas = [...respostas];
+    novasRespostas[currentItemIndex] = {
+      ...novasRespostas[currentItemIndex],
+      [field]: value,
+    };
+    setRespostas(novasRespostas);
+  };
+
+  const handleProximoItem = () => {
+    if (currentItemIndex < itensChecklist.length - 1) {
+      setCurrentItemIndex(currentItemIndex + 1);
+    }
+  };
+
+  const handleItemAnterior = () => {
+    if (currentItemIndex > 0) {
+      setCurrentItemIndex(currentItemIndex - 1);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!modeloSelecionado || !equipamentoSelecionado) {
+      toast.error('Selecione modelo e equipamento');
+      return;
+    }
+
+    // Verificar se todos os itens obrigatórios foram respondidos
+    const itensObrigatorios = itensChecklist.filter(item => item.obrigatorio);
+    const respostasObrigatorias = respostas.filter((resp, index) => {
+      const item = itensChecklist[index];
+      return item.obrigatorio && (resp.resposta || resp.valor_numerico || resp.valor_texto);
+    });
+
+    if (respostasObrigatorias.length < itensObrigatorios.length) {
+      toast.error('Responda todos os itens obrigatórios antes de finalizar');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Criar checklist
+      console.log('🔷 Criando checklist...');
+      const checklist = await nr12Api.checklists.create({
+        modelo: modeloSelecionado,
+        equipamento: equipamentoSelecionado,
+        leitura_equipamento: leituraEquipamento || null,
+        operador_nome: operadorNome || 'Não informado',
+        origem: 'WEB',
+        status: 'EM_ANDAMENTO',
+      });
+      console.log('✅ Checklist criado:', checklist.id);
+
+      // 2. Registrar todas as respostas
+      const respostasValidas = respostas.filter(resp => 
+        resp.resposta || resp.valor_numerico || resp.valor_texto
+      );
+
+      console.log(`🔷 Registrando ${respostasValidas.length} respostas...`);
+      for (const resp of respostasValidas) {
+        const respostaPayload = {
+          checklist: checklist.id,  // ✅ CRÍTICO: ID do checklist
+          item: resp.item_id,
+          resposta: resp.resposta || null,
+          valor_numerico: resp.valor_numerico || null,
+          valor_texto: resp.valor_texto || '',
+          observacao: resp.observacao || '',
+        };
+        
+        console.log('📤 Enviando resposta:', respostaPayload);
+        await nr12Api.respostas.create(respostaPayload);
+      }
+      console.log('✅ Respostas registradas');
+
+      // 3. Finalizar checklist
+      console.log('🔷 Finalizando checklist...');
+      await nr12Api.checklists.finalizar(checklist.id);
+      console.log('✅ Checklist finalizado');
+
+      toast.success('Checklist realizado com sucesso!');
+      router.push(`/dashboard/nr12/checklists/${checklist.id}`);
+    } catch (err: any) {
+      console.error('❌ Erro ao salvar checklist:', err);
+      toast.error('Erro ao salvar checklist: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const carregarItens = async () => {
-    if (!modeloSelecionado) return;
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
-    try {
-      const modelo = await nr12Api.modelos.get(modeloSelecionado);
-      setItens(modelo.itens || []);
-    } catch (error) {
-      console.error("Erro ao carregar itens:", error);
-      alert("Erro ao carregar itens do checklist.");
-    }
-  };
-
-  const handleRespostaChange = (itemId: number, resposta: string) => {
-    setRespostas((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        item_checklist: itemId,
-        resposta: resposta,
-      },
-    }));
-  };
-
-  const handleObservacaoChange = (itemId: number, observacao: string) => {
-    setRespostas((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        item_checklist: itemId,
-        observacao: observacao,
-      },
-    }));
-  };
-
-  const validarFormulario = () => {
-    if (!equipamentoSelecionado) {
-      alert("Selecione um equipamento");
-      return false;
-    }
-
-    if (!modeloSelecionado) {
-      alert("Selecione um modelo de checklist");
-      return false;
-    }
-
-    // Verificar itens obrigatórios
-    const itensObrigatorios = itens.filter((item) => item.obrigatorio && item.id);
-    const respostasObrigatorias = itensObrigatorios.filter((item) => item.id && respostas[item.id]?.resposta);
-
-    if (respostasObrigatorias.length < itensObrigatorios.length) {
-      alert("Responda todos os itens obrigatórios");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSalvar = async () => {
-    if (!validarFormulario()) return;
-
-    try {
-      setSalvando(true);
-
-      // Criar checklist
-      const checklistData = {
-        modelo: modeloSelecionado!,
-        equipamento: equipamentoSelecionado!,
-        origem: "WEB" as const,
-        leitura_equipamento: leituraEquipamento || null,
-        observacoes_gerais: observacoesGerais,
-        respostas: Object.values(respostas).filter((r) => r.resposta),
-      };
-
-      const checklist = await nr12Api.checklists.create(checklistData);
-
-      // Finalizar checklist
-      await nr12Api.checklists.finalizar(checklist.id);
-
-      alert("Checklist salvo com sucesso!");
-      router.push(`/dashboard/nr12/checklists/${checklist.id}`);
-    } catch (error) {
-      console.error("Erro ao salvar checklist:", error);
-      alert("Erro ao salvar checklist. Tente novamente.");
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const getCategoriaColor = (categoria: string) => {
-    const colors: Record<string, string> = {
-      SEGURANCA: "bg-red-100 text-red-800 border-red-200",
-      FUNCIONAL: "bg-blue-100 text-blue-800 border-blue-200",
-      VISUAL: "bg-purple-100 text-purple-800 border-purple-200",
-      MEDICAO: "bg-green-100 text-green-800 border-green-200",
-      LIMPEZA: "bg-cyan-100 text-cyan-800 border-cyan-200",
-      LUBRIFICACAO: "bg-orange-100 text-orange-800 border-orange-200",
-      DOCUMENTACAO: "bg-gray-100 text-gray-800 border-gray-200",
-      OUTROS: "bg-pink-100 text-pink-800 border-pink-200",
-    };
-    return colors[categoria] || "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
-  const renderCampoResposta = (item: ItemChecklist) => {
-    if (!item.id) return null;
-    
-    const itemId = item.id;
-    const resposta = respostas[itemId]?.resposta || "";
-
-    switch (item.tipo_resposta) {
-      case "SIM_NAO":
-        return (
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name={`item_${itemId}`}
-                value="SIM"
-                checked={resposta === "SIM"}
-                onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-                className="w-4 h-4 text-green-600 focus:ring-green-500"
-              />
-              <span className="text-sm font-medium text-green-700">Sim</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name={`item_${itemId}`}
-                value="NAO"
-                checked={resposta === "NAO"}
-                onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-                className="w-4 h-4 text-red-600 focus:ring-red-500"
-              />
-              <span className="text-sm font-medium text-red-700">Não</span>
-            </label>
-          </div>
-        );
-
-      case "CONFORME":
-        return (
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name={`item_${itemId}`}
-                value="CONFORME"
-                checked={resposta === "CONFORME"}
-                onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-                className="w-4 h-4 text-green-600 focus:ring-green-500"
-              />
-              <span className="text-sm font-medium text-green-700">Conforme</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name={`item_${itemId}`}
-                value="NAO_CONFORME"
-                checked={resposta === "NAO_CONFORME"}
-                onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-                className="w-4 h-4 text-red-600 focus:ring-red-500"
-              />
-              <span className="text-sm font-medium text-red-700">Não Conforme</span>
-            </label>
-          </div>
-        );
-
-      case "NUMERO":
-        return (
-          <input
-            type="number"
-            value={resposta}
-            onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-            placeholder="Digite o valor"
-            className="w-full max-w-xs px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        );
-
-      case "TEXTO":
-        return (
-          <textarea
-            value={resposta}
-            onChange={(e) => handleRespostaChange(itemId, e.target.value)}
-            placeholder="Digite sua resposta"
-            rows={3}
-            className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const progresso = itens.length > 0
-    ? Math.round((Object.keys(respostas).length / itens.length) * 100)
-    : 0;
+  const itemAtual = itensChecklist[currentItemIndex];
+  const respostaAtual = respostas[currentItemIndex];
+  const progresso = itensChecklist.length > 0 ? ((currentItemIndex + 1) / itensChecklist.length) * 100 : 0;
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push("/dashboard/nr12/checklists")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Novo Checklist NR12</h1>
-            <p className="text-gray-600 mt-1">Preencha as informações e respostas</p>
-          </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <Link href="/dashboard/nr12" className="hover:text-blue-600">NR12</Link>
+          <span>/</span>
+          <Link href="/dashboard/nr12/checklists" className="hover:text-blue-600">Checklists</Link>
+          <span>/</span>
+          <span>Novo</span>
         </div>
-        <button
-          onClick={handleSalvar}
-          disabled={salvando || !equipamentoSelecionado || !modeloSelecionado}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          {salvando ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Salvar Checklist
-            </>
-          )}
-        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Realizar Checklist</h1>
+        <p className="text-gray-600 mt-1">Preencha o checklist de segurança NR12</p>
       </div>
 
-      {/* Barra de Progresso */}
-      {itens.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Progresso</span>
-            <span className="text-sm font-medium text-gray-700">{progresso}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progresso}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Formulário Principal */}
-      <div className="bg-white rounded-lg shadow p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-gray-900">Informações Básicas</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Equipamento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Equipamento <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={equipamentoSelecionado || ""}
-              onChange={(e) => setEquipamentoSelecionado(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={loading}
-            >
-              <option value="">Selecione um equipamento</option>
-              {equipamentos.map((eq) => (
-                <option key={eq.id} value={eq.id}>
-                  {eq.codigo} - {eq.descricao}
-                </option>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Seleção Inicial */}
+        {!modeloSelecionado && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Selecione o Modelo</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {modelos.map(modelo => (
+                <button
+                  key={modelo.id}
+                  type="button"
+                  onClick={() => setModeloSelecionado(modelo.id)}
+                  className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <h3 className="font-semibold text-gray-900">{modelo.nome}</h3>
+                  <p className="text-sm text-gray-600">{modelo.tipo_equipamento_nome}</p>
+                  <p className="text-xs text-gray-500 mt-1">{modelo.total_itens} itens</p>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
+        )}
 
-          {/* Modelo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Modelo de Checklist <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={modeloSelecionado || ""}
-              onChange={(e) => setModeloSelecionado(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={loading}
+        {modeloSelecionado && !equipamentoSelecionado && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <button
+              type="button"
+              onClick={() => setModeloSelecionado(null)}
+              className="text-blue-600 hover:underline mb-4"
             >
-              <option value="">Selecione um modelo</option>
-              {modelos.map((modelo) => (
-                <option key={modelo.id} value={modelo.id}>
-                  {modelo.nome} ({modelo.periodicidade})
-                </option>
+              ← Trocar modelo
+            </button>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Selecione o Equipamento</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nome do Operador
+              </label>
+              <input
+                type="text"
+                value={operadorNome}
+                onChange={(e) => setOperadorNome(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                placeholder="Digite o nome do operador"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {equipamentos.map(eq => (
+                <button
+                  key={eq.id}
+                  type="button"
+                  onClick={() => setEquipamentoSelecionado(eq.id)}
+                  className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <h3 className="font-semibold text-gray-900">{eq.codigo}</h3>
+                  <p className="text-sm text-gray-600">{eq.descricao}</p>
+                  <p className="text-xs text-gray-500">{eq.cliente_nome}</p>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
+        )}
 
-          {/* Leitura do Equipamento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Leitura do Equipamento (Horímetro/Odômetro)
-            </label>
-            <input
-              type="text"
-              value={leituraEquipamento}
-              onChange={(e) => setLeituraEquipamento(e.target.value)}
-              placeholder="Ex: 12345"
-              className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Itens do Checklist */}
-      {itens.length > 0 && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Itens do Checklist ({itens.length})
-            </h2>
-          </div>
-          <div className="divide-y">
-            {itens.map((item, index) => {
-              if (!item.id) return null;
-              
-              const itemId = item.id;
-              
-              return (
-              <div key={itemId} className="p-6 space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getCategoriaColor(item.categoria)}`}>
-                        {item.categoria}
-                      </span>
-                      {item.obrigatorio && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                          Obrigatório
-                        </span>
-                      )}
-                      <span className="text-sm text-gray-500">Item {index + 1}</span>
-                    </div>
-                    <p className="font-medium text-gray-900 mb-3">{item.pergunta}</p>
-                    {item.descricao_ajuda && (
-                      <p className="text-sm text-gray-600 mb-3">{item.descricao_ajuda}</p>
-                    )}
-
-                    {renderCampoResposta(item)}
-
-                    {/* Observação */}
-                    {((item.requer_observacao_nao_conforme &&
-                      (respostas[itemId]?.resposta === "NAO_CONFORME" ||
-                        respostas[itemId]?.resposta === "NAO")) ||
-                      !item.requer_observacao_nao_conforme) && (
-                      <div className="mt-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Observação {item.requer_observacao_nao_conforme && respostas[itemId]?.resposta === "NAO_CONFORME" ? "(Obrigatória)" : "(Opcional)"}
-                        </label>
-                        <textarea
-                          value={respostas[itemId]?.observacao || ""}
-                          onChange={(e) => handleObservacaoChange(itemId, e.target.value)}
-                          placeholder="Adicione observações sobre este item..."
-                          rows={2}
-                          className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    )}
-                  </div>
+        {/* Perguntas do Checklist */}
+        {modeloSelecionado && equipamentoSelecionado && itemAtual && (
+          <>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-600">
+                    Pergunta {currentItemIndex + 1} de {itensChecklist.length}
+                  </span>
+                  <span className="text-sm font-medium text-blue-600">{Math.round(progresso)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progresso}%` }}
+                  />
                 </div>
               </div>
-            )})}
-          </div>
-        </div>
-      )}
 
-      {/* Observações Gerais */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Observações Gerais (Opcional)
-        </label>
-        <textarea
-          value={observacoesGerais}
-          onChange={(e) => setObservacoesGerais(e.target.value)}
-          placeholder="Adicione observações gerais sobre o checklist..."
-          rows={4}
-          className="w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
+              <div className="mb-6">
+                <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium mb-3">
+                  {itemAtual.categoria}
+                </span>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">{itemAtual.pergunta}</h2>
+                {itemAtual.descricao_ajuda && (
+                  <p className="text-sm text-gray-600">{itemAtual.descricao_ajuda}</p>
+                )}
+              </div>
 
-      {/* Botão Salvar (Fixo no rodapé em mobile) */}
-      <div className="sticky bottom-0 bg-white border-t p-4 -mx-6 mt-6 flex justify-end gap-3">
-        <button
-          onClick={() => router.push("/dashboard/nr12/checklists")}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={handleSalvar}
-          disabled={salvando || !equipamentoSelecionado || !modeloSelecionado}
-          className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          {salvando ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Salvando...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              Finalizar Checklist
-            </>
-          )}
-        </button>
-      </div>
+              {/* Campos de Resposta */}
+              <div className="space-y-4">
+                {itemAtual.tipo_resposta === 'CONFORME' && (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleRespostaChange('resposta', 'CONFORME')}
+                      className={`flex-1 p-4 border-2 rounded-lg transition-colors ${
+                        respostaAtual?.resposta === 'CONFORME'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-300 hover:border-green-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">✓</div>
+                      <div className="font-semibold text-gray-900">Conforme</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespostaChange('resposta', 'NAO_CONFORME')}
+                      className={`flex-1 p-4 border-2 rounded-lg transition-colors ${
+                        respostaAtual?.resposta === 'NAO_CONFORME'
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300 hover:border-red-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">✗</div>
+                      <div className="font-semibold text-gray-900">Não Conforme</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespostaChange('resposta', 'NA')}
+                      className={`flex-1 p-4 border-2 rounded-lg transition-colors ${
+                        respostaAtual?.resposta === 'NA'
+                          ? 'border-gray-500 bg-gray-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">—</div>
+                      <div className="font-semibold text-gray-900">N/A</div>
+                    </button>
+                  </div>
+                )}
+
+                {itemAtual.tipo_resposta === 'SIM_NAO' && (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleRespostaChange('resposta', 'SIM')}
+                      className={`flex-1 p-4 border-2 rounded-lg transition-colors ${
+                        respostaAtual?.resposta === 'SIM'
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-300 hover:border-green-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">👍</div>
+                      <div className="font-semibold text-gray-900">Sim</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespostaChange('resposta', 'NAO')}
+                      className={`flex-1 p-4 border-2 rounded-lg transition-colors ${
+                        respostaAtual?.resposta === 'NAO'
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300 hover:border-red-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">👎</div>
+                      <div className="font-semibold text-gray-900">Não</div>
+                    </button>
+                  </div>
+                )}
+
+                {itemAtual.tipo_resposta === 'NUMERO' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Valor Numérico
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={respostaAtual?.valor_numerico || ''}
+                      onChange={(e) => handleRespostaChange('valor_numerico', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      placeholder="Digite o valor"
+                    />
+                  </div>
+                )}
+
+                {itemAtual.tipo_resposta === 'TEXTO' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Resposta
+                    </label>
+                    <textarea
+                      value={respostaAtual?.valor_texto || ''}
+                      onChange={(e) => handleRespostaChange('valor_texto', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      rows={3}
+                      placeholder="Digite sua resposta"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Observações {respostaAtual?.resposta === 'NAO_CONFORME' && '(Obrigatório)'}
+                  </label>
+                  <textarea
+                    value={respostaAtual?.observacao || ''}
+                    onChange={(e) => handleRespostaChange('observacao', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    rows={2}
+                    placeholder="Adicione observações se necessário"
+                  />
+                </div>
+              </div>
+
+              {/* Navegação */}
+              <div className="flex justify-between mt-6 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={handleItemAnterior}
+                  disabled={currentItemIndex === 0}
+                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Anterior
+                </button>
+
+                {currentItemIndex < itensChecklist.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleProximoItem}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Próximo →
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {loading ? 'Salvando...' : '✓ Finalizar Checklist'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </form>
     </div>
   );
 }
