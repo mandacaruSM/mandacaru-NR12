@@ -249,6 +249,391 @@ export const tiposEquipamentoApi = {
 };
 
 // ============================================
+// OPERADORES E SUPERVISORES - TIPOS
+// ============================================
+
+export interface Operador {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  data_nascimento: string;
+  email: string;
+  telefone: string;
+  foto: string | null;
+  
+  // Telegram
+  telegram_chat_id: string | null;
+  telegram_username: string;
+  telegram_vinculado_em: string | null;
+  telegram_vinculado: boolean;
+  codigo_vinculacao: string | null;
+  codigo_valido_ate: string | null;
+  
+  // Endereço
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  
+  // Status e datas
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  
+  // Campos computados
+  clientes_nomes: string[];
+  total_equipamentos: number;
+  total_checklists: number;
+  taxa_aprovacao: number;
+}
+
+export interface OperadorDetalhado extends Operador {
+  clientes: any[];
+  equipamentos_autorizados_detalhes: any[];
+  checklists_recentes: any[];
+  estatisticas: {
+    total_checklists: number;
+    taxa_aprovacao: number;
+    total_equipamentos: number;
+    total_clientes: number;
+  };
+}
+
+export interface Supervisor {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  data_nascimento: string;
+  email: string;
+  telefone: string;
+  foto: string | null;
+  
+  // Telegram
+  telegram_chat_id: string | null;
+  telegram_username: string;
+  telegram_vinculado_em: string | null;
+  telegram_vinculado: boolean;
+  codigo_vinculacao: string | null;
+  codigo_valido_ate: string | null;
+  
+  // Status
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  
+  // Campos computados
+  clientes_nomes: string[];
+  total_operadores: number;
+}
+
+export interface CodigoVinculacao {
+  codigo: string;
+  valido_ate: string;
+  instrucoes: string;
+}
+
+export interface EstatisticasOperador {
+  total_checklists: number;
+  taxa_aprovacao: number;
+  checklists_aprovados: number;
+  checklists_reprovados: number;
+  equipamentos_autorizados: number;
+  clientes_vinculados: number;
+  telegram_vinculado: boolean;
+}
+
+// ============================================
+// TIPOS GENÉRICOS
+// ============================================
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+// ============================================
+// OPERADORES E SUPERVISORES - TIPOS
+// ============================================
+
+export interface Operador {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  data_nascimento: string;
+  email: string;
+  telefone: string;
+  foto: string | null;
+  
+  // Telegram
+  telegram_chat_id: string | null;
+  telegram_username: string;
+  telegram_vinculado_em: string | null;
+  telegram_vinculado: boolean;
+  codigo_vinculacao: string | null;
+  codigo_valido_ate: string | null;
+  
+  // Endereço
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  
+  // Status e datas
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  
+  // Campos computados
+  clientes_nomes: string[];
+  total_equipamentos: number;
+  total_checklists: number;
+  taxa_aprovacao: number;
+}
+
+export interface OperadorDetalhado extends Operador {
+  clientes: any[];
+  equipamentos_autorizados_detalhes: any[];
+  checklists_recentes: any[];
+  estatisticas: {
+    total_checklists: number;
+    taxa_aprovacao: number;
+    total_equipamentos: number;
+    total_clientes: number;
+  };
+}
+
+export interface Supervisor {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  data_nascimento: string;
+  email: string;
+  telefone: string;
+  foto: string | null;
+  
+  // Telegram
+  telegram_chat_id: string | null;
+  telegram_username: string;
+  telegram_vinculado_em: string | null;
+  telegram_vinculado: boolean;
+  codigo_vinculacao: string | null;
+  codigo_valido_ate: string | null;
+  
+  // Status
+  ativo: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  
+  // Campos computados
+  clientes_nomes: string[];
+  total_operadores: number;
+}
+
+export interface CodigoVinculacao {
+  codigo: string;
+  valido_ate: string;
+  instrucoes: string;
+}
+
+export interface EstatisticasOperador {
+  total_checklists: number;
+  taxa_aprovacao: number;
+  checklists_aprovados: number;
+  checklists_reprovados: number;
+  equipamentos_autorizados: number;
+  clientes_vinculados: number;
+  telegram_vinculado: boolean;
+}
+
+// ============================================
+// OPERADORES API
+// ============================================
+
+export const operadoresApi = {
+  /**
+   * Lista operadores com filtros opcionais
+   */
+  list: async (filters?: {
+    cliente?: number;
+    ativo?: boolean;
+    telegram_vinculado?: boolean;
+    search?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+    if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+    if (filters?.telegram_vinculado !== undefined) {
+      params.append('telegram_vinculado', filters.telegram_vinculado.toString());
+    }
+    if (filters?.search) params.append('search', filters.search);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<PaginatedResponse<Operador>>(`/operadores/${query}`);
+  },
+
+  /**
+   * Busca operador por ID (com detalhes)
+   */
+  get: async (id: number) => {
+    return apiFetch<OperadorDetalhado>(`/operadores/${id}/`);
+  },
+
+  /**
+   * Cria novo operador
+   */
+  create: async (data: Partial<Operador> & { clientes_ids?: number[] }) => {
+    return apiFetch<Operador>('/operadores/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Atualiza operador
+   */
+  update: async (id: number, data: Partial<Operador> & { clientes_ids?: number[] }) => {
+    return apiFetch<Operador>(`/operadores/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Exclui operador
+   */
+  delete: async (id: number) => {
+    return apiFetch<void>(`/operadores/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * Gera código de 8 dígitos para vincular Telegram
+   */
+  gerarCodigoVinculacao: async (id: number) => {
+    return apiFetch<CodigoVinculacao>(`/operadores/${id}/gerar_codigo_vinculacao/`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Remove vinculação do Telegram
+   */
+  desvincularTelegram: async (id: number) => {
+    return apiFetch<{ detail: string }>(`/operadores/${id}/desvincular_telegram/`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Lista equipamentos autorizados para o operador
+   */
+  equipamentos: async (id: number) => {
+    return apiFetch<Equipamento[]>(`/operadores/${id}/equipamentos/`);
+  },
+
+  /**
+   * Autoriza operador a usar um equipamento
+   */
+  vincularEquipamento: async (
+    id: number, 
+    equipamento_id: number, 
+    observacoes?: string,
+    data_validade?: string
+  ) => {
+    return apiFetch<{ detail: string; autorizacao_id: number }>(`/operadores/${id}/vincular_equipamento/`, {
+      method: 'POST',
+      body: JSON.stringify({ equipamento_id, observacoes, data_validade }),
+    });
+  },
+
+  /**
+   * Remove autorização de equipamento
+   */
+  desvincularEquipamento: async (id: number, equipamento_id: number) => {
+    return apiFetch<{ detail: string }>(`/operadores/${id}/desvincular_equipamento/`, {
+      method: 'POST',
+      body: JSON.stringify({ equipamento_id }),
+    });
+  },
+
+  /**
+   * Busca estatísticas do operador
+   */
+  estatisticas: async (id: number) => {
+    return apiFetch<EstatisticasOperador>(`/operadores/${id}/estatisticas/`);
+  },
+};
+
+// ============================================
+// SUPERVISORES API
+// ============================================
+
+export const supervisoresApi = {
+  /**
+   * Lista supervisores com filtros opcionais
+   */
+  list: async (filters?: {
+    cliente?: number;
+    ativo?: boolean;
+    search?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+    if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+    if (filters?.search) params.append('search', filters.search);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<PaginatedResponse<Supervisor>>(`/supervisores/${query}`);
+  },
+
+  /**
+   * Busca supervisor por ID
+   */
+  get: async (id: number) => {
+    return apiFetch<Supervisor>(`/supervisores/${id}/`);
+  },
+
+  /**
+   * Cria novo supervisor
+   */
+  create: async (data: Partial<Supervisor>) => {
+    return apiFetch<Supervisor>('/supervisores/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Atualiza supervisor
+   */
+  update: async (id: number, data: Partial<Supervisor>) => {
+    return apiFetch<Supervisor>(`/supervisores/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Exclui supervisor
+   */
+  delete: async (id: number) => {
+    return apiFetch<void>(`/supervisores/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+
+// ============================================
 // EQUIPAMENTOS API
 // ============================================
 
@@ -539,4 +924,13 @@ export const nr12Api = {
   },
 };
 
-export default apiFetch;
+  export default {
+    auth: authApi,
+    clientes: clientesApi,
+    empreendimentos: empreendimentosApi,
+    tiposEquipamento: tiposEquipamentoApi,
+    equipamentos: equipamentosApi,
+    nr12: nr12Api,
+    operadores: operadoresApi,      // ✅ NOVO
+    supervisores: supervisoresApi,  // ✅ NOVO
+  };
