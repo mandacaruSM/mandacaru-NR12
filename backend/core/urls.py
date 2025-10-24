@@ -1,37 +1,36 @@
 # backend/core/urls.py
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    HealthView, MeView,
-    OperadorViewSet, SupervisorViewSet,
-    # Endpoints do Bot
+    HealthView,
+    MeView,
+    OperadorViewSet,
+    SupervisorViewSet,
     bot_vincular_codigo,
-    bot_validar_operador,
-    bot_equipamentos_operador,
-    bot_verificar_acesso_equipamento
+    bot_vincular_supervisor,
 )
 
 # Router para ViewSets
 router = DefaultRouter()
-router.register(r'operadores', OperadorViewSet, basename='operadores')
-router.register(r'supervisores', SupervisorViewSet, basename='supervisores')
-
-# Endpoints específicos do Bot
-bot_patterns = [
-    path('vincular/', bot_vincular_codigo, name='bot-vincular'),
-    path('validar-operador/', bot_validar_operador, name='bot-validar-operador'),
-    path('equipamentos/', bot_equipamentos_operador, name='bot-equipamentos'),
-    path('verificar-acesso/', bot_verificar_acesso_equipamento, name='bot-verificar-acesso'),
-]
+router.register(r'operadores', OperadorViewSet, basename='operador')
+router.register(r'supervisores', SupervisorViewSet, basename='supervisor')
 
 urlpatterns = [
-    # Endpoints básicos
-    path("health/", HealthView.as_view(), name="health"),
-    path("users/me/", MeView.as_view(), name="me"),
-    
-    # ViewSets (CRUD com JWT)
+    # Rotas do router
     path('', include(router.urls)),
     
-    # Endpoints do Bot (sem autenticação JWT)
-    path('bot/', include(bot_patterns)),
+    # Health check
+    path('health/', HealthView.as_view(), name='health'),
+    path('me/', MeView.as_view(), name='me'),
+    
+    # ============================================
+    # ENDPOINTS ESPECÍFICOS PARA BOT TELEGRAM
+    # ============================================
+    
+    # Bot - Vincular Operador
+    path('bot/vincular/', bot_vincular_codigo, name='bot-vincular-operador'),
+    
+    # Bot - Vincular Supervisor
+    path('bot/vincular-supervisor/', bot_vincular_supervisor, name='bot-vincular-supervisor'),
 ]
