@@ -23,4 +23,7 @@ urlpatterns = [
     path("api/v1/auth/login/", cookie_login, name="auth_cookie_login"),
     path("api/v1/auth/logout/", cookie_logout, name="auth_cookie_logout"),
     path("api/v1/auth/refresh/", refresh_token, name="auth_cookie_refresh"),
+
+    path('equipamentos/', include('equipamentos.urls')),
+    path('cadastro/', include('cadastro.urls')),
 ]

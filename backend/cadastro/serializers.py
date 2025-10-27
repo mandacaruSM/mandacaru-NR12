@@ -8,6 +8,7 @@ class ClienteSerializer(serializers.ModelSerializer):
 
 class EmpreendimentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.CharField(source="cliente.nome_razao", read_only=True)
+    supervisor_nome = serializers.CharField(source="supervisor.nome_completo", read_only=True)
 
     class Meta:
         model = Empreendimento

@@ -1,344 +1,138 @@
 // frontend/src/app/dashboard/operadores/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import api, { Operador } from '@/lib/api';
-import { formatarCPF } from '@/lib/utils';
-
-interface FiltrosOperador {
-  cliente?: number;
-  ativo?: boolean;
-  telegram_vinculado?: boolean;
-  search: string;
-}
+import { operadoresApi, Operador } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function OperadoresPage() {
-  const [operadores, setOperadores] = useState<Operador[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState('');
-  const [pagina, setPagina] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
+  const toast = useToast();
+  const [items, setItems] = useState<Operador[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
 
-  const [filtros, setFiltros] = useState<FiltrosOperador>({
-    search: '',
-    ativo: true,
-  });
-
-  // ============================================
-  // CARREGAR OPERADORES
-  // ============================================
-
-  const carregarOperadores = async () => {
-    setCarregando(true);
-    setErro('');
-
+  const load = async () => {
     try {
-      const { data } = await api.operadores.list({
-        search: filtros.search || undefined,
-        ativo: filtros.ativo,
-        telegram_vinculado: filtros.telegram_vinculado,
-        cliente: filtros.cliente,
-      });
-
-      setOperadores(data.results || []);
-      setTotalPaginas(Math.ceil((data.count || 0) / 20));
-    } catch (err: any) {
-      setErro(err.message || 'Erro ao carregar operadores');
+      setLoading(true);
+      const data = await operadoresApi.list({ q });
+      setItems(data.results);
+      setCount(data.count);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao listar operadores');
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    carregarOperadores();
-  }, [filtros]);
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ============================================
-  // HANDLERS
-  // ============================================
-
-  const handleExcluir = async (id: number, nome: string) => {
-    if (!confirm(`Tem certeza que deseja excluir ${nome}?`)) return;
-
-    try {
-      await api.operadores.delete(id);
-      setOperadores((prev) => prev.filter((o) => o.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Erro ao excluir operador');
-    }
+  const onSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    load();
   };
 
-  const handleGerar CodigoTelegram = async (id: number, nome: string) => {
+  const onRemove = async (id: number) => {
+    if (!confirm('Excluir este operador?')) return;
     try {
-      const { codigo, valido_ate } = await api.operadores.gerarCodigoVinculacao(id);
-      alert(
-        `Código gerado: ${codigo}\nVálido até: ${new Date(valido_ate).toLocaleString('pt-BR')}\n\nCompartilhe este código com ${nome} para vincular ao Telegram.`
-      );
-    } catch (err: any) {
-      alert(err.message || 'Erro ao gerar código');
+      await operadoresApi.remove(id);
+      toast.success('Operador removido');
+      load();
+    } catch (e: any) {
+      toast.error(e.message || 'Falha ao remover');
     }
   };
-
-  const handleDesvinculaTelegram = async (id: number) => {
-    if (!confirm('Tem certeza que deseja desvincular o Telegram?')) return;
-
-    try {
-      await api.operadores.desvincularTelegram(id);
-      carregarOperadores();
-    } catch (err: any) {
-      alert(err.message || 'Erro ao desvincular Telegram');
-    }
-  };
-
-  // ============================================
-  // RENDER
-  // ============================================
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Operadores</h1>
-          <Link
-            href="/dashboard/operadores/novo"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            + Novo Operador
-          </Link>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Operadores 👷</h1>
+          <p className="text-gray-600">Total: {count}</p>
         </div>
+        <Link
+          href="/dashboard/operadores/novo"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Novo Operador
+        </Link>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white rounded-lg shadow mb-6 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Busca */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Buscar por nome ou CPF
-            </label>
-            <input
-              type="text"
-              value={filtros.search}
-              onChange={(e) =>
-                setFiltros((prev) => ({
-                  ...prev,
-                  search: e.target.value,
-                }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
-              placeholder="João Silva..."
-            />
-          </div>
+      <form onSubmit={onSearch} className="flex gap-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por nome/CPF/telefone"
+          className="w-full max-w-md px-3 py-2 border rounded-lg"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 bg-gray-800 text-white rounded-lg"
+        >
+          Buscar
+        </button>
+      </form>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={filtros.ativo === undefined ? 'todos' : filtros.ativo.toString()}
-              onChange={(e) => {
-                const valor = e.target.value;
-                setFiltros((prev) => ({
-                  ...prev,
-                  ativo: valor === 'todos' ? undefined : valor === 'true',
-                }));
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-            >
-              <option value="todos">Todos</option>
-              <option value="true">Ativo</option>
-              <option value="false">Inativo</option>
-            </select>
-          </div>
-
-          {/* Telegram */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Telegram
-            </label>
-            <select
-              value={
-                filtros.telegram_vinculado === undefined
-                  ? 'todos'
-                  : filtros.telegram_vinculado.toString()
-              }
-              onChange={(e) => {
-                const valor = e.target.value;
-                setFiltros((prev) => ({
-                  ...prev,
-                  telegram_vinculado:
-                    valor === 'todos' ? undefined : valor === 'true',
-                }));
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-            >
-              <option value="todos">Todos</option>
-              <option value="true">Vinculado</option>
-              <option value="false">Não vinculado</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Erro */}
-      {erro && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded mb-6">
-          <p className="text-red-800">{erro}</p>
-        </div>
-      )}
-
-      {/* Carregando */}
-      {carregando && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      )}
-
-      {/* Tabela */}
-      {!carregando && operadores.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Operador
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    CPF
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Clientes
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Ações
-                  </th>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Nome</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">CPF</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Telefone</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Ativo</th>
+              <th className="px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  Carregando...
+                </td>
+              </tr>
+            ) : items.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  Nenhum operador encontrado
+                </td>
+              </tr>
+            ) : (
+              items.map((op) => (
+                <tr key={op.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2">
+                    <Link href={`/dashboard/operadores/${op.id}`} className="text-blue-600 hover:underline">
+                      {op.nome_completo}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2">{op.cpf}</td>
+                  <td className="px-4 py-2">{op.telefone || '-'}</td>
+                  <td className="px-4 py-2">
+                    <span className={`px-2 py-1 rounded text-xs ${op.ativo ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      {op.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-right space-x-3">
+                    <Link href={`/dashboard/operadores/${op.id}/editar`} className="text-gray-700 hover:text-gray-900">
+                      Editar
+                    </Link>
+                    <button
+                      onClick={() => onRemove(op.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {operadores.map((operador) => (
-                  <tr
-                    key={operador.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {operador.foto && (
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100">
-                            <Image
-                              src={operador.foto}
-                              alt={operador.nome_completo}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {operador.nome_completo}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {operador.telegram_vinculado && (
-                              <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                ✓ Telegram vinculado
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {formatarCPF(operador.cpf)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {operador.email}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {operador.clientes_nomes?.join(', ') || '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                          operador.ativo
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {operador.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/dashboard/operadores/${operador.id}`}
-                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                        >
-                          Ver
-                        </Link>
-                        <Link
-                          href={`/dashboard/operadores/${operador.id}/editar`}
-                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                        >
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => {
-                            if (operador.telegram_vinculado) {
-                              handleDesvinculaTelegram(operador.id);
-                            } else {
-                              handleGerar CodigoTelegram(
-                                operador.id,
-                                operador.nome_completo
-                              );
-                            }
-                          }}
-                          className="text-purple-600 hover:text-purple-900 text-sm font-medium"
-                        >
-                          {operador.telegram_vinculado
-                            ? 'Desvincular Telegram'
-                            : 'Telegram'}
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleExcluir(operador.id, operador.nome_completo)
-                          }
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Sem dados */}
-      {!carregando && operadores.length === 0 && (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600">Nenhum operador encontrado</p>
-          <Link
-            href="/dashboard/operadores/novo"
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            + Criar primeiro operador
-          </Link>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

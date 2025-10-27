@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Operador, Supervisor, OperadorEquipamento, OperadorCliente
 from .serializers import (
@@ -58,6 +59,31 @@ class OperadorViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gerenciar operadores via interface web
     """
+    queryset = Operador.objects.all().select_related().prefetch_related('clientes', 'equipamentos_autorizados')
+    serializer_class = OperadorSerializer
+    permission_classes = [IsAuthenticated]
+
+    # Busca e ordenação padrão
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    # Busca por nome/cpf/telefone
+    search_fields = ["nome_completo", "cpf", "telefone"]
+    # Ordenação por nome/cpf
+    ordering_fields = ["nome_completo", "cpf", "id"]
+    ordering = ["nome_completo"]
+
+    # Filtros exatos
+    filterset_fields = {
+        # filtrar por ativo
+        "ativo": ["exact"],
+    }
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        cliente_id = self.request.query_params.get("cliente")
+        if cliente_id:
+            qs = qs.filter(clientes__id=cliente_id)
+        return qs.distinct()
+    
     queryset = Operador.objects.all()
     serializer_class = OperadorSerializer
     permission_classes = [IsAuthenticated]
@@ -256,8 +282,10 @@ class SupervisorViewSet(viewsets.ModelViewSet):
     serializer_class = SupervisorSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['nome_completo', 'cpf', 'email']
-    ordering = ['nome_completo']
+    search_fields = ["nome_completo", "cpf", "telefone"]
+    ordering_fields = ["nome_completo", "cpf", "id"]
+    ordering = ["nome_completo"]
+
     
     def perform_create(self, serializer):
         serializer.save(criado_por=self.request.user)
@@ -317,6 +345,53 @@ def bot_vincular_codigo(request):
             'id': operador.id,
             'nome': operador.nome_completo,
             'cpf': operador.cpf
+        }
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def bot_vincular_supervisor(request):
+    """
+    Vincula Telegram para Supervisor usando código de 8 dígitos
+    Bot: POST /api/v1/bot/vincular-supervisor/
+    Body: {"codigo":"12345678","chat_id":"123","username":"encarregado"}
+    """
+    codigo = request.data.get('codigo')
+    chat_id = request.data.get('chat_id')
+    username = request.data.get('username', '')
+
+    if not codigo or not chat_id:
+        return Response(
+            {'detail': 'codigo e chat_id são obrigatórios'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        supervisor = Supervisor.objects.get(
+            codigo_vinculacao=codigo,
+            codigo_valido_ate__gte=timezone.now()
+        )
+    except Supervisor.DoesNotExist:
+        return Response(
+            {'detail': 'Código inválido ou expirado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if Supervisor.objects.filter(telegram_chat_id=str(chat_id)).exclude(id=supervisor.id).exists():
+        return Response(
+            {'detail': 'Este Telegram já está vinculado a outro supervisor'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    supervisor.vincular_telegram(chat_id=chat_id, username=username)
+
+    return Response({
+        'detail': 'Telegram vinculado com sucesso',
+        'supervisor': {
+            'id': supervisor.id,
+            'nome': supervisor.nome_completo,
+            'cpf': supervisor.cpf
         }
     })
 

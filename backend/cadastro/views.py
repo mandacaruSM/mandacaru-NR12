@@ -1,6 +1,9 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
-
+from django.shortcuts import get_object_or_404
+from django.http import Http404
+from .models import Cliente
+from core.qr_utils import qr_png_response
 from .models import Cliente, Empreendimento
 from .serializers import ClienteSerializer, EmpreendimentoSerializer
 
@@ -29,3 +32,12 @@ class EmpreendimentoViewSet(BaseAuthViewSet):
         if cliente_id:
             qs = qs.filter(cliente_id=cliente_id)
         return qs
+
+    def cliente_qr_view(request, uuid_str: str):
+        try:
+            cli = get_object_or_404(Cliente, uuid=uuid_str)
+        except (ValueError, Http404):
+            raise Http404("Cliente não encontrado")
+
+        payload = cli.qr_payload
+        return qr_png_response(payload)

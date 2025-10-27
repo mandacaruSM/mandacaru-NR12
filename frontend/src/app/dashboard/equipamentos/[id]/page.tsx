@@ -3,7 +3,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { equipamentosApi, clientesApi, empreendimentosApi, tiposEquipamentoApi, Equipamento, Cliente, Empreendimento, TipoEquipamento } from '@/lib/api';
+import { equipamentosApi, clientesApi, empreendimentosApi, tiposEquipamentoApi, operadoresApi, Equipamento, Cliente, Empreendimento, TipoEquipamento, Operador } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
 
@@ -20,6 +20,8 @@ export default function EditarEquipamentoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [tipos, setTipos] = useState<TipoEquipamento[]>([]);
+  const [operadores, setOperadores] = useState<Operador[]>([]);
+  const [operadorSelecionado, setOperadorSelecionado] = useState<number | ''>('');
   const [formData, setFormData] = useState<Partial<Equipamento>>({});
 
   useEffect(() => {
@@ -35,15 +37,17 @@ export default function EditarEquipamentoPage() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [equipamento, clientesRes, tiposRes] = await Promise.all([
+      const [equipamento, clientesRes, tiposRes, operadoresRes] = await Promise.all([
         equipamentosApi.get(equipamentoId),
         clientesApi.list(),
         tiposEquipamentoApi.list(),
+        operadoresApi.list(),
       ]);
       
       setFormData(equipamento);
       setClientes(clientesRes.results);
       setTipos(tiposRes.results);
+      setOperadores(operadoresRes.results);
       
       // Carregar empreendimentos do cliente
       if (equipamento.cliente) {
@@ -83,7 +87,10 @@ export default function EditarEquipamentoPage() {
     setError('');
 
     try {
-      await equipamentosApi.update(equipamentoId, formData);
+      const updated = await equipamentosApi.update(equipamentoId, formData);
+      if (operadorSelecionado) {
+        await operadoresApi.vincularEquipamento(Number(operadorSelecionado), updated.id);
+      }
       toast.success('Equipamento atualizado com sucesso!');
       router.push('/dashboard/equipamentos');
     } catch (err: any) {
@@ -196,6 +203,19 @@ export default function EditarEquipamentoPage() {
                   <option value="">Selecione um tipo...</option>
                   {tipos.map(tipo => (
                     <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Operador (opcional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Operador opcional 👷</label>
+                <select name="operador" value={operadorSelecionado}
+                  onChange={(e) => setOperadorSelecionado(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
+                  <option value="">Não vincular agora</option>
+                  {operadores.map(op => (
+                    <option key={op.id} value={op.id}>{op.nome_completo} ({op.cpf})</option>
                   ))}
                 </select>
               </div>

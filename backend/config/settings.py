@@ -105,6 +105,15 @@ DATABASES = {
     }
 }
 
+# URL base pública do ERP (ajuste para seu domínio)
+ERP_PUBLIC_BASE_URL = os.getenv("ERP_PUBLIC_BASE_URL", "https://erp.mandacaru.com.br")
+# Usuário do bot para deep link (opcional)
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "mandacaru_bot")
+
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Templates (admin requer este backend)
 TEMPLATES = [
     {

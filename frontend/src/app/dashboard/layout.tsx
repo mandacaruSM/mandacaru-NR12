@@ -28,6 +28,12 @@ const menuItems: MenuItem[] = [
   { name: 'Compras', href: '/dashboard/compras', module: 'compras', icon: '🛒' },
 ];
 
+// Links adicionais: Operadores e Supervisores
+menuItems.push(
+  { name: 'Operadores', href: '/dashboard/operadores', module: '', icon: '??' },
+  { name: 'Supervisores', href: '/dashboard/supervisores', module: '', icon: '??' },
+);
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, loading, logout, hasModule } = useAuth();
   const router = useRouter();

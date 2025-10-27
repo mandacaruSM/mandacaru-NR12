@@ -257,6 +257,14 @@ class Supervisor(models.Model):
     # ==================== CONTATO ====================
     email = models.EmailField(blank=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, blank=True, verbose_name="Telefone")
+    # Endereço
+    logradouro = models.CharField(max_length=255, blank=True, verbose_name="Logradouro")
+    numero = models.CharField(max_length=20, blank=True, verbose_name="Número")
+    complemento = models.CharField(max_length=100, blank=True, verbose_name="Complemento")
+    bairro = models.CharField(max_length=100, blank=True, verbose_name="Bairro")
+    cidade = models.CharField(max_length=100, blank=True, verbose_name="Cidade")
+    uf = models.CharField(max_length=2, blank=True, verbose_name="UF")
+    cep = models.CharField(max_length=9, blank=True, verbose_name="CEP")
     
     # ==================== TELEGRAM ====================
     telegram_chat_id = models.CharField(

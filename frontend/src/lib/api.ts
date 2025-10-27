@@ -84,7 +84,8 @@ export const authApi = {
   },
 
   me: async () => {
-    return apiFetch<User>('/users/me/');
+    // Alinhado ao backend: GET /api/v1/me/
+    return apiFetch<User>('/me/');
   },
 
   health: async () => {
@@ -157,11 +158,20 @@ export interface Empreendimento {
   id: number;
   cliente: number;
   cliente_nome: string;
+  supervisor?: number | null;
+  supervisor_nome?: string;
   nome: string;
   tipo: 'LAVRA' | 'OBRA' | 'PLANTA' | 'OUTRO';
   distancia_km: string;
   latitude: string | null;
   longitude: string | null;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
   ativo: boolean;
   criado_em: string;
   atualizado_em: string;
@@ -265,184 +275,137 @@ export interface Operador {
   id: number;
   nome_completo: string;
   cpf: string;
-  data_nascimento: string; // YYYY-MM-DD
-  email: string;
-  telefone: string;
-  foto: string | null;
-  
-  // Telegram
-  telegram_chat_id: string | null;
-  telegram_username: string | null;
-  telegram_vinculado_em: string | null;
-  telegram_vinculado: boolean;
-  codigo_vinculacao: string | null;
-  codigo_valido_ate: string | null;
-  
-  // Endereço
-  logradouro: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  
-  // Status e datas (✅ CORRIGIDO: nomes do backend)
+  data_nascimento?: string;
+  telefone?: string;
   ativo: boolean;
-  data_criacao: string;
-  data_atualizacao: string;
+  // relacionais resumidos
+  clientes?: number[];
+  // endereço
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
 }
-
-export interface CodigoVinculacao {
-  id: number;
-  codigo: string;
-  valido_ate: string;
-  mensagem: string;
-}
-
-export const operadoresApi = {
-  list: async (params?: {
-    search?: string;
-    ativo?: boolean;
-    ordering?: string;
-    page?: number;
-  }): Promise<PaginatedResponse<Operador>> => {
-    const queryParams = new URLSearchParams();
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.ativo !== undefined) queryParams.append('ativo', String(params.ativo));
-    if (params?.ordering) queryParams.append('ordering', params.ordering);
-    if (params?.page) queryParams.append('page', String(params.page));
-
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    return apiFetch<PaginatedResponse<Operador>>(`/operadores/${query}`);
-  },
-
-  get: async (id: number): Promise<Operador> => {
-    return apiFetch<Operador>(`/operadores/${id}/`);
-  },
-
-  create: async (data: Partial<Operador>): Promise<Operador> => {
-    return apiFetch<Operador>('/operadores/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  update: async (id: number, data: Partial<Operador>): Promise<Operador> => {
-    return apiFetch<Operador>(`/operadores/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-
-  delete: async (id: number): Promise<void> => {
-    return apiFetch<void>(`/operadores/${id}/`, {
-      method: 'DELETE',
-    });
-  },
-
-  gerarCodigoVinculacao: async (id: number): Promise<CodigoVinculacao> => {
-    return apiFetch<CodigoVinculacao>(`/operadores/${id}/gerar_codigo_vinculacao/`, {
-      method: 'POST',
-    });
-  },
-
-  desvincularTelegram: async (id: number): Promise<{ id: number; mensagem: string; telegram_vinculado: boolean }> => {
-    return apiFetch<{ id: number; mensagem: string; telegram_vinculado: boolean }>(
-      `/operadores/${id}/desvincular_telegram/`,
-      { method: 'POST' }
-    );
-  },
-};
-
-// ============================================
-// SUPERVISORES - TIPOS E API
-// ✅ CORRIGIDO: Adicionados métodos Telegram
-// ============================================
 
 export interface Supervisor {
   id: number;
   nome_completo: string;
   cpf: string;
-  data_nascimento: string; // YYYY-MM-DD
-  email: string;
-  telefone: string;
-  foto: string | null;
-  
-  // Telegram
-  telegram_chat_id: string | null;
-  telegram_username: string | null;
-  telegram_vinculado_em: string | null;
-  telegram_vinculado: boolean;
-  codigo_vinculacao: string | null;
-  codigo_valido_ate: string | null;
-  
-  // Endereço
-  logradouro: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  
-  // Status e datas (✅ CORRIGIDO: nomes do backend)
+  data_nascimento?: string;
+  telefone?: string;
   ativo: boolean;
-  data_criacao: string;
-  data_atualizacao: string;
+  // endereço
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
 }
 
-export const supervisoresApi = {
-  list: async (params?: {
-    search?: string;
-    ativo?: boolean;
-    ordering?: string;
-    page?: number;
-  }): Promise<PaginatedResponse<Supervisor>> => {
-    const queryParams = new URLSearchParams();
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.ativo !== undefined) queryParams.append('ativo', String(params.ativo));
-    if (params?.ordering) queryParams.append('ordering', params.ordering);
-    if (params?.page) queryParams.append('page', String(params.page));
+export type ListParams = {
+  q?: string;           // search
+  ordering?: string;    // ex: nome_completo,-id
+  page?: number;
+  page_size?: number;
+  cliente?: number;     // filtro por cliente
+  ativo?: boolean;
+};
 
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    return apiFetch<PaginatedResponse<Supervisor>>(`/supervisores/${query}`);
+function toQuery(params: Record<string, any> = {}) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") {
+      q.set(k, String(v));
+    }
+  });
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
+
+export const operadoresApi = {
+  async list(params: ListParams = {}) {
+    return apiFetch<{ results: Operador[]; count: number }>(
+      `/operadores/${toQuery({
+        search: params.q,
+        ordering: params.ordering,
+        page: params.page,
+        page_size: params.page_size,
+        cliente: params.cliente,
+        ativo: params.ativo,
+      })}`
+    );
   },
+  async retrieve(id: number) {
+    return apiFetch<Operador>(`/operadores/${id}/`);
+  },
+  async create(data: Partial<Operador>) {
+    return apiFetch<Operador>(`/operadores/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  },
+  async update(id: number, data: Partial<Operador>) {
+    return apiFetch<Operador>(`/operadores/${id}/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  },
+  async remove(id: number) {
+    return apiFetch<void>(`/operadores/${id}/`, { method: "DELETE" });
+  },
+  async vincularEquipamento(operadorId: number, equipamentoId: number, observacoes?: string) {
+    return apiFetch<{ detail: string; autorizacao_id?: number }>(`/operadores/${operadorId}/vincular_equipamento/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipamento_id: equipamentoId, observacoes }),
+    });
+  },
+  async desvincularEquipamento(operadorId: number, equipamentoId: number) {
+    return apiFetch<{ detail: string }>(`/operadores/${operadorId}/desvincular_equipamento/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipamento_id: equipamentoId }),
+    });
+  },
+};
 
-  get: async (id: number): Promise<Supervisor> => {
+export const supervisoresApi = {
+  async list(params: ListParams = {}) {
+    return apiFetch<{ results: Supervisor[]; count: number }>(
+      `/supervisores/${toQuery({
+        search: params.q,
+        ordering: params.ordering,
+        page: params.page,
+        page_size: params.page_size,
+      })}`
+    );
+  },
+  async retrieve(id: number) {
     return apiFetch<Supervisor>(`/supervisores/${id}/`);
   },
-
-  create: async (data: Partial<Supervisor>): Promise<Supervisor> => {
-    return apiFetch<Supervisor>('/supervisores/', {
-      method: 'POST',
+  async create(data: Partial<Supervisor>) {
+    return apiFetch<Supervisor>(`/supervisores/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
-
-  update: async (id: number, data: Partial<Supervisor>): Promise<Supervisor> => {
+  async update(id: number, data: Partial<Supervisor>) {
     return apiFetch<Supervisor>(`/supervisores/${id}/`, {
-      method: 'PUT',
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
-
-  delete: async (id: number): Promise<void> => {
-    return apiFetch<void>(`/supervisores/${id}/`, {
-      method: 'DELETE',
-    });
-  },
-
-  // ✅ NOVO: Métodos Telegram adicionados
-  gerarCodigoVinculacao: async (id: number): Promise<CodigoVinculacao> => {
-    return apiFetch<CodigoVinculacao>(`/supervisores/${id}/gerar_codigo_vinculacao/`, {
-      method: 'POST',
-    });
-  },
-
-  desvincularTelegram: async (id: number): Promise<{ id: number; mensagem: string; telegram_vinculado: boolean }> => {
-    return apiFetch<{ id: number; mensagem: string; telegram_vinculado: boolean }>(
-      `/supervisores/${id}/desvincular_telegram/`,
-      { method: 'POST' }
-    );
+  async remove(id: number) {
+    return apiFetch<void>(`/supervisores/${id}/`, { method: "DELETE" });
   },
 };
 

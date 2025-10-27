@@ -3,7 +3,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { empreendimentosApi, clientesApi, Empreendimento, Cliente } from '@/lib/api';
+import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
 
@@ -21,6 +21,10 @@ export default function NovoEmpreendimentoPage() {
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [error, setError] = useState('');
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
+  const [supervisores, setSupervisores] = useState<Supervisor[]>([]);
+  const [equipamentosSelecionados, setEquipamentosSelecionados] = useState<number[]>([]);
+  const [supervisorSelecionado, setSupervisorSelecionado] = useState<number | ''>('');
 
   const [formData, setFormData] = useState<Partial<Empreendimento>>({
     cliente: undefined,
@@ -29,12 +33,32 @@ export default function NovoEmpreendimentoPage() {
     distancia_km: '0',
     latitude: null,
     longitude: null,
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    cep: '',
     ativo: true,
   });
 
   useEffect(() => {
     loadClientes();
   }, []);
+
+  useEffect(() => {
+    // quando cliente mudar, carregar equipamentos e supervisores do cliente (se aplicável)
+    if (formData.cliente) {
+      loadEquipamentos(Number(formData.cliente));
+      loadSupervisores();
+    } else {
+      setEquipamentos([]);
+      setEquipamentosSelecionados([]);
+      setSupervisores([]);
+      setSupervisorSelecionado('');
+    }
+  }, [formData.cliente]);
 
   const loadClientes = async () => {
     try {
@@ -45,6 +69,24 @@ export default function NovoEmpreendimentoPage() {
       toast.error('Erro ao carregar clientes');
     } finally {
       setLoadingClientes(false);
+    }
+  };
+
+  const loadEquipamentos = async (clienteId: number) => {
+    try {
+      const res = await equipamentosApi.list({ cliente: clienteId });
+      setEquipamentos(res.results);
+    } catch (e) {
+      toast.error('Erro ao carregar equipamentos do cliente');
+    }
+  };
+
+  const loadSupervisores = async () => {
+    try {
+      const res = await supervisoresApi.list();
+      setSupervisores(res.results);
+    } catch (e) {
+      // opcional
     }
   };
 
@@ -69,7 +111,17 @@ export default function NovoEmpreendimentoPage() {
     setError('');
 
     try {
-      await empreendimentosApi.create(formData);
+      const payload = {
+        ...formData,
+        supervisor: supervisorSelecionado || null,
+      } as any;
+      const created = await empreendimentosApi.create(payload);
+      // Atribuir equipamentos selecionados ao empreendimento criado
+      if (equipamentosSelecionados.length > 0) {
+        await Promise.all(
+          equipamentosSelecionados.map(id => equipamentosApi.update(id, { empreendimento: created.id }))
+        );
+      }
       toast.success('Empreendimento cadastrado com sucesso!');
       router.push('/dashboard/empreendimentos');
     } catch (err: any) {
@@ -196,40 +248,88 @@ export default function NovoEmpreendimentoPage() {
             </div>
           </div>
 
-          {/* Seção: Localização */}
+          {/* Seção: Responsável e Equipamentos */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Localização (Opcional)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Vínculos</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Latitude */}
+              {/* Supervisor (opcional) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Latitude
-                </label>
-                <input
-                  type="number"
-                  name="latitude"
-                  value={formData.latitude || ''}
-                  onChange={handleChange}
-                  step="0.000001"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supervisor (opcional) 🧑‍💼</label>
+                <select
+                  value={supervisorSelecionado}
+                  onChange={(e) => setSupervisorSelecionado(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
-                  placeholder="Ex: -12.971891"
-                />
+                >
+                  <option value="">Não definir agora</option>
+                  {supervisores.map(sp => (
+                    <option key={sp.id} value={sp.id}>{sp.nome_completo} ({sp.cpf})</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Longitude */}
+              {/* Equipamentos do cliente para vincular ao empreendimento */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Equipamentos do cliente</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-3">
+                  {equipamentos.map(eq => (
+                    <label key={eq.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={equipamentosSelecionados.includes(eq.id)}
+                        onChange={(e) => {
+                          setEquipamentosSelecionados(prev => e.target.checked ? [...prev, eq.id] : prev.filter(i => i !== eq.id));
+                        }}
+                      />
+                      <span className="text-gray-700">{eq.codigo} — {eq.descricao || 'Sem descrição'}</span>
+                    </label>
+                  ))}
+                  {equipamentos.length === 0 && (
+                    <div className="text-gray-500">Nenhum equipamento deste cliente.</div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Os equipamentos selecionados serão vinculados a este empreendimento.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Seção: Localização */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Endereço</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Logradouro</label>
+                <input type="text" name="logradouro" value={formData.logradouro || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Longitude
-                </label>
-                <input
-                  type="number"
-                  name="longitude"
-                  value={formData.longitude || ''}
-                  onChange={handleChange}
-                  step="0.000001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
-                  placeholder="Ex: -38.501617"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                <input type="text" name="numero" value={formData.numero || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                <input type="text" name="complemento" value={formData.complemento || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+                <input type="text" name="bairro" value={formData.bairro || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                <input type="text" name="cidade" value={formData.cidade || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">UF</label>
+                <input type="text" name="uf" value={formData.uf || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                <input type="text" name="cep" value={formData.cep || ''} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
               </div>
             </div>
           </div>

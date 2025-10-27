@@ -1,17 +1,17 @@
-// frontend/src/app/dashboard/operadores/[id]/page.tsx
+// frontend/src/app/dashboard/supervisores/[id]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { operadoresApi, Operador } from '@/lib/api';
+import { supervisoresApi, Supervisor } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
-export default function OperadorDetalhePage() {
+export default function SupervisorDetalhePage() {
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
-  const [item, setItem] = useState<Operador | null>(null);
+  const [item, setItem] = useState<Supervisor | null>(null);
   const [loading, setLoading] = useState(true);
 
   const id = Number(params?.id);
@@ -21,11 +21,11 @@ export default function OperadorDetalhePage() {
     (async () => {
       try {
         setLoading(true);
-        const data = await operadoresApi.retrieve(id);
+        const data = await supervisoresApi.retrieve(id);
         setItem(data);
       } catch (e: any) {
-        toast.error(e.message || 'Erro ao carregar operador');
-        router.push('/dashboard/operadores');
+        toast.error(e.message || 'Erro ao carregar supervisor');
+        router.push('/dashboard/supervisores');
       } finally {
         setLoading(false);
       }
@@ -42,14 +42,14 @@ export default function OperadorDetalhePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Operador #{item.id}</h1>
-          <p className="text-gray-600">Detalhes do operador</p>
+          <h1 className="text-2xl font-bold text-gray-900">Supervisor #{item.id}</h1>
+          <p className="text-gray-600">Detalhes do supervisor</p>
         </div>
         <div className="space-x-3">
-          <Link href={`/dashboard/operadores/${item.id}/editar`} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
+          <Link href={`/dashboard/supervisores/${item.id}/editar`} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
             Editar
           </Link>
-          <Link href="/dashboard/operadores" className="text-blue-600 hover:underline">Voltar</Link>
+          <Link href="/dashboard/supervisores" className="text-blue-600 hover:underline">Voltar</Link>
         </div>
       </div>
 

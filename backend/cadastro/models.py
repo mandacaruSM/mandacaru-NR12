@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 
 UF_CHOICES = [
@@ -8,6 +9,7 @@ UF_CHOICES = [
 ]
 
 class Cliente(models.Model):
+    
     TIPO_PESSOA = [("PJ","PJ"), ("PF","PF")]
     tipo_pessoa = models.CharField(max_length=2, choices=TIPO_PESSOA, default="PJ")
     nome_razao = models.CharField(max_length=150)
@@ -28,6 +30,13 @@ class Cliente(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    @property
+    def qr_payload(self) -> str:
+        # usado no Telegram: /start=cl:{uuid}
+        return f"cl:{self.uuid}"
+    
     documento = models.CharField(
         max_length=20, 
         blank=True, 
@@ -43,18 +52,41 @@ class Cliente(models.Model):
 
 
 class Empreendimento(models.Model):
+    import uuid
     TIPO = [("LAVRA","Lavra"), ("OBRA","Obra"), ("PLANTA","Planta"), ("OUTRO","Outro")]
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name="empreendimentos")
+    supervisor = models.ForeignKey(
+        'core.Supervisor',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='empreendimentos'
+    )
     nome = models.CharField(max_length=150)
     tipo = models.CharField(max_length=10, choices=TIPO, default="LAVRA")
     distancia_km = models.DecimalField(max_digits=8, decimal_places=2, default=0)  # sem API Maps por enquanto
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    # Endereço completo (opcional)
+    logradouro = models.CharField(max_length=150, blank=True, default="")
+    numero = models.CharField(max_length=20, blank=True, default="")
+    complemento = models.CharField(max_length=100, blank=True, default="")
+    bairro = models.CharField(max_length=100, blank=True, default="")
+    cidade = models.CharField(max_length=100, blank=True, default="")
+    uf = models.CharField(max_length=2, blank=True, default="")
+    cep = models.CharField(max_length=10, blank=True, default="")
 
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
+    @property
+    def qr_payload(self) -> str:
+        # usado no Telegram: /start=eq:{uuid}
+        return f"eq:{self.uuid}"
+    
     class Meta:
         ordering = ["nome"]
 
