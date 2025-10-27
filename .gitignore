@@ -27,3 +27,5 @@ Thumbs.db
 .pytest_cache/
 coverage/
 '@ | Out-File -Encoding UTF8 .gitignore
+nr
+12.zip
