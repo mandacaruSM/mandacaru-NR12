@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils import timezone
 
@@ -36,6 +37,12 @@ class Equipamento(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    @property
+    def qr_payload(self) -> str:
+        return f"eq:{self.uuid}"
+    
     class Meta:
         ordering = ["codigo"]
 

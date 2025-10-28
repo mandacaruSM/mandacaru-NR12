@@ -15,24 +15,24 @@ ALLOWED_HOSTS = os.environ.get(
 
 INSTALLED_APPS = [
     # Django
-    "django.contrib.admin", 
-    "django.contrib.auth", 
+    "django.contrib.admin",
+    "django.contrib.auth",
     "django.contrib.contenttypes",
-    "django.contrib.sessions", 
-    "django.contrib.messages", 
+    "django.contrib.sessions",
+    "django.contrib.messages",
     "django.contrib.staticfiles",
 
     # Terceiros
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",  # logout/rotação de refresh
+    "rest_framework_simplejwt.token_blacklist",
 
     # Apps do projeto
     "core",
-    "cadastro",
+    "cadastro.apps.CadastroConfig",
     "equipamentos.apps.EquipamentosConfig",
-    "nr12",
+    "nr12.apps.Nr12Config",
 ]
 
 MIDDLEWARE = [

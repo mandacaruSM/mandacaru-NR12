@@ -1,11 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from django.urls import path
-from .views import equipamento_qr_view
-
 from .views import (
     TipoEquipamentoViewSet, EquipamentoViewSet,
-    PlanoManutencaoItemViewSet, MedicaoEquipamentoViewSet
+    PlanoManutencaoItemViewSet, MedicaoEquipamentoViewSet,
+    equipamento_qr_view,
 )
 
 router = DefaultRouter()
@@ -15,6 +13,6 @@ router.register(r"equipamentos-planos", PlanoManutencaoItemViewSet, basename="eq
 router.register(r"equipamentos-medicoes", MedicaoEquipamentoViewSet, basename="equipamentos-medicoes")
 
 urlpatterns = [
-                path("", include(router.urls)),
-                path('qr/<uuid:uuid_str>.png', equipamento_qr_view, name='equipamento_qr'),
-                 ]
+    path("", include(router.urls)),
+    path("qr/<uuid:uuid_str>.png", equipamento_qr_view, name="equipamento_qr"),
+]

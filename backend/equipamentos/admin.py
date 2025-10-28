@@ -19,21 +19,14 @@ class EquipamentoAdmin(admin.ModelAdmin):
     readonly_fields = ("qr_preview",)
 
     def qr_preview(self, obj):
-        if not obj or not obj.uuid:
-            return "-"
-        return format_html(
-            '<img src="/equipamentos/qr/{}.png" width="200" height="200" />',
-            obj.uuid
-        )
+        if getattr(obj, "uuid", None):
+            return format_html('<img src="/api/v1/equipamentos/qr/{}.png" width="200" height="200" />', obj.uuid)
+        return "-"
     qr_preview.short_description = "QR Code"
 
 @admin.register(PlanoManutencaoItem)
 class PlanoManutencaoItemAdmin(admin.ModelAdmin):
-    list_display = (
-        "titulo", "equipamento", "modo",
-        "periodicidade_valor", "proxima_leitura",
-        "proxima_data", "ativo"
-    )
+    list_display = ("titulo", "equipamento", "modo", "periodicidade_valor", "proxima_leitura", "proxima_data", "ativo")
     search_fields = ("titulo", "equipamento__codigo")
     list_filter = ("ativo", "modo", "equipamento")
 
