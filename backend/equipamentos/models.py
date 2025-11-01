@@ -38,11 +38,33 @@ class Equipamento(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    qr_code = models.ImageField(upload_to='qrcodes/equipamentos/', blank=True, null=True, verbose_name="QR Code")
 
     @property
     def qr_payload(self) -> str:
         return f"eq:{self.uuid}"
-    
+
+    def gerar_qr_code(self):
+        """Gera e salva o QR code do equipamento"""
+        from core.qr_utils import save_qr_code_to_file
+        filename = f"equipamento_{self.id}_{self.uuid}.png"
+        # Usar código + descrição como texto inferior
+        bottom_text = f"{self.codigo} - {self.descricao or self.modelo}"
+        qr_file = save_qr_code_to_file(
+            data=self.qr_payload,
+            filename=filename,
+            top_text="MANDACARU S M",
+            bottom_text=bottom_text
+        )
+        self.qr_code.save(filename, qr_file, save=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        # Gera QR code automaticamente após salvar
+        if not self.qr_code:
+            self.gerar_qr_code()
+
     class Meta:
         ordering = ["codigo"]
 

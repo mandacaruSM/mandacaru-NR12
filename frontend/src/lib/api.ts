@@ -1,5 +1,6 @@
 // frontend/src/lib/api.ts - CORRIGIDO E OTIMIZADO
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_V0 = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:8000/api';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
@@ -10,6 +11,27 @@ interface FetchOptions extends RequestInit {
  * Wrapper para fetch com tratamento de erros e autenticação automática
  */
 async function apiFetch<T>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<T> {
+  return apiFetchBase<T>(API_BASE, endpoint, options);
+}
+
+/**
+ * Wrapper para fetch usando API_BASE_V0 (para manutenções e técnicos)
+ */
+async function apiFetchV0<T>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<T> {
+  return apiFetchBase<T>(API_BASE_V0, endpoint, options);
+}
+
+/**
+ * Função base para fetch com tratamento de erros e autenticação automática
+ */
+async function apiFetchBase<T>(
+  baseUrl: string,
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
@@ -25,7 +47,7 @@ async function apiFetch<T>(
   };
 
   try {
-    const response = await fetch(`${API_BASE}${endpoint}`, config);
+    const response = await fetch(`${baseUrl}${endpoint}`, config);
 
     if (response.status === 401 && requireAuth) {
       throw new Error('Não autenticado');
@@ -122,29 +144,29 @@ export interface Cliente {
 export const clientesApi = {
   list: async (search?: string) => {
     const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    return apiFetch<{ results: Cliente[]; count: number }>(`/clientes/${params}`);
+    return apiFetch<{ results: Cliente[]; count: number }>(`/cadastro/clientes/${params}`);
   },
 
   get: async (id: number) => {
-    return apiFetch<Cliente>(`/clientes/${id}/`);
+    return apiFetch<Cliente>(`/cadastro/clientes/${id}/`);
   },
 
   create: async (data: Partial<Cliente>) => {
-    return apiFetch<Cliente>('/clientes/', {
+    return apiFetch<Cliente>('/cadastro/clientes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Cliente>) => {
-    return apiFetch<Cliente>(`/clientes/${id}/`, {
+    return apiFetch<Cliente>(`/cadastro/clientes/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/clientes/${id}/`, {
+    return apiFetch<void>(`/cadastro/clientes/${id}/`, {
       method: 'DELETE',
     });
   },
@@ -182,31 +204,31 @@ export const empreendimentosApi = {
     const params = new URLSearchParams();
     if (filters?.cliente) params.append('cliente', filters.cliente.toString());
     if (filters?.search) params.append('search', filters.search);
-    
+
     const query = params.toString() ? `?${params.toString()}` : '';
-    return apiFetch<{ results: Empreendimento[]; count: number }>(`/empreendimentos/${query}`);
+    return apiFetch<{ results: Empreendimento[]; count: number }>(`/cadastro/empreendimentos/${query}`);
   },
 
   get: async (id: number) => {
-    return apiFetch<Empreendimento>(`/empreendimentos/${id}/`);
+    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}/`);
   },
 
   create: async (data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>('/empreendimentos/', {
+    return apiFetch<Empreendimento>('/cadastro/empreendimentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>(`/empreendimentos/${id}/`, {
+    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/empreendimentos/${id}/`, {
+    return apiFetch<void>(`/cadastro/empreendimentos/${id}/`, {
       method: 'DELETE',
     });
   },
@@ -227,29 +249,29 @@ export interface TipoEquipamento {
 
 export const tiposEquipamentoApi = {
   list: async () => {
-    return apiFetch<{ results: TipoEquipamento[]; count: number }>('/tipos-equipamento/');
+    return apiFetch<{ results: TipoEquipamento[]; count: number }>('/equipamentos/tipos-equipamento/');
   },
 
   get: async (id: number) => {
-    return apiFetch<TipoEquipamento>(`/tipos-equipamento/${id}/`);
+    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}/`);
   },
 
   create: async (data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>('/tipos-equipamento/', {
+    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>(`/tipos-equipamento/${id}/`, {
+    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/tipos-equipamento/${id}/`, {
+    return apiFetch<void>(`/equipamentos/tipos-equipamento/${id}/`, {
       method: 'DELETE',
     });
   },
@@ -440,31 +462,31 @@ export const equipamentosApi = {
     if (filters?.cliente) params.append('cliente', filters.cliente.toString());
     if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
     if (filters?.search) params.append('search', filters.search);
-    
+
     const query = params.toString() ? `?${params.toString()}` : '';
-    return apiFetch<{ results: Equipamento[]; count: number }>(`/equipamentos/${query}`);
+    return apiFetch<{ results: Equipamento[]; count: number }>(`/equipamentos/equipamentos/${query}`);
   },
 
   get: async (id: number) => {
-    return apiFetch<Equipamento>(`/equipamentos/${id}/`);
+    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}/`);
   },
 
   create: async (data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>('/equipamentos/', {
+    return apiFetch<Equipamento>('/equipamentos/equipamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>(`/equipamentos/${id}/`, {
+    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/equipamentos/${id}/`, {
+    return apiFetch<void>(`/equipamentos/equipamentos/${id}/`, {
       method: 'DELETE',
     });
   },
@@ -697,6 +719,66 @@ export const nr12Api = {
 };
 
 // ============================================
+// ============================================
+// MANUTENÇÕES API
+// ============================================
+
+export const manutencoesApi = {
+  list: async () => {
+    return apiFetchV0<any[]>('/manutencoes/');
+  },
+  get: async (id: number) => {
+    return apiFetchV0<any>(`/manutencoes/${id}/`);
+  },
+  create: async (data: any) => {
+    return apiFetchV0<any>('/manutencoes/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: any) => {
+    return apiFetchV0<any>(`/manutencoes/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return apiFetchV0<void>(`/manutencoes/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// ============================================
+// TÉCNICOS API
+// ============================================
+
+export const tecnicosApi = {
+  list: async () => {
+    return apiFetchV0<any[]>('/tecnicos/');
+  },
+  get: async (id: number) => {
+    return apiFetchV0<any>(`/tecnicos/${id}/`);
+  },
+  create: async (data: any) => {
+    return apiFetchV0<any>('/tecnicos/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: any) => {
+    return apiFetchV0<any>(`/tecnicos/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return apiFetchV0<void>(`/tecnicos/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // EXPORT DEFAULT
 // ============================================
 
@@ -709,4 +791,27 @@ export default {
   nr12: nr12Api,
   operadores: operadoresApi,
   supervisores: supervisoresApi,
+  manutencoes: manutencoesApi,
+  tecnicos: tecnicosApi,
 };
+
+
+export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  // Detectar se é um endpoint que precisa de API_BASE_V0
+  const useV0 = path.startsWith('/manutencoes') || path.startsWith('/tecnicos');
+  const baseUrl = useV0 ? API_BASE_V0 : API_BASE;
+
+  const res = await fetch(`${baseUrl}${path}`, {
+    ...init,
+    headers: {
+      ...(init?.headers || {}),
+    },
+    credentials: 'include', // CRÍTICO: Adicionar para enviar cookies de autenticação
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API ${res.status}: ${text || res.statusText}`);
+  }
+  return res.json();
+}

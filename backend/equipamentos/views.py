@@ -62,15 +62,16 @@ class MedicaoEquipamentoViewSet(BaseAuthViewSet):
         if eq_id:
             qs = qs.filter(equipamento_id=eq_id)
         return qs[:200]  # proteção simples
-    
-    def equipamento_qr_view(request, uuid_str: str):
-        try:
-            equip = get_object_or_404(Equipamento, uuid=uuid_str)
-        except (ValueError, Http404):
-            raise Http404("Equipamento não encontrado")
 
-        payload = equip.qr_payload
-        # Ex.: payload "eq:1b9e3e1f-..." → no QR você terá "eq:{uuid}".
-        # Para deep-link do Telegram, use t.me/<seu_bot>?start=eq:{uuid}
-        return qr_png_response(payload)
+
+def equipamento_qr_view(request, uuid_str: str):
+    try:
+        equip = get_object_or_404(Equipamento, uuid=uuid_str)
+    except (ValueError, Http404):
+        raise Http404("Equipamento não encontrado")
+
+    payload = equip.qr_payload
+    # Ex.: payload "eq:1b9e3e1f-..." → no QR você terá "eq:{uuid}".
+    # Para deep-link do Telegram, use t.me/<seu_bot>?start=eq:{uuid}
+    return qr_png_response(payload)
 

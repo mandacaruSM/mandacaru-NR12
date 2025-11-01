@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(../.venv/Scripts/python.exe manage.py:*)",
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "Bash(pip install:*)",
+      "Bash(.venvScriptspython.exe -m pip install django-filter qrcode[pil])",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(python manage.py startapp:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python manage.py migrate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

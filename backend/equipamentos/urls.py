@@ -6,13 +6,22 @@ from .views import (
     equipamento_qr_view,
 )
 
+# ============================================
+# Router para ViewSets REST
+# ============================================
 router = DefaultRouter()
 router.register(r"tipos-equipamento", TipoEquipamentoViewSet, basename="tipos-equipamento")
 router.register(r"equipamentos", EquipamentoViewSet, basename="equipamentos")
-router.register(r"equipamentos-planos", PlanoManutencaoItemViewSet, basename="equipamentos-planos")
-router.register(r"equipamentos-medicoes", MedicaoEquipamentoViewSet, basename="equipamentos-medicoes")
+router.register(r"planos-manutencao", PlanoManutencaoItemViewSet, basename="planos-manutencao")
+router.register(r"medicoes", MedicaoEquipamentoViewSet, basename="medicoes")
 
+# ============================================
+# URL Patterns
+# ============================================
 urlpatterns = [
+    # REST API endpoints
     path("", include(router.urls)),
-    path("qr/<uuid:uuid_str>.png", equipamento_qr_view, name="equipamento_qr"),
+
+    # QR Code generation for Telegram deep links
+    path("equipamentos/<uuid:uuid_str>/qr.png", equipamento_qr_view, name="equipamento_qr"),
 ]

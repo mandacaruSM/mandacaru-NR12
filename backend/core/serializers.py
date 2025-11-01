@@ -260,31 +260,6 @@ class SupervisorDetailSerializer(serializers.ModelSerializer):
 # RELACIONAMENTOS
 # ============================================
 
-def _somente_digitos(s: str) -> str:
-    return "".join(ch for ch in s or "" if ch.isdigit())
-
-class OperadorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Operador
-        fields = "__all__"
-
-    def validate_cpf(self, value):
-        cpf = _somente_digitos(value)
-        if len(cpf) != 11:
-            raise serializers.ValidationError("CPF inválido (11 dígitos).")
-        return value
-
-class SupervisorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Supervisor
-        fields = "__all__"
-
-    def validate_cpf(self, value):
-        cpf = _somente_digitos(value)
-        if len(cpf) != 11:
-            raise serializers.ValidationError("CPF inválido (11 dígitos).")
-        return value
-
 class OperadorEquipamentoSerializer(serializers.ModelSerializer):
     """Serializer para autorização de equipamentos"""
     operador_nome = serializers.CharField(source='operador.nome_completo', read_only=True)

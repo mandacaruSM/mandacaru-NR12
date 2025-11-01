@@ -9,11 +9,16 @@ UF_CHOICES = [
 ]
 
 class Cliente(models.Model):
-    
+
     TIPO_PESSOA = [("PJ","PJ"), ("PF","PF")]
     tipo_pessoa = models.CharField(max_length=2, choices=TIPO_PESSOA, default="PJ")
     nome_razao = models.CharField(max_length=150)
-    documento = models.CharField(max_length=20, blank=True, default="")  # CNPJ/CPF (sem validação por enquanto)
+    documento = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        db_index=True
+    )
     inscricao_estadual = models.CharField(max_length=20, blank=True, default="")
     email_financeiro = models.EmailField(blank=True, default="")
     telefone = models.CharField(max_length=30, blank=True, default="")
@@ -31,18 +36,31 @@ class Cliente(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    qr_code = models.ImageField(upload_to='qrcodes/clientes/', blank=True, null=True, verbose_name="QR Code")
 
     @property
     def qr_payload(self) -> str:
         # usado no Telegram: /start=cl:{uuid}
         return f"cl:{self.uuid}"
-    
-    documento = models.CharField(
-        max_length=20, 
-        blank=True, 
-        default="",
-        db_index=True
-    )
+
+    def gerar_qr_code(self):
+        """Gera e salva o QR code do cliente"""
+        from core.qr_utils import save_qr_code_to_file
+        filename = f"cliente_{self.id}_{self.uuid}.png"
+        qr_file = save_qr_code_to_file(
+            data=self.qr_payload,
+            filename=filename,
+            top_text="MANDACARU S M",
+            bottom_text=self.nome_razao
+        )
+        self.qr_code.save(filename, qr_file, save=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        # Gera QR code automaticamente após salvar
+        if not self.qr_code:
+            self.gerar_qr_code()
 
     class Meta:
         ordering = ["nome_razao"]
@@ -52,7 +70,6 @@ class Cliente(models.Model):
 
 
 class Empreendimento(models.Model):
-    import uuid
     TIPO = [("LAVRA","Lavra"), ("OBRA","Obra"), ("PLANTA","Planta"), ("OUTRO","Outro")]
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name="empreendimentos")
     supervisor = models.ForeignKey(
@@ -81,12 +98,32 @@ class Empreendimento(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
     
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    qr_code = models.ImageField(upload_to='qrcodes/empreendimentos/', blank=True, null=True, verbose_name="QR Code")
 
     @property
     def qr_payload(self) -> str:
         # usado no Telegram: /start=eq:{uuid}
         return f"eq:{self.uuid}"
-    
+
+    def gerar_qr_code(self):
+        """Gera e salva o QR code do empreendimento"""
+        from core.qr_utils import save_qr_code_to_file
+        filename = f"empreendimento_{self.id}_{self.uuid}.png"
+        qr_file = save_qr_code_to_file(
+            data=self.qr_payload,
+            filename=filename,
+            top_text="MANDACARU S M",
+            bottom_text=self.nome
+        )
+        self.qr_code.save(filename, qr_file, save=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        # Gera QR code automaticamente após salvar
+        if not self.qr_code:
+            self.gerar_qr_code()
+
     class Meta:
         ordering = ["nome"]
 

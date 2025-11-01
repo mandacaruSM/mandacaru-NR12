@@ -33,6 +33,9 @@ INSTALLED_APPS = [
     "cadastro.apps.CadastroConfig",
     "equipamentos.apps.EquipamentosConfig",
     "nr12.apps.Nr12Config",
+    'manutencao',
+    'tecnicos',
+    'abastecimentos',
 ]
 
 MIDDLEWARE = [
