@@ -102,8 +102,8 @@ class Empreendimento(models.Model):
 
     @property
     def qr_payload(self) -> str:
-        # usado no Telegram: /start=eq:{uuid}
-        return f"eq:{self.uuid}"
+        # usado no Telegram para identificar empreendimento
+        return f"emp:{self.uuid}"
 
     def gerar_qr_code(self):
         """Gera e salva o QR code do empreendimento"""

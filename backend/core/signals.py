@@ -7,5 +7,5 @@ from .models import Profile
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance, role="ADMIN", modules_enabled=[
-            "clientes","empreendimentos","equipamentos","nr12","manutencoes","abastecimentos","almoxarifado","os","orcamentos","compras"
+            "clientes","empreendimentos","equipamentos","nr12","manutencoes","abastecimentos","almoxarifado","os","orcamentos","financeiro","compras"
         ])

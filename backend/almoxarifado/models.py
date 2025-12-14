@@ -48,6 +48,6 @@ class MovimentoEstoque(models.Model):
     criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     # vínculo com abastecimento (se aplicável)
     abastecimento = models.ForeignKey(
-        "abastecimento.RegistroAbastecimento",
+        "abastecimentos.Abastecimento",
         null=True, blank=True, on_delete=models.SET_NULL, related_name="movimentos_estoque"
     )

@@ -2,8 +2,17 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv, find_dotenv  # ✅ adicione find_dotenv aqui
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 1) raiz do repo: D:\mandacaru_nr12\nr12_erp\.env
+load_dotenv(dotenv_path=BASE_DIR.parent / ".env", override=False, encoding="utf-8")
+# 2) opcional: backend/.env (se um dia você mover)
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=False, encoding="utf-8")
+# 3) fallback: encontrar automaticamente subindo diretórios
+load_dotenv(find_dotenv(), override=False, encoding="utf-8")
+
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "CHANGE_ME")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
@@ -33,9 +42,14 @@ INSTALLED_APPS = [
     "cadastro.apps.CadastroConfig",
     "equipamentos.apps.EquipamentosConfig",
     "nr12.apps.Nr12Config",
-    'manutencao',
+    'manutencao.apps.ManutencaoConfig',
     'tecnicos',
-    'abastecimentos',
+    'abastecimentos.apps.AbastecimentosConfig',
+    'almoxarifado.apps.AlmoxarifadoConfig',
+    'orcamentos.apps.OrcamentosConfig',
+    'ordens_servico.apps.OrdensServicoConfig',
+    'financeiro',
+    'bot_telegram.apps.BotTelegramConfig',
 ]
 
 MIDDLEWARE = [
@@ -110,8 +124,11 @@ DATABASES = {
 
 # URL base pública do ERP (ajuste para seu domínio)
 ERP_PUBLIC_BASE_URL = os.getenv("ERP_PUBLIC_BASE_URL", "https://erp.mandacaru.com.br")
-# Usuário do bot para deep link (opcional)
+
+# Configurações do Telegram Bot
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "mandacaru_bot")
+TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
 
 
 MEDIA_URL = "/media/"

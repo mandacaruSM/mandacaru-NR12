@@ -1,4 +1,3 @@
-@'
 # Python / Django
 __pycache__/
 *.pyc
@@ -10,8 +9,9 @@ media/
 staticfiles/
 .env
 .env.*
-.vscode/
-.idea/
+.venv/
+venv/
+env/
 
 # Node / Next.js
 node_modules/
@@ -26,6 +26,36 @@ Thumbs.db
 # Coverage / tests
 .pytest_cache/
 coverage/
-'@ | Out-File -Encoding UTF8 .gitignore
-nr
-12.zip
+
+# IDE
+.vscode/
+.idea/
+
+# Project specific
+nr12.zip
+nul
+*.bat
+*.ps1
+
+# Documentation files (se não quiser enviar)
+COMO_*.md
+CORRECAO_*.md
+CORRECOES_*.md
+GUIA_*.md
+IMPLEMENTACAO_*.md
+MANUTENCAO_*.md
+MUDANCAS_*.md
+PASSO_*.md
+README_TELEGRAM_BOT.md
+TELEGRAM_BOT_SETUP.md
+VINCULACAO_*.md
+COMPARACAO_*.md
+
+# Test files
+backend/test_*.py
+backend/testar_*.py
+backend/gerar_codigo_bot.py
+backend/imghdr.py
+
+# Force rebuild marker
+frontend/.force-rebuild.txt

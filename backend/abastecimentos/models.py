@@ -21,6 +21,17 @@ class Abastecimento(models.Model):
         help_text="Horímetro ou KM no momento do abastecimento"
     )
 
+    # Relacionamento com produto de combustível
+    produto = models.ForeignKey(
+        "almoxarifado.Produto",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        limit_choices_to={'tipo': 'COMBUSTIVEL'},
+        related_name="abastecimentos",
+        help_text="Produto de combustível do almoxarifado"
+    )
+
     tipo_combustivel = models.CharField(
         max_length=20,
         choices=TIPO_COMBUSTIVEL_CHOICES,
@@ -44,7 +55,16 @@ class Abastecimento(models.Model):
         help_text="Valor por litro (calculado automaticamente)"
     )
 
-    local = models.CharField(max_length=150, blank=True, default="")
+    # Local de estoque (tanque/posto)
+    local_estoque = models.ForeignKey(
+        "almoxarifado.LocalEstoque",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="abastecimentos",
+        help_text="Local de onde saiu o combustível"
+    )
+    local = models.CharField(max_length=150, blank=True, default="", help_text="Descrição do local (alternativa)")
     operador = models.ForeignKey(
         "core.Operador",
         on_delete=models.SET_NULL,

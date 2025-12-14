@@ -3,40 +3,107 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
   AlertTriangle,
-  Plus, 
+  Plus,
   Search,
   Filter,
   Eye
 } from "lucide-react";
-import { nr12Api, ChecklistRealizado } from "@/lib/api";
+import { nr12Api, ChecklistRealizado, cadastroApi, equipamentosApi } from "@/lib/api";
 
 export default function ChecklistsPage() {
   const router = useRouter();
   const [checklists, setChecklists] = useState<ChecklistRealizado[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [empreendimentos, setEmpreendimentos] = useState<any[]>([]);
+  const [equipamentos, setEquipamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("");
+  const [clienteFiltro, setClienteFiltro] = useState<string>("");
+  const [empreendimentoFiltro, setEmpreendimentoFiltro] = useState<string>("");
+  const [equipamentoFiltro, setEquipamentoFiltro] = useState<string>("");
   const [statusFiltro, setStatusFiltro] = useState<string>("TODOS");
   const [resultadoFiltro, setResultadoFiltro] = useState<string>("TODOS");
 
   useEffect(() => {
+    carregarDadosIniciais();
+  }, []);
+
+  useEffect(() => {
     carregarChecklists();
-  }, [statusFiltro, resultadoFiltro]);
+  }, [statusFiltro, resultadoFiltro, equipamentoFiltro]);
+
+  useEffect(() => {
+    if (clienteFiltro) {
+      carregarEmpreendimentos(clienteFiltro);
+    } else {
+      setEmpreendimentos([]);
+      setEmpreendimentoFiltro("");
+    }
+  }, [clienteFiltro]);
+
+  useEffect(() => {
+    if (empreendimentoFiltro) {
+      carregarEquipamentos(empreendimentoFiltro);
+    } else if (clienteFiltro) {
+      carregarEquipamentos(null, clienteFiltro);
+    } else {
+      setEquipamentos([]);
+      setEquipamentoFiltro("");
+    }
+  }, [empreendimentoFiltro]);
+
+  const carregarDadosIniciais = async () => {
+    try {
+      const clientesRes = await cadastroApi.clientes.list();
+      setClientes(clientesRes.results || []);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+      setClientes([]);
+    }
+  };
+
+  const carregarEmpreendimentos = async (clienteId: string) => {
+    try {
+      const response = await cadastroApi.empreendimentos.list({ cliente: Number(clienteId) });
+      setEmpreendimentos(response.results || []);
+    } catch (error) {
+      console.error("Erro ao carregar empreendimentos:", error);
+    }
+  };
+
+  const carregarEquipamentos = async (empreendimentoId: string | null = null, clienteId: string | null = null) => {
+    try {
+      const params: any = {};
+      if (empreendimentoId) {
+        params.empreendimento = empreendimentoId;
+      } else if (clienteId) {
+        params.cliente = clienteId;
+      }
+      const response = await equipamentosApi.list(params);
+      setEquipamentos(response.results || []);
+    } catch (error) {
+      console.error("Erro ao carregar equipamentos:", error);
+    }
+  };
 
   const carregarChecklists = async () => {
     try {
       setLoading(true);
       const params: any = {};
-      
+
       if (statusFiltro !== "TODOS") {
         params.status = statusFiltro;
       }
       if (resultadoFiltro !== "TODOS") {
         params.resultado = resultadoFiltro;
+      }
+      if (equipamentoFiltro) {
+        params.equipamento = equipamentoFiltro;
       }
 
       const response = await nr12Api.checklists.list(params);
@@ -110,7 +177,15 @@ export default function ChecklistsPage() {
           <p className="text-gray-600 mt-1">Gerenciar checklists realizados</p>
         </div>
         <button
-          onClick={() => router.push("/dashboard/nr12/checklists/novo")}
+          onClick={() => {
+            const params = new URLSearchParams();
+            if (equipamentoFiltro) params.append('equipamento', equipamentoFiltro);
+            if (clienteFiltro) params.append('cliente', clienteFiltro);
+            if (empreendimentoFiltro) params.append('empreendimento', empreendimentoFiltro);
+
+            const url = `/dashboard/nr12/checklists/novo${params.toString() ? `?${params.toString()}` : ''}`;
+            router.push(url);
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -120,9 +195,63 @@ export default function ChecklistsPage() {
 
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Filtro Cliente */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Cliente</label>
+            <select
+              value={clienteFiltro}
+              onChange={(e) => setClienteFiltro(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+            >
+              <option value="" className="text-gray-900">Todos os Clientes</option>
+              {clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id} className="text-gray-900">
+                  {cliente.nome_razao}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro Empreendimento */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Empreendimento</label>
+            <select
+              value={empreendimentoFiltro}
+              onChange={(e) => setEmpreendimentoFiltro(e.target.value)}
+              disabled={!clienteFiltro}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="" className="text-gray-900">Todos os Empreendimentos</option>
+              {empreendimentos.map((emp) => (
+                <option key={emp.id} value={emp.id} className="text-gray-900">
+                  {emp.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro Equipamento */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Equipamento</label>
+            <select
+              value={equipamentoFiltro}
+              onChange={(e) => setEquipamentoFiltro(e.target.value)}
+              disabled={!clienteFiltro && !empreendimentoFiltro}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="" className="text-gray-900">Todos os Equipamentos</option>
+              {equipamentos.map((eq) => (
+                <option key={eq.id} value={eq.id} className="text-gray-900">
+                  {eq.codigo} - {eq.descricao}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Busca */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-900 mb-1">Busca rápida</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -130,37 +259,56 @@ export default function ChecklistsPage() {
                 placeholder="Buscar por equipamento, modelo ou operador..."
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
             </div>
           </div>
 
           {/* Filtro Status */}
           <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Status</label>
             <select
               value={statusFiltro}
               onChange={(e) => setStatusFiltro(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             >
-              <option value="TODOS">Todos os Status</option>
-              <option value="EM_ANDAMENTO">Em Andamento</option>
-              <option value="CONCLUIDO">Concluído</option>
-              <option value="CANCELADO">Cancelado</option>
+              <option value="TODOS" className="text-gray-900">Todos os Status</option>
+              <option value="EM_ANDAMENTO" className="text-gray-900">Em Andamento</option>
+              <option value="CONCLUIDO" className="text-gray-900">Concluído</option>
+              <option value="CANCELADO" className="text-gray-900">Cancelado</option>
             </select>
           </div>
 
           {/* Filtro Resultado */}
           <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Resultado</label>
             <select
               value={resultadoFiltro}
               onChange={(e) => setResultadoFiltro(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             >
-              <option value="TODOS">Todos os Resultados</option>
-              <option value="APROVADO">Aprovado</option>
-              <option value="APROVADO_RESTRICAO">Aprovado c/ Restrição</option>
-              <option value="REPROVADO">Reprovado</option>
+              <option value="TODOS" className="text-gray-900">Todos os Resultados</option>
+              <option value="APROVADO" className="text-gray-900">Aprovado</option>
+              <option value="APROVADO_RESTRICAO" className="text-gray-900">Aprovado c/ Restrição</option>
+              <option value="REPROVADO" className="text-gray-900">Reprovado</option>
             </select>
+          </div>
+
+          {/* Botão Limpar Filtros */}
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setClienteFiltro("");
+                setEmpreendimentoFiltro("");
+                setEquipamentoFiltro("");
+                setFiltro("");
+                setStatusFiltro("TODOS");
+                setResultadoFiltro("TODOS");
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 hover:bg-gray-50 transition-colors"
+            >
+              Limpar Filtros
+            </button>
           </div>
         </div>
       </div>

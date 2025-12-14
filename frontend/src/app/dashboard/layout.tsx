@@ -25,6 +25,7 @@ const menuItems: MenuItem[] = [
 
   // Operações
   { name: 'Manutenções', href: '/dashboard/manutencoes', module: 'manutencoes', icon: '🔧' },
+  { name: 'Manutenção Preventiva', href: '/dashboard/manutencao-preventiva', module: 'nr12', icon: '⚙️' },
   { name: 'Abastecimentos', href: '/dashboard/abastecimentos', module: 'abastecimentos', icon: '⛽' },
   { name: 'NR12', href: '/dashboard/nr12', module: 'nr12', icon: '📋' },
 
@@ -35,9 +36,11 @@ const menuItems: MenuItem[] = [
 
   // Gestão
   { name: 'Almoxarifado', href: '/dashboard/almoxarifado', module: 'almoxarifado', icon: '📦' },
-  { name: 'Ordens de Serviço', href: '/dashboard/os', module: 'os', icon: '📝' },
+  { name: 'Ordens de Serviço', href: '/dashboard/ordens-servico', module: 'os', icon: '📝' },
   { name: 'Orçamentos', href: '/dashboard/orcamentos', module: 'orcamentos', icon: '💰' },
+  { name: 'Financeiro', href: '/dashboard/financeiro', module: 'financeiro', icon: '💵' },
   { name: 'Compras', href: '/dashboard/compras', module: 'compras', icon: '🛒' },
+  { name: 'Relatórios', href: '/dashboard/relatorios', module: '', icon: '📈' },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

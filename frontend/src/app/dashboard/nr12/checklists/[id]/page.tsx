@@ -190,7 +190,7 @@ export default function ChecklistDetailPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Operador</p>
-              <p className="font-medium text-gray-900">{checklist.operador_nome || "N/A"}</p>
+              <p className="font-medium text-gray-900">{checklist.operador_nome_display || checklist.operador_nome || "N/A"}</p>
             </div>
           </div>
         </div>
@@ -262,12 +262,12 @@ export default function ChecklistDetailPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoriaColor('FUNCIONAL')}`}>
-                        Item {index + 1}
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoriaColor(resposta.item_categoria)}`}>
+                        {resposta.item_categoria}
                       </span>
                     </div>
                     <p className="font-medium text-gray-900 mb-2">
-                      {resposta.item_checklist}
+                      {resposta.item_pergunta}
                     </p>
                     {resposta.observacao && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-lg">

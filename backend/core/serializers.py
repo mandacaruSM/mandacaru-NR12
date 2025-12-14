@@ -37,6 +37,7 @@ class OnboardingSerializer(serializers.Serializer):
 class OperadorSerializer(serializers.ModelSerializer):
     """Serializer básico para lista e criação"""
     clientes_nomes = serializers.SerializerMethodField()
+    empreendimentos_nomes = serializers.SerializerMethodField()
     total_equipamentos = serializers.SerializerMethodField()
     total_checklists = serializers.SerializerMethodField()
     taxa_aprovacao = serializers.SerializerMethodField()
@@ -48,7 +49,14 @@ class OperadorSerializer(serializers.ModelSerializer):
         required=False,
         source='clientes'
     )
-    
+    empreendimentos_ids = serializers.PrimaryKeyRelatedField(
+        queryset=__import__('cadastro.models', fromlist=['Empreendimento']).Empreendimento.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        source='empreendimentos_vinculados'
+    )
+
     class Meta:
         model = Operador
         fields = [
@@ -59,8 +67,8 @@ class OperadorSerializer(serializers.ModelSerializer):
             'logradouro', 'numero', 'complemento', 'bairro',
             'cidade', 'uf', 'cep',
             'ativo', 'criado_em', 'atualizado_em',
-            'clientes_nomes', 'total_equipamentos',
-            'total_checklists', 'taxa_aprovacao', 'clientes_ids'
+            'clientes_nomes', 'empreendimentos_nomes', 'total_equipamentos',
+            'total_checklists', 'taxa_aprovacao', 'clientes_ids', 'empreendimentos_ids'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
@@ -69,7 +77,10 @@ class OperadorSerializer(serializers.ModelSerializer):
     
     def get_clientes_nomes(self, obj):
         return [c.nome_razao for c in obj.clientes.all()]
-    
+
+    def get_empreendimentos_nomes(self, obj):
+        return [e.nome for e in obj.empreendimentos_vinculados.all()]
+
     def get_total_equipamentos(self, obj):
         return obj.equipamentos_autorizados.count()
     
@@ -84,9 +95,10 @@ class OperadorSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         clientes_data = validated_data.pop('clientes', [])
+        empreendimentos_data = validated_data.pop('empreendimentos_vinculados', [])
         operador = Operador.objects.create(**validated_data)
         operador.criado_por = self.context['request'].user
-        
+
         # Vincular clientes
         for cliente in clientes_data:
             OperadorCliente.objects.create(
@@ -94,23 +106,28 @@ class OperadorSerializer(serializers.ModelSerializer):
                 cliente=cliente,
                 vinculado_por=self.context['request'].user
             )
-        
+
+        # Vincular empreendimentos
+        for empreendimento in empreendimentos_data:
+            operador.empreendimentos_vinculados.add(empreendimento)
+
         operador.save()
         return operador
-    
+
     def update(self, instance, validated_data):
         clientes_data = validated_data.pop('clientes', None)
-        
+        empreendimentos_data = validated_data.pop('empreendimentos_vinculados', None)
+
         # Atualizar campos básicos
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
+
         # Atualizar clientes se fornecido
         if clientes_data is not None:
             # Remover vínculos antigos
             OperadorCliente.objects.filter(operador=instance).delete()
-            
+
             # Criar novos vínculos
             for cliente in clientes_data:
                 OperadorCliente.objects.create(
@@ -118,7 +135,13 @@ class OperadorSerializer(serializers.ModelSerializer):
                     cliente=cliente,
                     vinculado_por=self.context['request'].user
                 )
-        
+
+        # Atualizar empreendimentos se fornecido
+        if empreendimentos_data is not None:
+            instance.empreendimentos_vinculados.clear()
+            for empreendimento in empreendimentos_data:
+                instance.empreendimentos_vinculados.add(empreendimento)
+
         return instance
 
 
@@ -167,6 +190,7 @@ class OperadorDetailSerializer(serializers.ModelSerializer):
 class SupervisorSerializer(serializers.ModelSerializer):
     """Serializer básico para lista e criação"""
     clientes_nomes = serializers.SerializerMethodField()
+    empreendimentos_nomes = serializers.SerializerMethodField()
     total_operadores = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
     clientes_ids = serializers.PrimaryKeyRelatedField(
@@ -176,7 +200,14 @@ class SupervisorSerializer(serializers.ModelSerializer):
         required=False,
         source='clientes'
     )
-    
+    empreendimentos_ids = serializers.PrimaryKeyRelatedField(
+        queryset=__import__('cadastro.models', fromlist=['Empreendimento']).Empreendimento.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        source='empreendimentos_vinculados'
+    )
+
     class Meta:
         model = Supervisor
         fields = [
@@ -187,7 +218,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'logradouro', 'numero', 'complemento', 'bairro',
             'cidade', 'uf', 'cep',
             'ativo', 'criado_em', 'atualizado_em',
-            'clientes_nomes', 'total_operadores', 'clientes_ids'
+            'clientes_nomes', 'empreendimentos_nomes', 'total_operadores', 'clientes_ids', 'empreendimentos_ids'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
@@ -196,39 +227,54 @@ class SupervisorSerializer(serializers.ModelSerializer):
     
     def get_clientes_nomes(self, obj):
         return [c.nome_razao for c in obj.clientes.all()]
-    
+
+    def get_empreendimentos_nomes(self, obj):
+        return [e.nome for e in obj.empreendimentos_vinculados.all()]
+
     def get_total_operadores(self, obj):
         return obj.operadores_supervisionados.count()
-    
+
     def get_telegram_vinculado(self, obj):
         return obj.telegram_vinculado
-    
+
     def create(self, validated_data):
         clientes_data = validated_data.pop('clientes', [])
+        empreendimentos_data = validated_data.pop('empreendimentos_vinculados', [])
         supervisor = Supervisor.objects.create(**validated_data)
         supervisor.criado_por = self.context['request'].user
-        
+
         # Vincular clientes
         for cliente in clientes_data:
             supervisor.clientes.add(cliente)
-        
+
+        # Vincular empreendimentos
+        for empreendimento in empreendimentos_data:
+            supervisor.empreendimentos_vinculados.add(empreendimento)
+
         supervisor.save()
         return supervisor
-    
+
     def update(self, instance, validated_data):
         clientes_data = validated_data.pop('clientes', None)
-        
+        empreendimentos_data = validated_data.pop('empreendimentos_vinculados', None)
+
         # Atualizar campos básicos
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
+
         # Atualizar clientes se fornecido
         if clientes_data is not None:
             instance.clientes.clear()
             for cliente in clientes_data:
                 instance.clientes.add(cliente)
-        
+
+        # Atualizar empreendimentos se fornecido
+        if empreendimentos_data is not None:
+            instance.empreendimentos_vinculados.clear()
+            for empreendimento in empreendimentos_data:
+                instance.empreendimentos_vinculados.add(empreendimento)
+
         return instance
 
 

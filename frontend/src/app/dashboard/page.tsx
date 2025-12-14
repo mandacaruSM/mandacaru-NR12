@@ -1,7 +1,15 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  clientesApi,
+  equipamentosApi,
+  operadoresApi,
+  supervisoresApi,
+  ordensServicoApi
+} from '@/lib/api';
 
 interface StatCard {
   title: string;
@@ -24,60 +32,89 @@ interface Activity {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [statsData, setStatsData] = useState({
+    clientes: 0,
+    equipamentos: 0,
+    operadores: 0,
+    supervisores: 0,
+    osAbertas: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  async function loadDashboardData() {
+    try {
+      setLoading(true);
+
+      const [clientesRes, equipamentosRes, operadoresRes, supervisoresRes, osRes] = await Promise.all([
+        clientesApi.list({ page_size: 1 }),
+        equipamentosApi.list({ page_size: 1 }),
+        operadoresApi.list({ page_size: 1 }),
+        supervisoresApi.list({ page_size: 1 }),
+        ordensServicoApi.list({ status: 'ABERTA', page_size: 1 }),
+      ]);
+
+      setStatsData({
+        clientes: clientesRes.count || 0,
+        equipamentos: equipamentosRes.count || 0,
+        operadores: operadoresRes.count || 0,
+        supervisores: supervisoresRes.count || 0,
+        osAbertas: osRes.count || 0,
+      });
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const stats: StatCard[] = [
     {
       title: 'Total de Clientes',
-      value: '42',
-      change: '+3 este mês',
+      value: loading ? '...' : statsData.clientes.toString(),
+      change: '',
       href: '/dashboard/clientes',
       icon: '👥',
-      changeType: 'positive',
+      changeType: 'neutral',
       color: 'from-blue-500 to-blue-600',
     },
     {
-      title: 'Equipamentos Ativos',
-      value: '127',
-      change: '+12 este mês',
+      title: 'Equipamentos',
+      value: loading ? '...' : statsData.equipamentos.toString(),
+      change: '',
       href: '/dashboard/equipamentos',
       icon: '🚜',
-      changeType: 'positive',
+      changeType: 'neutral',
       color: 'from-green-500 to-green-600',
     },
     {
-      title: 'Operadores Ativos',
-      value: '24',
-      change: '+2 este mês',
+      title: 'Operadores',
+      value: loading ? '...' : statsData.operadores.toString(),
+      change: '',
       href: '/dashboard/operadores',
       icon: '👷',
-      changeType: 'positive',
+      changeType: 'neutral',
       color: 'from-indigo-500 to-indigo-600',
     },
     {
       title: 'Supervisores',
-      value: '8',
-      change: 'Estável',
+      value: loading ? '...' : statsData.supervisores.toString(),
+      change: '',
       href: '/dashboard/supervisores',
       icon: '👨‍💼',
       changeType: 'neutral',
       color: 'from-purple-500 to-purple-600',
     },
     {
-      title: 'Manutenções Pendentes',
-      value: '8',
-      change: '-2 esta semana',
-      href: '/dashboard/manutencoes',
-      icon: '🔧',
-      changeType: 'neutral',
-      color: 'from-yellow-500 to-yellow-600',
-    },
-    {
       title: 'OS Abertas',
-      value: '15',
-      change: '+5 hoje',
-      href: '/dashboard/os',
+      value: loading ? '...' : statsData.osAbertas.toString(),
+      change: '',
+      href: '/dashboard/ordens-servico',
       icon: '📝',
-      changeType: 'negative',
+      changeType: 'neutral',
       color: 'from-red-500 to-red-600',
     },
   ];
@@ -120,20 +157,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-8 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-black">
               Olá, {user?.username}!
             </h1>
-            <p className="text-blue-100 text-lg">
+            <p className="text-lg text-black">
               Bem-vindo ao sistema de gestão NR12
             </p>
           </div>
           <div className="hidden md:flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-blue-100">Hoje</p>
-              <p className="text-xl font-semibold">
+              <p className="text-sm text-black">Hoje</p>
+              <p className="text-xl font-semibold text-black">
                 {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
               </p>
             </div>
@@ -165,19 +202,21 @@ export default function DashboardPage() {
               </div>
               <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
               <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
-              <div className="flex items-center">
-                <span
-                  className={`text-xs font-medium ${
-                    stat.changeType === 'positive'
-                      ? 'text-green-600 bg-green-50'
-                      : stat.changeType === 'negative'
-                      ? 'text-red-600 bg-red-50'
-                      : 'text-gray-600 bg-gray-50'
-                  } px-2 py-1 rounded-full`}
-                >
-                  {stat.change}
-                </span>
-              </div>
+              {stat.change && (
+                <div className="flex items-center">
+                  <span
+                    className={`text-xs font-medium ${
+                      stat.changeType === 'positive'
+                        ? 'text-green-600 bg-green-50'
+                        : stat.changeType === 'negative'
+                        ? 'text-red-600 bg-red-50'
+                        : 'text-gray-600 bg-gray-50'
+                    } px-2 py-1 rounded-full`}
+                  >
+                    {stat.change}
+                  </span>
+                </div>
+              )}
             </div>
           </Link>
         ))}
@@ -290,36 +329,6 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium text-gray-700 group-hover:text-pink-700 text-center">
                   Novo Checklist NR12
                 </span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Alerts */}
-      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-400 rounded-lg shadow-sm">
-        <div className="p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
-                <span className="text-xl">⚠️</span>
-              </div>
-            </div>
-            <div className="ml-4 flex-1">
-              <h3 className="text-sm font-semibold text-yellow-900 mb-1">
-                Atenção necessária!
-              </h3>
-              <p className="text-sm text-yellow-800">
-                Você tem 3 equipamentos com manutenção atrasada.
-              </p>
-              <Link
-                href="/dashboard/manutencoes"
-                className="inline-flex items-center mt-2 text-sm font-medium text-yellow-900 hover:text-yellow-700"
-              >
-                Ver detalhes
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </Link>
             </div>
           </div>

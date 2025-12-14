@@ -14,6 +14,7 @@ class EquipamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipamento
         fields = "__all__"
+        read_only_fields = ['uuid', 'qr_code', 'criado_em', 'atualizado_em']
 
     def validate(self, data):
         # garante coerência: empreendimento pertence ao cliente

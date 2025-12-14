@@ -3,7 +3,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
+import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, api, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
 
@@ -14,6 +14,12 @@ const TIPO_OPTIONS = [
   { value: 'OUTRO', label: 'Outro' },
 ];
 
+interface Tecnico {
+  id: number;
+  nome: string;
+  nome_completo?: string;
+}
+
 export default function NovoEmpreendimentoPage() {
   const router = useRouter();
   const toast = useToast();
@@ -23,8 +29,10 @@ export default function NovoEmpreendimentoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [supervisores, setSupervisores] = useState<Supervisor[]>([]);
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [equipamentosSelecionados, setEquipamentosSelecionados] = useState<number[]>([]);
   const [supervisorSelecionado, setSupervisorSelecionado] = useState<number | ''>('');
+  const [tecnicosSelecionados, setTecnicosSelecionados] = useState<number[]>([]);
 
   const [formData, setFormData] = useState<Partial<Empreendimento>>({
     cliente: undefined,
@@ -48,15 +56,18 @@ export default function NovoEmpreendimentoPage() {
   }, []);
 
   useEffect(() => {
-    // quando cliente mudar, carregar equipamentos e supervisores do cliente (se aplicável)
+    // quando cliente mudar, carregar equipamentos, supervisores e técnicos
     if (formData.cliente) {
       loadEquipamentos(Number(formData.cliente));
       loadSupervisores();
+      loadTecnicos();
     } else {
       setEquipamentos([]);
       setEquipamentosSelecionados([]);
       setSupervisores([]);
       setSupervisorSelecionado('');
+      setTecnicos([]);
+      setTecnicosSelecionados([]);
     }
   }, [formData.cliente]);
 
@@ -90,6 +101,15 @@ export default function NovoEmpreendimentoPage() {
     }
   };
 
+  const loadTecnicos = async () => {
+    try {
+      const res = await api('/tecnicos/');
+      setTecnicos(res.results || res || []);
+    } catch (e) {
+      // opcional
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -101,7 +121,7 @@ export default function NovoEmpreendimentoPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.cliente) {
       toast.error('Selecione um cliente');
       return;
@@ -114,6 +134,7 @@ export default function NovoEmpreendimentoPage() {
       const payload = {
         ...formData,
         supervisor: supervisorSelecionado || null,
+        tecnicos_ids: tecnicosSelecionados,
       } as any;
       const created = await empreendimentosApi.create(payload);
       // Atribuir equipamentos selecionados ao empreendimento criado
@@ -265,6 +286,29 @@ export default function NovoEmpreendimentoPage() {
                     <option key={sp.id} value={sp.id}>{sp.nome_completo} ({sp.cpf})</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Técnicos (múltiplos) */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Técnicos Autorizados 🔧</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-3">
+                  {tecnicos.map(tec => (
+                    <label key={tec.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={tecnicosSelecionados.includes(tec.id)}
+                        onChange={(e) => {
+                          setTecnicosSelecionados(prev => e.target.checked ? [...prev, tec.id] : prev.filter(i => i !== tec.id));
+                        }}
+                      />
+                      <span className="text-gray-700">{tec.nome_completo || tec.nome}</span>
+                    </label>
+                  ))}
+                  {tecnicos.length === 0 && (
+                    <div className="text-gray-500">Nenhum técnico cadastrado.</div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Técnicos selecionados terão acesso aos equipamentos deste empreendimento.</p>
               </div>
 
               {/* Equipamentos do cliente para vincular ao empreendimento */}

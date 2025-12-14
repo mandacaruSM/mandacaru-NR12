@@ -100,56 +100,56 @@ export default function EditarSupervisorPage() {
 
       <form onSubmit={onSubmit} className="bg-white shadow rounded-lg p-6 space-y-4 max-w-xl">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nome completo</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2" required />
+          <label className="block text-sm font-medium text-gray-900">Nome completo</label>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" required />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">CPF</label>
-          <input value={cpf} onChange={(e) => setCpf(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2" required />
+          <label className="block text-sm font-medium text-gray-900">CPF</label>
+          <input value={cpf} onChange={(e) => setCpf(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" required />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Data de Nascimento</label>
-          <input type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2" required />
+          <label className="block text-sm font-medium text-gray-900">Data de Nascimento</label>
+          <input type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" required />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Telefone</label>
-          <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2" />
+          <label className="block text-sm font-medium text-gray-900">Telefone</label>
+          <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
         </div>
         <div className="flex items-center gap-2">
           <input id="ativo" type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
-          <label htmlFor="ativo" className="text-sm text-gray-700">Ativo</label>
+          <label htmlFor="ativo" className="text-sm text-gray-900">Ativo</label>
         </div>
 
         <div className="pt-2 border-t mt-4">
-          <h2 className="text-md font-semibold text-gray-800 mb-2">Endereço</h2>
+          <h2 className="text-md font-semibold text-gray-900 mb-2">Endereço</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="block text-sm text-gray-700">Logradouro</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={logradouro} onChange={(e)=>setLogradouro(e.target.value)} />
+              <label className="block text-sm text-gray-900">Logradouro</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={logradouro} onChange={(e)=>setLogradouro(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">Número</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={numero} onChange={(e)=>setNumero(e.target.value)} />
+              <label className="block text-sm text-gray-900">Número</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={numero} onChange={(e)=>setNumero(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">Complemento</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={complemento} onChange={(e)=>setComplemento(e.target.value)} />
+              <label className="block text-sm text-gray-900">Complemento</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={complemento} onChange={(e)=>setComplemento(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">Bairro</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={bairro} onChange={(e)=>setBairro(e.target.value)} />
+              <label className="block text-sm text-gray-900">Bairro</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={bairro} onChange={(e)=>setBairro(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">Cidade</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={cidade} onChange={(e)=>setCidade(e.target.value)} />
+              <label className="block text-sm text-gray-900">Cidade</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={cidade} onChange={(e)=>setCidade(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">UF</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={uf} onChange={(e)=>setUf(e.target.value)} />
+              <label className="block text-sm text-gray-900">UF</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={uf} onChange={(e)=>setUf(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm text-gray-700">CEP</label>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2" value={cep} onChange={(e)=>setCep(e.target.value)} />
+              <label className="block text-sm text-gray-900">CEP</label>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" value={cep} onChange={(e)=>setCep(e.target.value)} />
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
+import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, api, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
 
@@ -13,6 +13,12 @@ const TIPO_OPTIONS = [
   { value: 'PLANTA', label: 'Planta' },
   { value: 'OUTRO', label: 'Outro' },
 ];
+
+interface Tecnico {
+  id: number;
+  nome: string;
+  nome_completo?: string;
+}
 
 export default function EditarEmpreendimentoPage() {
   const router = useRouter();
@@ -26,8 +32,10 @@ export default function EditarEmpreendimentoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [supervisores, setSupervisores] = useState<Supervisor[]>([]);
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [equipamentosSelecionados, setEquipamentosSelecionados] = useState<number[]>([]);
   const [supervisorSelecionado, setSupervisorSelecionado] = useState<number | ''>('');
+  const [tecnicosSelecionados, setTecnicosSelecionados] = useState<number[]>([]);
   const [formData, setFormData] = useState<Partial<Empreendimento>>({});
 
   useEffect(() => {
@@ -39,6 +47,7 @@ export default function EditarEmpreendimentoPage() {
     if (formData?.cliente) {
       loadEquipamentos(Number(formData.cliente));
       loadSupervisores();
+      loadTecnicos();
     }
   }, [formData?.cliente]);
 
@@ -57,6 +66,12 @@ export default function EditarEmpreendimentoPage() {
       const empreendimento = await empreendimentosApi.get(empreendimentoId);
       setFormData(empreendimento);
       setSupervisorSelecionado((empreendimento as any).supervisor ?? '');
+
+      // Carregar técnicos vinculados
+      if ((empreendimento as any).tecnicos_vinculados_ids) {
+        setTecnicosSelecionados((empreendimento as any).tecnicos_vinculados_ids);
+      }
+
       // equipamentos do cliente para oferecer seleção
       if (empreendimento.cliente) {
         const resEq = await equipamentosApi.list({ cliente: Number(empreendimento.cliente) });
@@ -88,6 +103,15 @@ export default function EditarEmpreendimentoPage() {
     }
   };
 
+  const loadTecnicos = async () => {
+    try {
+      const res = await api('/tecnicos/');
+      setTecnicos(res.results || res || []);
+    } catch (e) {
+      // opcional
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -106,6 +130,7 @@ export default function EditarEmpreendimentoPage() {
       const payload = {
         ...formData,
         supervisor: supervisorSelecionado === '' ? null : supervisorSelecionado,
+        tecnicos_ids: tecnicosSelecionados,
       } as any;
       await empreendimentosApi.update(empreendimentoId, payload);
       if (equipamentosSelecionados.length > 0) {
@@ -321,6 +346,29 @@ export default function EditarEmpreendimentoPage() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Associação de supervisor por cliente; alteração específica por empreendimento requer backend.</p>
+              </div>
+
+              {/* Técnicos (múltiplos) */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Técnicos Autorizados 🔧</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-3">
+                  {tecnicos.map(tec => (
+                    <label key={tec.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={tecnicosSelecionados.includes(tec.id)}
+                        onChange={(e) => {
+                          setTecnicosSelecionados(prev => e.target.checked ? [...prev, tec.id] : prev.filter(i => i !== tec.id));
+                        }}
+                      />
+                      <span className="text-gray-700">{tec.nome_completo || tec.nome}</span>
+                    </label>
+                  ))}
+                  {tecnicos.length === 0 && (
+                    <div className="text-gray-500">Nenhum técnico cadastrado.</div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Técnicos selecionados terão acesso aos equipamentos deste empreendimento.</p>
               </div>
 
               {/* Equipamentos do cliente para vincular ao empreendimento */}

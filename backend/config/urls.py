@@ -41,9 +41,18 @@ urlpatterns = [
     path("api/v1/auth/login/", cookie_login, name="auth_cookie_login"),
     path("api/v1/auth/logout/", cookie_logout, name="auth_cookie_logout"),
     path("api/v1/auth/refresh/", refresh_token, name="auth_cookie_refresh"),
-    path('api/', include('tecnicos.urls')),
-    path('api/', include('manutencao.urls')),
-    path('api/', include('abastecimentos.urls')),
+
+    # Outros módulos
+    path('api/v1/', include('tecnicos.urls')),
+    path('api/v1/', include('manutencao.urls')),
+    path('api/v1/', include('abastecimentos.urls')),
+    path('api/v1/almoxarifado/', include('almoxarifado.urls')),
+    path('api/v1/', include('orcamentos.urls')),
+    path('api/v1/', include('ordens_servico.urls')),
+    path('api/v1/financeiro/', include('financeiro.urls')),
+
+    # Bot do Telegram
+    path('bot/', include('bot_telegram.urls')),
 ]
 
 # Serve media files in development

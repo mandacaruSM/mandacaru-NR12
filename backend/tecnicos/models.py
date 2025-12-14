@@ -49,6 +49,43 @@ class Tecnico(models.Model):
         verbose_name="Telefone de Emergência"
     )
 
+    # ==================== TELEGRAM ====================
+    telegram_chat_id = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="Telegram Chat ID",
+        help_text="ID único do chat do Telegram"
+    )
+    telegram_username = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name="Username do Telegram",
+        help_text="@username do técnico no Telegram"
+    )
+    telegram_vinculado_em = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Data de vinculação do Telegram"
+    )
+
+    # ==================== CÓDIGO DE VINCULAÇÃO ====================
+    codigo_vinculacao = models.CharField(
+        max_length=8,
+        unique=True,
+        null=True,
+        blank=True,
+        verbose_name="Código de Vinculação",
+        help_text="Código de 8 dígitos para vincular Telegram"
+    )
+    codigo_valido_ate = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Código válido até"
+    )
+
     # ==================== ENDEREÇO ====================
     logradouro = models.CharField(max_length=255, blank=True, default='', verbose_name="Logradouro")
     numero = models.CharField(max_length=20, blank=True, default='', verbose_name="Número")
@@ -133,6 +170,20 @@ class Tecnico(models.Model):
         help_text="Informações adicionais sobre o técnico"
     )
 
+    # ==================== RELACIONAMENTOS ====================
+    clientes = models.ManyToManyField(
+        'cadastro.Cliente',
+        related_name='tecnicos',
+        verbose_name="Clientes",
+        blank=True
+    )
+    empreendimentos_vinculados = models.ManyToManyField(
+        'cadastro.Empreendimento',
+        related_name='tecnicos_vinculados',
+        verbose_name="Empreendimentos",
+        blank=True
+    )
+
     # ==================== STATUS E DATAS ====================
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
@@ -157,6 +208,25 @@ class Tecnico(models.Model):
             cpf_limpo = ''.join(filter(str.isdigit, self.cpf))
             if len(cpf_limpo) != 11:
                 raise ValidationError({'cpf': 'CPF deve ter 11 dígitos'})
+
+    def gerar_codigo_vinculacao(self):
+        """Gera código de 8 dígitos para vincular Telegram"""
+        from django.utils import timezone
+        from datetime import timedelta
+        import random
+
+        # Gerar código de 8 dígitos
+        codigo = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+
+        # Verificar se código já existe
+        while Tecnico.objects.filter(codigo_vinculacao=codigo).exists():
+            codigo = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+
+        self.codigo_vinculacao = codigo
+        self.codigo_valido_ate = timezone.now() + timedelta(hours=24)
+        self.save()
+
+        return codigo
 
     def save(self, *args, **kwargs):
         # Sincronizar nome e nome_completo

@@ -7,18 +7,32 @@ from .views import (
     ChecklistRealizadoViewSet,
     RespostaItemChecklistViewSet,
     NotificacaoChecklistViewSet,
-    BotChecklistViewSet
+    BotChecklistViewSet,
+    # Manutenção Preventiva
+    ModeloManutencaoPreventivaViewSet,
+    ItemManutencaoPreventivaViewSet,
+    ProgramacaoManutencaoViewSet,
+    ManutencaoPreventivaRealizadaViewSet,
+    RespostaItemManutencaoViewSet
 )
 
 # ============================================
 # Router para ViewSets REST (Web Interface)
 # ============================================
 router = DefaultRouter()
+# Checklist
 router.register(r'modelos-checklist', ModeloChecklistViewSet, basename='modelos-checklist')
 router.register(r'itens-checklist', ItemChecklistViewSet, basename='itens-checklist')
 router.register(r'checklists', ChecklistRealizadoViewSet, basename='checklists')
 router.register(r'respostas-checklist', RespostaItemChecklistViewSet, basename='respostas-checklist')
 router.register(r'notificacoes', NotificacaoChecklistViewSet, basename='notificacoes')
+
+# Manutenção Preventiva
+router.register(r'modelos-manutencao-preventiva', ModeloManutencaoPreventivaViewSet, basename='modelos-manutencao-preventiva')
+router.register(r'itens-manutencao-preventiva', ItemManutencaoPreventivaViewSet, basename='itens-manutencao-preventiva')
+router.register(r'programacoes-manutencao', ProgramacaoManutencaoViewSet, basename='programacoes-manutencao')
+router.register(r'manutencoes-preventivas', ManutencaoPreventivaRealizadaViewSet, basename='manutencoes-preventivas')
+router.register(r'respostas-manutencao', RespostaItemManutencaoViewSet, basename='respostas-manutencao')
 
 # ============================================
 # Endpoints do Bot Telegram

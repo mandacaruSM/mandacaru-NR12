@@ -16,7 +16,13 @@ class ManutencaoSerializer(serializers.ModelSerializer):
     )
 
     equipamento_nome = serializers.CharField(source='equipamento.__str__', read_only=True)
-    tecnico_nome = serializers.CharField(source='tecnico.__str__', read_only=True)
+    tecnico_nome = serializers.SerializerMethodField(read_only=True)
+
+    def get_tecnico_nome(self, obj):
+        """Retorna nome do técnico ou None"""
+        if obj.tecnico:
+            return str(obj.tecnico)
+        return None
 
     class Meta:
         model = Manutencao

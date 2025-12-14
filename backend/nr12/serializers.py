@@ -4,7 +4,11 @@ from rest_framework import serializers
 from .models import (
     ModeloChecklist, ItemChecklist,
     ChecklistRealizado, RespostaItemChecklist,
-    NotificacaoChecklist
+    NotificacaoChecklist,
+    # Manutenção Preventiva
+    ModeloManutencaoPreventiva, ItemManutencaoPreventiva,
+    ProgramacaoManutencao, ManutencaoPreventivaRealizada,
+    RespostaItemManutencao
 )
 
 
@@ -76,13 +80,19 @@ class ChecklistRealizadoSerializer(serializers.ModelSerializer):
     modelo_nome = serializers.CharField(source='modelo.nome', read_only=True)
     equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
     equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
-    operador_nome = serializers.CharField(source='operador.nome_completo', read_only=True)
+    operador_nome_display = serializers.SerializerMethodField(read_only=True)
     total_respostas = serializers.SerializerMethodField()
     total_nao_conformidades = serializers.SerializerMethodField()
 
     class Meta:
         model = ChecklistRealizado
         fields = '__all__'
+
+    def get_operador_nome_display(self, obj):
+        """Retorna nome do operador cadastrado ou o nome em texto livre"""
+        if obj.operador:
+            return obj.operador.nome_completo
+        return obj.operador_nome or 'Não informado'
 
     def get_total_respostas(self, obj):
         return obj.respostas.count()
@@ -96,26 +106,54 @@ class ChecklistRealizadoDetailSerializer(serializers.ModelSerializer):
     modelo_nome = serializers.CharField(source='modelo.nome', read_only=True)
     equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
     equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
-    operador_nome = serializers.CharField(source='operador.nome_completo', read_only=True)
+    operador_nome_display = serializers.SerializerMethodField(read_only=True)
     respostas = RespostaItemChecklistSerializer(many=True, read_only=True)
     total_nao_conformidades = serializers.SerializerMethodField()
+    total_respostas = serializers.SerializerMethodField()
 
     class Meta:
         model = ChecklistRealizado
         fields = '__all__'
 
+    def get_operador_nome_display(self, obj):
+        """Retorna nome do operador cadastrado ou o nome em texto livre"""
+        if obj.operador:
+            return obj.operador.nome_completo
+        return obj.operador_nome or 'Não informado'
+
+    def get_total_respostas(self, obj):
+        return obj.respostas.count()
+
     def get_total_nao_conformidades(self, obj):
         return obj.respostas.filter(resposta__in=['NAO_CONFORME', 'NAO']).count()
 
 
+class RespostaItemChecklistCreateSerializer(serializers.Serializer):
+    """Serializer simplificado para criar respostas junto com checklist"""
+    item = serializers.IntegerField()
+    resposta = serializers.ChoiceField(
+        choices=['CONFORME', 'NAO_CONFORME', 'SIM', 'NAO', 'NA'],
+        required=False,
+        allow_null=True
+    )
+    valor_numerico = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+    valor_texto = serializers.CharField(required=False, allow_blank=True, default='')
+    observacao = serializers.CharField(required=False, allow_blank=True, default='')
+
+
 class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
-    """Serializer para criação de checklist (usado pelo bot)"""
-    respostas = RespostaItemChecklistSerializer(many=True, required=False)
+    """Serializer para criação de checklist (usado pelo bot e web)"""
+    respostas = RespostaItemChecklistCreateSerializer(many=True, required=False)
 
     class Meta:
         model = ChecklistRealizado
         fields = [
-            'modelo', 'equipamento', 'operador', 'usuario',
+            'modelo', 'equipamento', 'operador', 'operador_nome', 'usuario',
             'origem', 'leitura_equipamento', 'observacoes_gerais',
             'respostas'
         ]
@@ -126,8 +164,13 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
 
         # Criar respostas
         for resposta_data in respostas_data:
+            # Converter item_id para instância de ItemChecklist
+            item_id = resposta_data.pop('item')
+            item = ItemChecklist.objects.get(id=item_id)
+
             RespostaItemChecklist.objects.create(
                 checklist=checklist,
+                item=item,
                 **resposta_data
             )
 
@@ -289,3 +332,298 @@ class BotChecklistFinalizarSerializer(serializers.Serializer):
             )
 
         return value
+
+
+# ============================================================
+# SERIALIZERS: MANUTENÇÃO PREVENTIVA PROGRAMADA
+# ============================================================
+
+class ItemManutencaoPreventivaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemManutencaoPreventiva
+        fields = '__all__'
+
+
+class ItemManutencaoPreventivaListSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para listagem"""
+    class Meta:
+        model = ItemManutencaoPreventiva
+        fields = ['id', 'ordem', 'categoria', 'descricao', 'tipo_resposta', 'obrigatorio']
+
+
+class ModeloManutencaoPreventivaSerializer(serializers.ModelSerializer):
+    tipo_equipamento_nome = serializers.CharField(
+        source='tipo_equipamento.nome',
+        read_only=True
+    )
+    tipo_medicao_display = serializers.CharField(
+        source='get_tipo_medicao_display',
+        read_only=True
+    )
+    total_itens = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ModeloManutencaoPreventiva
+        fields = '__all__'
+
+    def get_total_itens(self, obj):
+        return obj.itens.filter(ativo=True).count()
+
+
+class ModeloManutencaoPreventivaDetailSerializer(serializers.ModelSerializer):
+    """Serializer detalhado com itens inclusos"""
+    tipo_equipamento_nome = serializers.CharField(
+        source='tipo_equipamento.nome',
+        read_only=True
+    )
+    tipo_medicao_display = serializers.CharField(
+        source='get_tipo_medicao_display',
+        read_only=True
+    )
+    itens = ItemManutencaoPreventivaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ModeloManutencaoPreventiva
+        fields = '__all__'
+
+
+class ProgramacaoManutencaoSerializer(serializers.ModelSerializer):
+    equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
+    equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
+    modelo_nome = serializers.CharField(source='modelo.nome', read_only=True)
+    modelo_intervalo = serializers.DecimalField(
+        source='modelo.intervalo',
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
+    tipo_medicao = serializers.CharField(source='modelo.tipo_medicao', read_only=True)
+    tipo_medicao_display = serializers.CharField(
+        source='modelo.get_tipo_medicao_display',
+        read_only=True
+    )
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    percentual_concluido = serializers.SerializerMethodField()
+    falta_para_manutencao = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProgramacaoManutencao
+        fields = '__all__'
+
+    def get_percentual_concluido(self, obj):
+        """Calcula percentual de uso até a próxima manutenção"""
+        if not obj.equipamento.leitura_atual:
+            return 0
+
+        leitura_atual = obj.equipamento.leitura_atual
+        intervalo = obj.leitura_proxima_manutencao - obj.leitura_ultima_manutencao
+
+        if intervalo <= 0:
+            return 100
+
+        progresso = leitura_atual - obj.leitura_ultima_manutencao
+        percentual = (progresso / intervalo) * 100
+
+        return min(max(percentual, 0), 100)  # Entre 0 e 100
+
+    def get_falta_para_manutencao(self, obj):
+        """Calcula quanto falta para a próxima manutenção"""
+        if not obj.equipamento.leitura_atual:
+            return obj.leitura_proxima_manutencao - obj.leitura_ultima_manutencao
+
+        falta = obj.leitura_proxima_manutencao - obj.equipamento.leitura_atual
+        return max(falta, 0)
+
+
+class RespostaItemManutencaoSerializer(serializers.ModelSerializer):
+    item_descricao = serializers.CharField(source='item.descricao', read_only=True)
+    item_categoria = serializers.CharField(source='item.categoria', read_only=True)
+
+    class Meta:
+        model = RespostaItemManutencao
+        fields = '__all__'
+
+    def validate(self, data):
+        """Valida se observação é obrigatória para não conformidades"""
+        item = data.get('item')
+        resposta = data.get('resposta')
+        observacao = data.get('observacao', '')
+
+        if item and item.requer_observacao_nao_conforme:
+            if resposta in ['NAO_EXECUTADO', 'NAO_CONFORME'] and not observacao:
+                raise serializers.ValidationError({
+                    'observacao': 'Observação é obrigatória para itens não executados ou não conformes.'
+                })
+
+        return data
+
+
+class ManutencaoPreventivaRealizadaSerializer(serializers.ModelSerializer):
+    modelo_nome = serializers.CharField(source='modelo.nome', read_only=True)
+    equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
+    equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
+    tecnico_nome_display = serializers.SerializerMethodField(read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    resultado_geral_display = serializers.CharField(
+        source='get_resultado_geral_display',
+        read_only=True
+    )
+    total_respostas = serializers.SerializerMethodField()
+    total_nao_conformidades = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ManutencaoPreventivaRealizada
+        fields = '__all__'
+
+    def get_tecnico_nome_display(self, obj):
+        """Retorna nome do técnico cadastrado ou o nome em texto livre"""
+        if obj.tecnico:
+            return obj.tecnico.nome
+        return obj.tecnico_nome or 'Não informado'
+
+    def get_total_respostas(self, obj):
+        return obj.respostas.count()
+
+    def get_total_nao_conformidades(self, obj):
+        return obj.respostas.filter(resposta__in=['NAO_EXECUTADO', 'NAO_CONFORME']).count()
+
+
+class ManutencaoPreventivaRealizadaDetailSerializer(serializers.ModelSerializer):
+    """Serializer detalhado com todas as respostas"""
+    modelo_nome = serializers.CharField(source='modelo.nome', read_only=True)
+    equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
+    equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
+    tecnico_nome_display = serializers.SerializerMethodField(read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    resultado_geral_display = serializers.CharField(
+        source='get_resultado_geral_display',
+        read_only=True
+    )
+    respostas = RespostaItemManutencaoSerializer(many=True, read_only=True)
+    total_nao_conformidades = serializers.SerializerMethodField()
+    total_respostas = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ManutencaoPreventivaRealizada
+        fields = '__all__'
+
+    def get_tecnico_nome_display(self, obj):
+        """Retorna nome do técnico cadastrado ou o nome em texto livre"""
+        if obj.tecnico:
+            return obj.tecnico.nome
+        return obj.tecnico_nome or 'Não informado'
+
+    def get_total_respostas(self, obj):
+        return obj.respostas.count()
+
+    def get_total_nao_conformidades(self, obj):
+        return obj.respostas.filter(resposta__in=['NAO_EXECUTADO', 'NAO_CONFORME']).count()
+
+
+class RespostaItemManutencaoCreateSerializer(serializers.Serializer):
+    """Serializer simplificado para criar respostas junto com manutenção"""
+    item = serializers.IntegerField()
+    resposta = serializers.ChoiceField(
+        choices=['EXECUTADO', 'NAO_EXECUTADO', 'CONFORME', 'NAO_CONFORME', 'NA'],
+        required=False,
+        allow_null=True
+    )
+    valor_numerico = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+    valor_texto = serializers.CharField(required=False, allow_blank=True, default='')
+    observacao = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class ManutencaoPreventivaRealizadaCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criação de manutenção preventiva (usado pelo bot e web)"""
+    respostas = RespostaItemManutencaoCreateSerializer(many=True, required=False)
+
+    class Meta:
+        model = ManutencaoPreventivaRealizada
+        fields = [
+            'programacao', 'equipamento', 'modelo', 'tecnico', 'tecnico_nome',
+            'usuario', 'origem', 'leitura_equipamento', 'observacoes_gerais',
+            'respostas'
+        ]
+
+    def create(self, validated_data):
+        respostas_data = validated_data.pop('respostas', [])
+        manutencao = ManutencaoPreventivaRealizada.objects.create(**validated_data)
+
+        # Criar respostas
+        for resposta_data in respostas_data:
+            # Converter item_id para instância de ItemManutencaoPreventiva
+            item_id = resposta_data.pop('item')
+            item = ItemManutencaoPreventiva.objects.get(id=item_id)
+
+            RespostaItemManutencao.objects.create(
+                manutencao=manutencao,
+                item=item,
+                **resposta_data
+            )
+
+        # Se todas as respostas foram fornecidas, finalizar automaticamente
+        total_itens = manutencao.modelo.itens.filter(ativo=True).count()
+        if len(respostas_data) == total_itens:
+            manutencao.finalizar()
+
+        return manutencao
+
+
+# ============================================
+# SERIALIZERS ESPECÍFICOS PARA O BOT - MANUTENÇÃO PREVENTIVA
+# ============================================
+
+class BotModeloManutencaoPreventivaSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para o bot"""
+    tipo_equipamento_nome = serializers.CharField(source='tipo_equipamento.nome')
+    tipo_medicao_display = serializers.CharField(source='get_tipo_medicao_display')
+    total_itens = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ModeloManutencaoPreventiva
+        fields = ['id', 'nome', 'tipo_equipamento_nome', 'tipo_medicao', 'tipo_medicao_display', 'intervalo', 'total_itens']
+
+    def get_total_itens(self, obj):
+        return obj.itens.filter(ativo=True).count()
+
+
+class BotItemManutencaoPreventivaSerializer(serializers.ModelSerializer):
+    """Serializer simplificado de item para o bot"""
+    categoria_display = serializers.CharField(source='get_categoria_display')
+
+    class Meta:
+        model = ItemManutencaoPreventiva
+        fields = [
+            'id', 'ordem', 'categoria', 'categoria_display', 'descricao',
+            'instrucoes', 'tipo_resposta', 'obrigatorio', 'requer_observacao_nao_conforme'
+        ]
+
+
+class BotProgramacaoManutencaoSerializer(serializers.ModelSerializer):
+    """Serializer de programação para o bot"""
+    equipamento_codigo = serializers.CharField(source='equipamento.codigo')
+    modelo_nome = serializers.CharField(source='modelo.nome')
+    tipo_medicao_display = serializers.CharField(source='modelo.get_tipo_medicao_display')
+    status_display = serializers.CharField(source='get_status_display')
+    falta_para_manutencao = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProgramacaoManutencao
+        fields = [
+            'id', 'equipamento_codigo', 'modelo_nome', 'tipo_medicao_display',
+            'leitura_proxima_manutencao', 'status', 'status_display',
+            'falta_para_manutencao'
+        ]
+
+    def get_falta_para_manutencao(self, obj):
+        """Calcula quanto falta para a próxima manutenção"""
+        if not obj.equipamento.leitura_atual:
+            return obj.leitura_proxima_manutencao - obj.leitura_ultima_manutencao
+
+        falta = obj.leitura_proxima_manutencao - obj.equipamento.leitura_atual
+        return max(falta, 0)

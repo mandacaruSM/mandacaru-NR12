@@ -2,14 +2,15 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  nr12Api, 
-  equipamentosApi, 
-  ModeloChecklist, 
-  Equipamento, 
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  nr12Api,
+  equipamentosApi,
+  operadoresApi,
+  ModeloChecklist,
+  Equipamento,
   RespostaItemChecklist, // ✅ CORRIGIDO: Nome correto do tipo
-  ItemChecklist 
+  ItemChecklist
 } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
@@ -27,6 +28,7 @@ interface RespostaTemp {
 
 export default function NovoChecklistPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -34,12 +36,13 @@ export default function NovoChecklistPage() {
 
   const [modelos, setModelos] = useState<ModeloChecklist[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
+  const [operadores, setOperadores] = useState<any[]>([]);
   const [itensChecklist, setItensChecklist] = useState<ItemChecklist[]>([]);
 
   const [modeloSelecionado, setModeloSelecionado] = useState<number | null>(null);
   const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<number | null>(null);
+  const [operadorSelecionado, setOperadorSelecionado] = useState<number | null>(null);
   const [leituraEquipamento, setLeituraEquipamento] = useState('');
-  const [operadorNome, setOperadorNome] = useState('');
 
   const [respostas, setRespostas] = useState<RespostaTemp[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -54,16 +57,41 @@ export default function NovoChecklistPage() {
     }
   }, [modeloSelecionado]);
 
+  // Pré-selecionar equipamento quando os dados forem carregados
+  useEffect(() => {
+    if (!loadingData && equipamentos.length > 0) {
+      const equipamentoParam = searchParams.get('equipamento');
+      if (equipamentoParam) {
+        const equipamentoId = Number(equipamentoParam);
+        const equipamento = equipamentos.find(eq => eq.id === equipamentoId);
+        if (equipamento) {
+          setEquipamentoSelecionado(equipamentoId);
+          // Pré-selecionar modelo baseado no tipo do equipamento
+          if (equipamento.tipo_equipamento) {
+            const modeloCompativel = modelos.find(
+              m => m.tipo_equipamento === equipamento.tipo_equipamento
+            );
+            if (modeloCompativel) {
+              setModeloSelecionado(modeloCompativel.id);
+            }
+          }
+        }
+      }
+    }
+  }, [loadingData, equipamentos, modelos, searchParams]);
+
   const loadInitialData = async () => {
     try {
       setLoadingData(true);
-      const [modelosRes, equipamentosRes] = await Promise.all([
+      const [modelosRes, equipamentosRes, operadoresRes] = await Promise.all([
         nr12Api.modelos.list({ ativo: true }),
-        equipamentosApi.list(), // ✅ CORRIGIDO: Sem filtro 'ativo'
+        equipamentosApi.list(),
+        operadoresApi.list({ ativo: true }),
       ]);
       setModelos(modelosRes.results);
       // Filtrar equipamentos ativos manualmente
       setEquipamentos(equipamentosRes.results.filter(eq => eq.ativo));
+      setOperadores(operadoresRes.results || []);
     } catch (err: any) {
       toast.error('Erro ao carregar dados iniciais');
     } finally {
@@ -139,43 +167,35 @@ export default function NovoChecklistPage() {
     setLoading(true);
 
     try {
-      // 1. Criar checklist
-      console.log('🔷 Criando checklist...');
-      const checklist = await nr12Api.checklists.create({
-        modelo: modeloSelecionado,
-        equipamento: equipamentoSelecionado,
-        leitura_equipamento: leituraEquipamento || null,
-        operador_nome: operadorNome || 'Não informado',
-        origem: 'WEB',
-        status: 'EM_ANDAMENTO',
-      });
-      console.log('✅ Checklist criado:', checklist.id);
-
-      // 2. Registrar todas as respostas
-      const respostasValidas = respostas.filter(resp => 
-        resp.resposta || resp.valor_numerico || resp.valor_texto
-      );
-
-      console.log(`🔷 Registrando ${respostasValidas.length} respostas...`);
-      for (const resp of respostasValidas) {
-        const respostaPayload = {
-          checklist: checklist.id,  // ✅ CRÍTICO: ID do checklist
+      // Preparar respostas válidas
+      const respostasValidas = respostas
+        .filter(resp => resp.resposta || resp.valor_numerico || resp.valor_texto)
+        .map(resp => ({
           item: resp.item_id,
           resposta: resp.resposta || null,
           valor_numerico: resp.valor_numerico || null,
           valor_texto: resp.valor_texto || '',
           observacao: resp.observacao || '',
-        };
-        
-        console.log('📤 Enviando resposta:', respostaPayload);
-        await nr12Api.respostas.create(respostaPayload);
-      }
-      console.log('✅ Respostas registradas');
+        }));
 
-      // 3. Finalizar checklist
-      console.log('🔷 Finalizando checklist...');
-      await nr12Api.checklists.finalizar(checklist.id);
-      console.log('✅ Checklist finalizado');
+      console.log('🔷 Criando checklist com respostas...');
+
+      // Criar checklist com respostas incluídas
+      const payload: any = {
+        modelo: modeloSelecionado,
+        equipamento: equipamentoSelecionado,
+        origem: 'WEB',
+        leitura_equipamento: leituraEquipamento || null,
+        respostas: respostasValidas,
+      };
+
+      // Adicionar operador apenas se selecionado
+      if (operadorSelecionado) {
+        payload.operador = operadorSelecionado;
+      }
+
+      const checklist = await nr12Api.checklists.create(payload);
+      console.log('✅ Checklist criado:', checklist.id);
 
       toast.success('Checklist realizado com sucesso!');
       router.push(`/dashboard/nr12/checklists/${checklist.id}`);
@@ -252,15 +272,23 @@ export default function NovoChecklistPage() {
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome do Operador
+                Operador (opcional)
               </label>
-              <input
-                type="text"
-                value={operadorNome}
-                onChange={(e) => setOperadorNome(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="Digite o nome do operador"
-              />
+              <select
+                value={operadorSelecionado || ''}
+                onChange={(e) => setOperadorSelecionado(e.target.value ? Number(e.target.value) : null)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+              >
+                <option value="">Selecione um operador (opcional)</option>
+                {operadores.map(op => (
+                  <option key={op.id} value={op.id}>
+                    {op.nome_completo || op.nome} - CPF: {op.cpf}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Deixe em branco se o operador não estiver cadastrado
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -9,5 +9,4 @@ class Nr12Config(AppConfig):
     verbose_name = 'NR12 - Checklists'
 
     def ready(self):
-        # Importar signals se necessário
-        pass
+        import nr12.signals

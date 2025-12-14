@@ -124,6 +124,12 @@ class Operador(models.Model):
         related_name='operadores',
         verbose_name="Clientes"
     )
+    empreendimentos_vinculados = models.ManyToManyField(
+        'cadastro.Empreendimento',
+        related_name='operadores_vinculados',
+        verbose_name="Empreendimentos",
+        blank=True
+    )
     equipamentos_autorizados = models.ManyToManyField(
         'equipamentos.Equipamento',
         through='OperadorEquipamento',
@@ -306,6 +312,12 @@ class Supervisor(models.Model):
         verbose_name="Clientes",
         blank=True
     )
+    empreendimentos_vinculados = models.ManyToManyField(
+        'cadastro.Empreendimento',
+        related_name='supervisores_vinculados',
+        verbose_name="Empreendimentos",
+        blank=True
+    )
     operadores_supervisionados = models.ManyToManyField(
         Operador,
         related_name='supervisores',
@@ -356,7 +368,7 @@ class Supervisor(models.Model):
     def vincular_telegram(self, chat_id, username=None):
         """Vincula conta do Telegram ao supervisor"""
         from django.utils import timezone
-        
+
         self.telegram_chat_id = str(chat_id)
         self.telegram_username = username or ''
         self.telegram_vinculado_em = timezone.now()
@@ -369,7 +381,18 @@ class Supervisor(models.Model):
             'codigo_vinculacao',
             'codigo_valido_ate'
         ])
-    
+
+    def desvincular_telegram(self):
+        """Desvincula conta do Telegram do supervisor"""
+        self.telegram_chat_id = None
+        self.telegram_username = ''
+        self.telegram_vinculado_em = None
+        self.save(update_fields=[
+            'telegram_chat_id',
+            'telegram_username',
+            'telegram_vinculado_em'
+        ])
+
     @property
     def telegram_vinculado(self):
         return bool(self.telegram_chat_id)
