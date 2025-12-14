@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Para servir arquivos estáticos
     "corsheaders.middleware.CorsMiddleware",   # alto na pilha
     "django.contrib.sessions.middleware.SessionMiddleware",
     "core.middleware.CookieToAuthorizationMiddleware",  # promove cookie -> Authorization
@@ -108,19 +109,35 @@ TIME_ZONE = "America/Bahia"
 USE_TZ = True
 
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # URLs/Wsgi
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Banco (SQLite em dev)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Banco de dados - usar PostgreSQL no Render, SQLite em dev
+import dj_database_url
+
+if os.environ.get("DATABASE_URL"):
+    # Produção: usar PostgreSQL do Render
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Desenvolvimento: SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # URL base pública do ERP (ajuste para seu domínio)
 ERP_PUBLIC_BASE_URL = os.getenv("ERP_PUBLIC_BASE_URL", "https://erp.mandacaru.com.br")
