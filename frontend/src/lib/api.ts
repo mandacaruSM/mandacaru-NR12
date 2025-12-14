@@ -1442,6 +1442,8 @@ export const cadastroApi = {
   empreendimentos: empreendimentosApi,
 };
 
+export const produtosApi = almoxarifadoApi.produtos;
+
 // EXPORT DEFAULT
 // ============================================
 

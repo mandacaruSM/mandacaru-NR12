@@ -236,7 +236,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Category Labels
-export const CATEGORIA_LABELS: Record<CategoriaItemManutencao, string> = {
+export const CATEGORIA_ITEM_LABELS: Record<CategoriaItemManutencao, string> = {
   TROCA_OLEO: 'Troca de Óleo',
   TROCA_FILTRO: 'Troca de Filtro',
   LUBRIFICACAO: 'Lubrificação',
@@ -248,6 +248,33 @@ export const CATEGORIA_LABELS: Record<CategoriaItemManutencao, string> = {
   MEDICAO: 'Medição',
   OUTROS: 'Outros',
 }
+
+export const CATEGORIAS_ITEM_MANUTENCAO: CategoriaItemManutencao[] = [
+  'TROCA_OLEO',
+  'TROCA_FILTRO',
+  'LUBRIFICACAO',
+  'INSPECAO',
+  'AJUSTE',
+  'LIMPEZA',
+  'SUBSTITUICAO',
+  'TESTE',
+  'MEDICAO',
+  'OUTROS',
+]
+
+export const TIPO_RESPOSTA_LABELS: Record<TipoRespostaItem, string> = {
+  EXECUTADO: 'Executado/Não Executado',
+  CONFORME: 'Conforme/Não Conforme',
+  NUMERO: 'Valor Numérico',
+  TEXTO: 'Texto Livre',
+}
+
+export const TIPO_RESPOSTA_ITEM: TipoRespostaItem[] = [
+  'EXECUTADO',
+  'CONFORME',
+  'NUMERO',
+  'TEXTO',
+]
 
 // Status Labels and Colors
 export const STATUS_PROGRAMACAO_LABELS: Record<StatusProgramacao, string> = {
