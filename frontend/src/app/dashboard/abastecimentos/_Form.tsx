@@ -183,15 +183,8 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
     }
   }
 
-  async function loadOperadoresPorEmpreendimento(empreendimentoId: number) {
-    try {
-      const operadoresData = await operadoresApi.list({ empreendimento: empreendimentoId });
-      setOperadores(operadoresData.results || []);
-    } catch (error) {
-      console.warn('⚠️ Erro ao carregar operadores por empreendimento:', error);
-      setOperadores([]);
-    }
-  }
+  // Operadores são filtrados por cliente, não por empreendimento
+  // A função loadOperadoresPorCliente já faz isso
 
   // Filtrar equipamentos por empreendimento
   const equipamentosFiltrados = empreendimentoSelecionado
