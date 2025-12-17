@@ -143,14 +143,8 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
     }
   }, [clienteSelecionado]);
 
-  // Atualizar operadores quando empreendimento for selecionado
-  useEffect(() => {
-    if (empreendimentoSelecionado) {
-      loadOperadoresPorEmpreendimento(empreendimentoSelecionado);
-    } else if (clienteSelecionado) {
-      loadOperadoresPorCliente(clienteSelecionado);
-    }
-  }, [empreendimentoSelecionado]);
+  // Operadores já são carregados por cliente quando clienteSelecionado muda
+  // Não é necessário recarregar quando empreendimento muda, pois operadores pertencem ao cliente, não ao empreendimento
 
   async function loadEmpreendimentos(clienteId: number) {
     try {
