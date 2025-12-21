@@ -174,10 +174,10 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
         Array.from(inputAnexos.files).forEach(f => fd.append('anexos_upload', f));
       }
 
-      const API_BASE_V0 = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:8000/api';
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
       const url = mode === 'create'
-        ? `${API_BASE_V0}/manutencoes/`
-        : `${API_BASE_V0}/manutencoes/${id}/`;
+        ? `${API_BASE}/manutencoes/`
+        : `${API_BASE}/manutencoes/${id}/`;
 
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PUT',
