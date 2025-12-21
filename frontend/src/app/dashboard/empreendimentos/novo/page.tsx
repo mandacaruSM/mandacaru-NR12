@@ -1,11 +1,22 @@
-// frontend/src/app/dashboard/empreendimentos/novo/page.tsx
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, api, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
-import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+
+import {
+  empreendimentosApi,
+  clientesApi,
+  equipamentosApi,
+  supervisoresApi,
+  api,
+  Empreendimento,
+  Cliente,
+  Equipamento,
+  Supervisor,
+} from '@/lib/api';
+
+import { useToast } from '@/contexts/ToastContext';
 
 const TIPO_OPTIONS = [
   { value: 'LAVRA', label: 'Lavra' },
@@ -20,16 +31,35 @@ interface Tecnico {
   nome_completo?: string;
 }
 
+type Paginated<T> = { results: T[] };
+
+function toList<T>(data: Paginated<T> | T[]): T[] {
+  return Array.isArray(data) ? data : data.results;
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return 'Erro desconhecido';
+  }
+}
+
 export default function NovoEmpreendimentoPage() {
   const router = useRouter();
   const toast = useToast();
+
   const [loading, setLoading] = useState(false);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [error, setError] = useState('');
+
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [supervisores, setSupervisores] = useState<Supervisor[]>([]);
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
+
   const [equipamentosSelecionados, setEquipamentosSelecionados] = useState<number[]>([]);
   const [supervisorSelecionado, setSupervisorSelecionado] = useState<number | ''>('');
   const [tecnicosSelecionados, setTecnicosSelecionados] = useState<number[]>([]);
@@ -51,71 +81,86 @@ export default function NovoEmpreendimentoPage() {
     ativo: true,
   });
 
-  useEffect(() => {
-    loadClientes();
-  }, []);
-
-  useEffect(() => {
-    // quando cliente mudar, carregar equipamentos, supervisores e técnicos
-    if (formData.cliente) {
-      loadEquipamentos(Number(formData.cliente));
-      loadSupervisores();
-      loadTecnicos();
-    } else {
-      setEquipamentos([]);
-      setEquipamentosSelecionados([]);
-      setSupervisores([]);
-      setSupervisorSelecionado('');
-      setTecnicos([]);
-      setTecnicosSelecionados([]);
-    }
-  }, [formData.cliente]);
-
-  const loadClientes = async () => {
+  const loadClientes = useCallback(async () => {
     try {
       setLoadingClientes(true);
       const response = await clientesApi.list();
       setClientes(response.results);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Erro ao carregar clientes');
+      // opcional: console.error(getErrorMessage(err));
     } finally {
       setLoadingClientes(false);
     }
-  };
+  }, [toast]);
 
-  const loadEquipamentos = async (clienteId: number) => {
-    try {
-      const res = await equipamentosApi.list({ cliente: clienteId });
-      setEquipamentos(res.results);
-    } catch (e) {
-      toast.error('Erro ao carregar equipamentos do cliente');
-    }
-  };
+  const loadEquipamentos = useCallback(
+    async (clienteId: number) => {
+      try {
+        const res = await equipamentosApi.list({ cliente: clienteId });
+        setEquipamentos(res.results);
+      } catch (err: unknown) {
+        toast.error('Erro ao carregar equipamentos do cliente');
+      }
+    },
+    [toast]
+  );
 
-  const loadSupervisores = async () => {
+  const loadSupervisores = useCallback(async () => {
     try {
       const res = await supervisoresApi.list();
       setSupervisores(res.results);
-    } catch (e) {
+    } catch {
       // opcional
     }
-  };
+  }, []);
 
-  const loadTecnicos = async () => {
+  const loadTecnicos = useCallback(async () => {
     try {
-      const res = await api('/tecnicos/');
-      setTecnicos(res.results || res || []);
-    } catch (e) {
+      // Aqui está a correção do build:
+      // api() está tipado como unknown, então nós tipamos o retorno na chamada
+      const res = await api<Paginated<Tecnico> | Tecnico[]>('/tecnicos/');
+      setTecnicos(toList(res));
+    } catch {
       // opcional
+      setTecnicos([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadClientes();
+  }, [loadClientes]);
+
+  useEffect(() => {
+    if (formData.cliente) {
+      const clienteId = Number(formData.cliente);
+      void loadEquipamentos(clienteId);
+      void loadSupervisores();
+      void loadTecnicos();
+      return;
+    }
+
+    setEquipamentos([]);
+    setEquipamentosSelecionados([]);
+    setSupervisores([]);
+    setSupervisorSelecionado('');
+    setTecnicos([]);
+    setTecnicosSelecionados([]);
+  }, [formData.cliente, loadEquipamentos, loadSupervisores, loadTecnicos]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              name === 'cliente' ? Number(value) : value
+      [name]:
+        type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : name === 'cliente'
+          ? value === ''
+            ? undefined
+            : Number(value)
+          : value,
     }));
   };
 
@@ -131,22 +176,30 @@ export default function NovoEmpreendimentoPage() {
     setError('');
 
     try {
-      const payload = {
+      // payload tipado sem any
+      const payload: Partial<Empreendimento> & {
+        supervisor: number | null;
+        tecnicos_ids: number[];
+      } = {
         ...formData,
-        supervisor: supervisorSelecionado || null,
+        supervisor: supervisorSelecionado === '' ? null : supervisorSelecionado,
         tecnicos_ids: tecnicosSelecionados,
-      } as any;
+      };
+
       const created = await empreendimentosApi.create(payload);
-      // Atribuir equipamentos selecionados ao empreendimento criado
+
       if (equipamentosSelecionados.length > 0) {
         await Promise.all(
-          equipamentosSelecionados.map(id => equipamentosApi.update(id, { empreendimento: created.id }))
+          equipamentosSelecionados.map((id) =>
+            equipamentosApi.update(id, { empreendimento: created.id })
+          )
         );
       }
+
       toast.success('Empreendimento cadastrado com sucesso!');
       router.push('/dashboard/empreendimentos');
-    } catch (err: any) {
-      const errorMsg = err.message || 'Erro ao cadastrar empreendimento';
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err) || 'Erro ao cadastrar empreendimento';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -206,7 +259,7 @@ export default function NovoEmpreendimentoPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Selecione um cliente...</option>
-                  {clientes.map(cliente => (
+                  {clientes.map((cliente) => (
                     <option key={cliente.id} value={cliente.id}>
                       {cliente.nome_razao}
                     </option>
@@ -242,7 +295,7 @@ export default function NovoEmpreendimentoPage() {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
-                  {TIPO_OPTIONS.map(option => (
+                  {TIPO_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -275,63 +328,81 @@ export default function NovoEmpreendimentoPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Supervisor (opcional) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Supervisor (opcional) 🧑‍💼</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Supervisor (opcional) 🧑‍💼
+                </label>
                 <select
                   value={supervisorSelecionado}
-                  onChange={(e) => setSupervisorSelecionado(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) =>
+                    setSupervisorSelecionado(e.target.value === '' ? '' : Number(e.target.value))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Não definir agora</option>
-                  {supervisores.map(sp => (
-                    <option key={sp.id} value={sp.id}>{sp.nome_completo} ({sp.cpf})</option>
+                  {supervisores.map((sp) => (
+                    <option key={sp.id} value={sp.id}>
+                      {sp.nome_completo} ({sp.cpf})
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Técnicos (múltiplos) */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Técnicos Autorizados 🔧</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Técnicos Autorizados 🔧
+                </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-3">
-                  {tecnicos.map(tec => (
+                  {tecnicos.map((tec) => (
                     <label key={tec.id} className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={tecnicosSelecionados.includes(tec.id)}
                         onChange={(e) => {
-                          setTecnicosSelecionados(prev => e.target.checked ? [...prev, tec.id] : prev.filter(i => i !== tec.id));
+                          setTecnicosSelecionados((prev) =>
+                            e.target.checked ? [...prev, tec.id] : prev.filter((i) => i !== tec.id)
+                          );
                         }}
                       />
                       <span className="text-gray-700">{tec.nome_completo || tec.nome}</span>
                     </label>
                   ))}
-                  {tecnicos.length === 0 && (
-                    <div className="text-gray-500">Nenhum técnico cadastrado.</div>
-                  )}
+                  {tecnicos.length === 0 && <div className="text-gray-500">Nenhum técnico cadastrado.</div>}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Técnicos selecionados terão acesso aos equipamentos deste empreendimento.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Técnicos selecionados terão acesso aos equipamentos deste empreendimento.
+                </p>
               </div>
 
-              {/* Equipamentos do cliente para vincular ao empreendimento */}
+              {/* Equipamentos do cliente */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Equipamentos do cliente</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Equipamentos do cliente
+                </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-3">
-                  {equipamentos.map(eq => (
+                  {equipamentos.map((eq) => (
                     <label key={eq.id} className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={equipamentosSelecionados.includes(eq.id)}
                         onChange={(e) => {
-                          setEquipamentosSelecionados(prev => e.target.checked ? [...prev, eq.id] : prev.filter(i => i !== eq.id));
+                          setEquipamentosSelecionados((prev) =>
+                            e.target.checked ? [...prev, eq.id] : prev.filter((i) => i !== eq.id)
+                          );
                         }}
                       />
-                      <span className="text-gray-700">{eq.codigo} — {eq.descricao || 'Sem descrição'}</span>
+                      <span className="text-gray-700">
+                        {eq.codigo} — {eq.descricao || 'Sem descrição'}
+                      </span>
                     </label>
                   ))}
                   {equipamentos.length === 0 && (
                     <div className="text-gray-500">Nenhum equipamento deste cliente.</div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Os equipamentos selecionados serão vinculados a este empreendimento.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Os equipamentos selecionados serão vinculados a este empreendimento.
+                </p>
               </div>
             </div>
           </div>
@@ -342,38 +413,73 @@ export default function NovoEmpreendimentoPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Logradouro</label>
-                <input type="text" name="logradouro" value={formData.logradouro || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="logradouro"
+                  value={formData.logradouro || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
-                <input type="text" name="numero" value={formData.numero || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="numero"
+                  value={formData.numero || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
-                <input type="text" name="complemento" value={formData.complemento || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="complemento"
+                  value={formData.complemento || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
-                <input type="text" name="bairro" value={formData.bairro || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="bairro"
+                  value={formData.bairro || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-                <input type="text" name="cidade" value={formData.cidade || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="cidade"
+                  value={formData.cidade || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">UF</label>
-                <input type="text" name="uf" value={formData.uf || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="uf"
+                  value={formData.uf || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                <input type="text" name="cep" value={formData.cep || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+                <input
+                  type="text"
+                  name="cep"
+                  value={formData.cep || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                />
               </div>
             </div>
           </div>
@@ -384,7 +490,7 @@ export default function NovoEmpreendimentoPage() {
               <input
                 type="checkbox"
                 name="ativo"
-                checked={formData.ativo}
+                checked={Boolean(formData.ativo)}
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />

@@ -1,16 +1,38 @@
-// frontend/src/app/dashboard/equipamentos/novo/page.tsx
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { equipamentosApi, clientesApi, empreendimentosApi, tiposEquipamentoApi, operadoresApi, Equipamento, Cliente, Empreendimento, TipoEquipamento, Operador } from '@/lib/api';
-import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+
+import {
+  equipamentosApi,
+  clientesApi,
+  empreendimentosApi,
+  tiposEquipamentoApi,
+  operadoresApi,
+  Equipamento,
+  Cliente,
+  Empreendimento,
+  TipoEquipamento,
+  Operador,
+} from '@/lib/api';
+
+import { useToast } from '@/contexts/ToastContext';
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return 'Erro desconhecido';
+  }
+}
 
 export default function NovoEquipamentoPage() {
   const router = useRouter();
   const toast = useToast();
-  
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
@@ -36,53 +58,70 @@ export default function NovoEquipamentoPage() {
     ativo: true,
   });
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (formData.cliente) {
-      loadEmpreendimentos(Number(formData.cliente));
-    } else {
-      setEmpreendimentos([]);
-      setFormData(prev => ({ ...prev, empreendimento: undefined }));
-    }
-  }, [formData.cliente]);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setLoadingData(true);
+
       const [clientesRes, tiposRes, operadoresRes] = await Promise.all([
         clientesApi.list(),
         tiposEquipamentoApi.list(),
         operadoresApi.list(),
       ]);
+
+      // Mantive como results porque seu SDK aparenta ser paginado (DRF)
       setClientes(clientesRes.results);
       setTipos(tiposRes.results);
       setOperadores(operadoresRes.results);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Erro ao carregar dados iniciais');
+      // opcional: console.error(getErrorMessage(err));
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [toast]);
 
-  const loadEmpreendimentos = async (clienteId: number) => {
-    try {
-      const response = await empreendimentosApi.list({ cliente: clienteId });
-      setEmpreendimentos(response.results);
-    } catch (err: any) {
-      toast.error('Erro ao carregar empreendimentos');
+  const loadEmpreendimentos = useCallback(
+    async (clienteId: number) => {
+      try {
+        const response = await empreendimentosApi.list({ cliente: clienteId });
+        setEmpreendimentos(response.results);
+      } catch (err: unknown) {
+        toast.error('Erro ao carregar empreendimentos');
+        // opcional: console.error(getErrorMessage(err));
+      }
+    },
+    [toast]
+  );
+
+  useEffect(() => {
+    void loadInitialData();
+  }, [loadInitialData]);
+
+  useEffect(() => {
+    if (formData.cliente) {
+      void loadEmpreendimentos(Number(formData.cliente));
+      return;
     }
-  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEmpreendimentos([]);
+    setFormData((prev) => ({ ...prev, empreendimento: undefined }));
+  }, [formData.cliente, loadEmpreendimentos]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              ['cliente', 'empreendimento', 'tipo', 'ano_fabricacao'].includes(name) ? 
-              (value === '' ? null : Number(value)) : value
+      [name]:
+        type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : ['cliente', 'empreendimento', 'tipo', 'ano_fabricacao'].includes(name)
+          ? value === ''
+            ? null
+            : Number(value)
+          : value,
     }));
   };
 
@@ -109,14 +148,15 @@ export default function NovoEquipamentoPage() {
 
     try {
       const created = await equipamentosApi.create(formData);
-      // Vincular operador (opcional)
+
       if (operadorSelecionado) {
         await operadoresApi.vincularEquipamento(Number(operadorSelecionado), created.id);
       }
+
       toast.success('Equipamento cadastrado com sucesso!');
       router.push('/dashboard/equipamentos');
-    } catch (err: any) {
-      const errorMsg = err.message || 'Erro ao cadastrar equipamento';
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err) || 'Erro ao cadastrar equipamento';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -176,7 +216,7 @@ export default function NovoEquipamentoPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Selecione um cliente...</option>
-                  {clientes.map(cliente => (
+                  {clientes.map((cliente) => (
                     <option key={cliente.id} value={cliente.id}>
                       {cliente.nome_razao}
                     </option>
@@ -198,9 +238,11 @@ export default function NovoEquipamentoPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">
-                    {formData.cliente ? 'Selecione um empreendimento...' : 'Selecione um cliente primeiro'}
+                    {formData.cliente
+                      ? 'Selecione um empreendimento...'
+                      : 'Selecione um cliente primeiro'}
                   </option>
-                  {empreendimentos.map(emp => (
+                  {empreendimentos.map((emp) => (
                     <option key={emp.id} value={emp.id}>
                       {emp.nome}
                     </option>
@@ -243,7 +285,7 @@ export default function NovoEquipamentoPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Selecione um tipo...</option>
-                  {tipos.map(tipo => (
+                  {tipos.map((tipo) => (
                     <option key={tipo.id} value={tipo.id}>
                       {tipo.nome}
                     </option>
@@ -259,11 +301,13 @@ export default function NovoEquipamentoPage() {
                 <select
                   name="operador"
                   value={operadorSelecionado}
-                  onChange={(e) => setOperadorSelecionado(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) =>
+                    setOperadorSelecionado(e.target.value === '' ? '' : Number(e.target.value))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
                 >
                   <option value="">Não vincular agora</option>
-                  {operadores.map(op => (
+                  {operadores.map((op) => (
                     <option key={op.id} value={op.id}>
                       {op.nome_completo} ({op.cpf})
                     </option>
@@ -402,7 +446,7 @@ export default function NovoEquipamentoPage() {
               <input
                 type="checkbox"
                 name="ativo"
-                checked={formData.ativo}
+                checked={Boolean(formData.ativo)}
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />

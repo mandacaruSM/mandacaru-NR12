@@ -1,7 +1,6 @@
-// frontend/src/app/dashboard/manutencao-preventiva/executar/[programacaoId]/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -16,17 +15,54 @@ import type {
   ProgramacaoManutencao,
   ModeloManutencaoPreventivaDetail,
   ItemManutencaoPreventiva,
+  RespostaItem as TipoResposta,
 } from '@/types/manutencao-preventiva'
-import {
-  TIPO_RESPOSTA_LABELS,
-  CATEGORIA_ITEM_LABELS,
-} from '@/types/manutencao-preventiva'
+import { CATEGORIA_ITEM_LABELS } from '@/types/manutencao-preventiva'
 
-interface RespostaItem {
+interface RespostaItemLocal {
   item_id: number
-  resposta: string
+  resposta: TipoResposta | string
   observacao?: string
   foto?: string
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return 'Erro desconhecido'
+  }
+}
+
+/**
+ * Compatibiliza diferentes formatos de retorno do backend.
+ * Ex.: leitura_atual | equipamento_leitura_atual | equipamento.leitura_atual
+ */
+function getLeituraAtualFromProgramacao(prog: ProgramacaoManutencao): string {
+  const p = prog as unknown as Record<string, unknown>
+
+  const leituraDireta = p['leitura_atual']
+  if (typeof leituraDireta === 'string' || typeof leituraDireta === 'number') {
+    return String(leituraDireta)
+  }
+
+  const leituraEquip = p['equipamento_leitura_atual']
+  if (typeof leituraEquip === 'string' || typeof leituraEquip === 'number') {
+    return String(leituraEquip)
+  }
+
+  const equipamento = p['equipamento']
+  if (typeof equipamento === 'object' && equipamento !== null) {
+    const eq = equipamento as Record<string, unknown>
+    const leituraEqObj = eq['leitura_atual']
+    if (typeof leituraEqObj === 'string' || typeof leituraEqObj === 'number') {
+      return String(leituraEqObj)
+    }
+  }
+
+  return '0'
 }
 
 export default function ExecutarManutencaoPreventiva() {
@@ -44,15 +80,11 @@ export default function ExecutarManutencaoPreventiva() {
   // Estado da execução
   const [manutencaoId, setManutencaoId] = useState<number | null>(null)
   const [leituraEquipamento, setLeituraEquipamento] = useState('')
-  const [respostas, setRespostas] = useState<Record<number, RespostaItem>>({})
+  const [respostas, setRespostas] = useState<Record<number, RespostaItemLocal>>({})
   const [observacoesGerais, setObservacoesGerais] = useState('')
   const [itemAtualIndex, setItemAtualIndex] = useState(0)
 
-  useEffect(() => {
-    loadData()
-  }, [programacaoId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -62,17 +94,21 @@ export default function ExecutarManutencaoPreventiva() {
 
       const modeloData = await getModeloManutencaoPreventivaDetail(progData.modelo)
       setModelo(modeloData)
-      setItens(modeloData.itens.sort((a, b) => a.ordem - b.ordem))
+      setItens([...modeloData.itens].sort((a, b) => a.ordem - b.ordem))
 
-      // Inicializar leitura com a leitura atual do equipamento
-      setLeituraEquipamento(progData.leitura_atual || '0')
-    } catch (err: any) {
+      // ✅ Inicializa usando leitura do equipamento (sem depender de progData.leitura_atual no tipo)
+      setLeituraEquipamento(getLeituraAtualFromProgramacao(progData))
+    } catch (err: unknown) {
       console.error('Erro ao carregar dados:', err)
-      setError(err.message || 'Erro ao carregar dados')
+      setError(getErrorMessage(err) || 'Erro ao carregar dados')
     } finally {
       setLoading(false)
     }
-  }
+  }, [programacaoId])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
   const iniciarManutencao = async () => {
     if (!programacao || !modelo) return
@@ -81,7 +117,9 @@ export default function ExecutarManutencaoPreventiva() {
       setSubmitting(true)
       setError(null)
 
-      if (!leituraEquipamento || parseFloat(leituraEquipamento) < 0) {
+      const leituraNumero = Number(leituraEquipamento)
+
+      if (!leituraEquipamento || Number.isNaN(leituraNumero) || leituraNumero < 0) {
         setError('Informe a leitura atual do equipamento')
         setSubmitting(false)
         return
@@ -91,15 +129,15 @@ export default function ExecutarManutencaoPreventiva() {
         programacao: programacaoId,
         equipamento: programacao.equipamento,
         modelo: programacao.modelo,
-        leitura_equipamento: leituraEquipamento,
+        leitura_equipamento: leituraNumero, // ✅ agora é number
         origem: 'WEB',
       })
 
       setManutencaoId(manutencao.id)
       alert('Manutenção iniciada! Agora responda os itens do checklist.')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao iniciar manutenção:', err)
-      setError(err.message || 'Erro ao iniciar manutenção')
+      setError(getErrorMessage(err) || 'Erro ao iniciar manutenção')
     } finally {
       setSubmitting(false)
     }
@@ -118,17 +156,17 @@ export default function ExecutarManutencaoPreventiva() {
       await createRespostaItemManutencao({
         manutencao: manutencaoId,
         item: itemId,
-        resposta: resposta.resposta,
+        resposta: resposta.resposta as TipoResposta,
         observacao: resposta.observacao || '',
       })
 
       // Avançar para próximo item
       if (itemAtualIndex < itens.length - 1) {
-        setItemAtualIndex(itemAtualIndex + 1)
+        setItemAtualIndex((prev) => prev + 1)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar resposta:', err)
-      alert(err.message || 'Erro ao salvar resposta')
+      alert(getErrorMessage(err) || 'Erro ao salvar resposta')
     }
   }
 
@@ -157,9 +195,9 @@ export default function ExecutarManutencaoPreventiva() {
       })
       alert('Manutenção finalizada com sucesso!')
       router.push(`/dashboard/manutencao-preventiva/historico/${manutencaoId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao finalizar manutenção:', err)
-      alert(err.message || 'Erro ao finalizar manutenção')
+      alert(getErrorMessage(err) || 'Erro ao finalizar manutenção')
     } finally {
       setSubmitting(false)
     }
@@ -212,7 +250,10 @@ export default function ExecutarManutencaoPreventiva() {
   }
 
   const itemAtual = itens[itemAtualIndex]
-  const progressoGeral = ((itemAtualIndex + 1) / itens.length) * 100
+  const progressoGeral = itens.length > 0 ? ((itemAtualIndex + 1) / itens.length) * 100 : 0
+
+  // ✅ leitura anterior “registrada” (compatível)
+  const leituraAnterior = getLeituraAtualFromProgramacao(programacao)
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -239,9 +280,7 @@ export default function ExecutarManutencaoPreventiva() {
             <span className="text-sm font-medium text-gray-700">
               Progresso: {itemAtualIndex + 1} de {itens.length} itens
             </span>
-            <span className="text-sm font-medium text-gray-700">
-              {progressoGeral.toFixed(0)}%
-            </span>
+            <span className="text-sm font-medium text-gray-700">{progressoGeral.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div
@@ -286,7 +325,7 @@ export default function ExecutarManutencaoPreventiva() {
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 Última leitura registrada:{' '}
-                {formatarLeitura(programacao.leitura_atual || '0', programacao.tipo_medicao)}
+                {formatarLeitura(leituraAnterior, programacao.tipo_medicao)}
               </p>
             </div>
 
@@ -353,9 +392,7 @@ export default function ExecutarManutencaoPreventiva() {
                   {itemAtual.tipo_resposta === 'TEXTO_LIVRE' ? (
                     <textarea
                       value={respostas[itemAtual.id]?.resposta || ''}
-                      onChange={(e) =>
-                        handleRespostaChange(itemAtual.id, 'resposta', e.target.value)
-                      }
+                      onChange={(e) => handleRespostaChange(itemAtual.id, 'resposta', e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="Digite sua resposta..."
@@ -365,6 +402,7 @@ export default function ExecutarManutencaoPreventiva() {
                       {getOpcoesResposta(itemAtual.tipo_resposta).map((opcao) => (
                         <button
                           key={opcao}
+                          type="button"
                           onClick={() => handleRespostaChange(itemAtual.id, 'resposta', opcao)}
                           className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                             respostas[itemAtual.id]?.resposta === opcao
@@ -386,9 +424,7 @@ export default function ExecutarManutencaoPreventiva() {
                   </label>
                   <textarea
                     value={respostas[itemAtual.id]?.observacao || ''}
-                    onChange={(e) =>
-                      handleRespostaChange(itemAtual.id, 'observacao', e.target.value)
-                    }
+                    onChange={(e) => handleRespostaChange(itemAtual.id, 'observacao', e.target.value)}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Adicione observações sobre este item..."
@@ -402,9 +438,7 @@ export default function ExecutarManutencaoPreventiva() {
                       Foto (opcional)
                     </label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <p className="text-sm text-gray-500">
-                        📷 Upload de foto será implementado em breve
-                      </p>
+                      <p className="text-sm text-gray-500">📷 Upload de foto será implementado em breve</p>
                     </div>
                   </div>
                 )}
@@ -412,14 +446,17 @@ export default function ExecutarManutencaoPreventiva() {
 
               <div className="p-6 border-t border-gray-200 flex justify-between">
                 <button
-                  onClick={() => setItemAtualIndex(Math.max(0, itemAtualIndex - 1))}
+                  type="button"
+                  onClick={() => setItemAtualIndex((prev) => Math.max(0, prev - 1))}
                   disabled={itemAtualIndex === 0}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Anterior
                 </button>
+
                 {itemAtualIndex < itens.length - 1 ? (
                   <button
+                    type="button"
                     onClick={() => salvarResposta(itemAtual.id)}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
@@ -427,6 +464,7 @@ export default function ExecutarManutencaoPreventiva() {
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => salvarResposta(itemAtual.id)}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                   >
@@ -456,6 +494,7 @@ export default function ExecutarManutencaoPreventiva() {
               </div>
 
               <button
+                type="button"
                 onClick={finalizarExecucao}
                 disabled={submitting}
                 className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-lg"
