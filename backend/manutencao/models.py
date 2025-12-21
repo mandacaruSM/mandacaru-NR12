@@ -31,7 +31,14 @@ class Manutencao(models.Model):
 
     descricao = models.TextField(blank=True, default='')
     observacoes = models.TextField(blank=True, default='')
-    proxima_manutencao = models.DateField(null=True, blank=True)
+    proxima_manutencao = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        help_text='Horímetro/KM para a próxima manutenção preventiva'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
