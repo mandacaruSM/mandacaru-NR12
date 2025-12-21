@@ -224,7 +224,7 @@ export default function ExecutarManutencaoPreventiva() {
         return ['APROVADO', 'REPROVADO']
       case 'BOM_REGULAR_RUIM':
         return ['BOM', 'REGULAR', 'RUIM']
-      case 'TEXTO_LIVRE':
+      case 'TEXTO':
         return []
       default:
         return []
@@ -389,7 +389,7 @@ export default function ExecutarManutencaoPreventiva() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Resposta {itemAtual.obrigatorio && <span className="text-red-500">*</span>}
                   </label>
-                  {itemAtual.tipo_resposta === 'TEXTO_LIVRE' ? (
+                  {itemAtual.tipo_resposta === 'TEXTO' ? (
                     <textarea
                       value={respostas[itemAtual.id]?.resposta || ''}
                       onChange={(e) => handleRespostaChange(itemAtual.id, 'resposta', e.target.value)}
