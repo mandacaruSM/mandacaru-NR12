@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi, User } from '@/lib/api';
+import { User } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -45,20 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔍 Verificando autenticação...');
 
-      // Timeout de 10 segundos para evitar travamento
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout na verificação de autenticação (60s)')), 60000)
-      );
+      // ✅ Chama a rota API local que encaminha cookies ao backend
+      const response = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include', // Importante para enviar cookies
+      });
 
-      const userData = await Promise.race([
-        authApi.me(),
-        timeoutPromise
-      ]) as User;
+      if (!response.ok) {
+        console.log('❌ Não autenticado');
+        setUser(null);
+        return;
+      }
 
+      const userData = await response.json();
       console.log('✅ Usuário autenticado:', userData.username);
       setUser(userData);
     } catch (error: any) {
-      console.log('❌ Não autenticado:', error.message);
+      console.log('❌ Erro ao verificar autenticação:', error.message);
       setUser(null);
     } finally {
       setLoading(false);
@@ -69,13 +72,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     try {
       console.log('🔐 Tentando fazer login...');
-      await authApi.login({ username, password });
-      
+
+      // ✅ Chama a rota API local que define cookies HttpOnly
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao fazer login');
+      }
+
       // ✅ Recarrega dados do usuário após login bem-sucedido
       isCheckingAuth.current = false; // Reset para permitir nova verificação
       hasCheckedAuth.current = false;
       await checkAuth();
-      
+
       console.log('✅ Login realizado com sucesso!');
       router.push('/dashboard');
     } catch (error: any) {
@@ -87,7 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       console.log('🚪 Fazendo logout...');
-      await authApi.logout();
+
+      // ✅ Chama a rota API local que limpa cookies
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
       console.log('✅ Logout realizado com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao fazer logout:', error);
