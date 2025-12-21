@@ -1,101 +1,143 @@
 # Status do Deploy - NR12 ERP
 
-## ✅ Situação Atual
+## 🚨 PROBLEMA ENCONTRADO E SOLUÇÃO
+
+### ❌ Erro Atual
+Frontend retorna **404 Not Found** ao tentar fazer login.
+
+**Causa:** Variável de ambiente `NEXT_PUBLIC_API_URL` está **ERRADA** no Render!
+
+### ✅ SOLUÇÃO IMEDIATA (2 minutos)
+
+**No Render Dashboard → nr12-frontend → Environment:**
+
+Alterar de:
+```
+NEXT_PUBLIC_API_URL=https://nr12-backend.onrender.com
+```
+
+Para:
+```
+NEXT_PUBLIC_API_URL=https://nr12-backend.onrender.com/api/v1
+```
+
+**Depois:**
+1. Salvar alterações
+2. Clicar em "Manual Deploy" → "Clear build cache & deploy"
+3. Aguardar build (3-5 minutos)
+4. Testar login com `admin` / `admin123`
+
+---
+
+## ✅ Status dos Serviços
 
 ### Frontend
-- **Status**: ✅ FUNCIONANDO
 - **URL**: https://nr12-frontend.onrender.com
-- **Último commit**: a8a6c81
+- **Status**: ⚠️ ONLINE mas com erro 404 (variável de ambiente incorreta)
+- **Último commit**: 03f531a
 - **Build**: Concluído com sucesso
 
 ### Backend
-- **Status**: ⏳ AGUARDANDO REDEPLOY
-- **Problema**: Render ainda está no commit 17be89f (antigo)
-- **Solução aplicada**: Commit c28354b já está no GitHub
-- **Próximo passo**: Aguardar Render detectar novo commit ou fazer redeploy manual
+- **URL**: https://nr12-backend.onrender.com
+- **Status**: ✅ FUNCIONANDO 100%
+- **Usuário admin**: ✅ Criado automaticamente
+- **API funcionando**: ✅ Testado com curl
 
-## 📝 Histórico de Correções
+---
 
-### Commit c28354b (MAIS RECENTE)
-**Fix: Corrige import do modelo Profile no comando create_default_user**
-- Corrigido: `UserProfile` → `Profile`
-- Corrigido: role `'admin'` → `'ADMIN'`
-- Este commit resolve o erro de build do backend
+## 📝 Evidências do Problema
 
-### Commit 17be89f
-- Criou comando create_default_user (com erro)
-- Build falhou por import incorreto
+### Logs do Console (Frontend)
+```
+📤 API Request: POST https://nr12-backend.onrender.com/auth/login/
+📥 API Response: 404
+```
 
-### Commits anteriores
-- a8a6c81: Fix timeout na autenticação do frontend
-- 3f25298: Fix interface ItemManutencaoPreventivaFormData
-- dc4152e: Fix missing properties ProgramacaoManutencaoFormData
-- ae162de: Fix resolve all TypeScript errors
-- 2565c8e: Fix remove non-existent Tecnico type
+**Problema:** Falta `/api/v1` no caminho!
 
-## 🔧 Como Forçar Redeploy Manual
+### Teste Manual (Backend - Funcionando)
+```bash
+curl -X POST https://nr12-backend.onrender.com/api/v1/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
 
-1. Acesse: https://dashboard.render.com
-2. Clique no serviço **nr12-backend**
-3. Clique em "Manual Deploy" (botão azul no canto superior direito)
-4. Selecione "Deploy latest commit"
-5. Aguarde o build completar (~2-3 minutos)
+# Resposta:
+{"detail": "Login realizado com sucesso.", "user": {...}}  ✅
+```
 
-## 📋 Após Build Bem-Sucedido
+---
 
-### Credenciais de Login:
+## 🎯 Credenciais de Login
+
 ```
 Username: admin
 Password: admin123
 Email: admin@nr12.com
 ```
 
-### Testar:
-1. Acesse: https://nr12-frontend.onrender.com
-2. Faça login com as credenciais acima
-3. Navegue pelo dashboard
-4. Teste CRUD de alguma funcionalidade
+**⚠️ IMPORTANTE:** Trocar senha após primeiro login!
 
-## ⚠️ Importante
+---
 
-- **Trocar senha padrão** após primeiro login
-- Acessar admin Django: https://nr12-backend.onrender.com/admin/
-- Verificar logs se houver problemas
+## 📊 Variáveis de Ambiente Corretas
 
-## 🎯 Próximos Passos
+### Backend (nr12-backend)
+```bash
+DJANGO_SECRET_KEY=<gerado pelo Render>
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=nr12-backend.onrender.com
+DJANGO_CORS_ORIGINS=https://nr12-frontend.onrender.com
+DATABASE_URL=<PostgreSQL nr12-db>
+ERP_PUBLIC_BASE_URL=https://nr12-backend.onrender.com
+```
 
-1. ⏳ Aguardar redeploy do backend (automático ou manual)
-2. ✅ Testar login no frontend
-3. ✅ Verificar todas as funcionalidades
-4. ✅ Trocar senha do admin
-5. ✅ Configurar variáveis de ambiente do Telegram (opcional)
+### Frontend (nr12-frontend) - ⚠️ CORRIGIR
+```bash
+NEXT_PUBLIC_API_URL=https://nr12-backend.onrender.com/api/v1
+```
 
-## 📊 Variáveis de Ambiente Configuradas
+**❌ ERRO COMUM:** Esquecer o `/api/v1` no final!
 
-### Backend
-- `DJANGO_SECRET_KEY`: Gerado automaticamente pelo Render
-- `DJANGO_DEBUG`: False
-- `DJANGO_ALLOWED_HOSTS`: nr12-backend.onrender.com
-- `DJANGO_CORS_ORIGINS`: https://nr12-frontend.onrender.com
-- `DATABASE_URL`: Conectado ao PostgreSQL nr12-db
-- `ERP_PUBLIC_BASE_URL`: https://nr12-backend.onrender.com
-- `TELEGRAM_BOT_TOKEN`: (configurar manualmente se necessário)
-- `TELEGRAM_WEBHOOK_URL`: (configurar manualmente se necessário)
+---
 
-### Frontend
-- `NEXT_PUBLIC_API_URL`: https://nr12-backend.onrender.com/api/v1
+## 🔧 Troubleshooting
 
-## 🐛 Troubleshooting
+### Se ainda der 404 após corrigir:
+1. Verificar se salvou as alterações no Render
+2. Verificar se fez redeploy manual
+3. Limpar cache do navegador (Ctrl+Shift+Del)
+4. Abrir aba anônima e testar novamente
 
-### Se o login não funcionar:
-1. Abra o console do navegador (F12)
-2. Veja se há erros de CORS
-3. Verifique se o backend está respondendo: https://nr12-backend.onrender.com/api/v1/auth/me/
+### Se der CORS error:
+- Backend já está configurado corretamente
+- Verificar se `DJANGO_CORS_ORIGINS` está certo
 
-### Se aparecer erro 502/503:
-- Backend ainda está fazendo build ou reiniciando
-- Aguarde 1-2 minutos e tente novamente
+### Se backend demorar:
+- Servidores free tier "hibernam" após inatividade
+- Primeiro acesso pode levar 30-60 segundos
+- Abrir https://nr12-backend.onrender.com/api/v1/health/ primeiro
 
-### Se der timeout:
-- Serviços no plano free do Render "hibernam" após inatividade
-- Primeiro acesso pode demorar 30-60 segundos
+---
+
+## 📋 Checklist de Deploy
+
+- [x] Backend deployado no Render
+- [x] Frontend deployado no Render
+- [x] PostgreSQL configurado
+- [x] Usuário admin criado automaticamente
+- [x] CORS configurado
+- [ ] **PENDING:** Corrigir `NEXT_PUBLIC_API_URL` no frontend
+- [ ] **PENDING:** Fazer redeploy do frontend
+- [ ] **PENDING:** Testar login
+- [ ] **PENDING:** Trocar senha padrão
+
+---
+
+## 🆘 Links Úteis
+
+- **Frontend**: https://nr12-frontend.onrender.com
+- **Backend API**: https://nr12-backend.onrender.com/api/v1
+- **Health Check**: https://nr12-backend.onrender.com/api/v1/health/
+- **Admin Django**: https://nr12-backend.onrender.com/admin/
+- **Render Dashboard**: https://dashboard.render.com
+
