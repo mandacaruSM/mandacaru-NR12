@@ -42,7 +42,8 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nConfiguração para deploy no Render\n\nBackend:\n- Adicionado build.sh com comandos de build\n- Adicionadas dependências de produção: gunicorn, psycopg2-binary, whitenoise, dj-database-url\n- Configurado middleware WhiteNoise para servir arquivos estáticos\n- Configurado database para usar PostgreSQL em produção (via DATABASE_URL)\n- Configurações de STATIC_ROOT e STATICFILES_STORAGE\n\nInfraestrutura:\n- Criado render.yaml com configuração completa:\n  - Banco PostgreSQL (free tier)\n  - Backend Django com gunicorn\n  - Frontend Next.js\n  - Variáveis de ambiente configuradas\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
       "Bash(git ls-tree:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

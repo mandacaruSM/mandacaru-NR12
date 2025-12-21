@@ -71,7 +71,7 @@ export default function RelatorioEmpreendimentosPage() {
 
   async function loadClientes() {
     try {
-      const data = await clientesApi.list({ page_size: 1000 });
+      const data = await clientesApi.list({} as any);
       setClientes(data.results || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
@@ -80,7 +80,7 @@ export default function RelatorioEmpreendimentosPage() {
 
   async function loadEmpreendimentos() {
     try {
-      const data = await empreendimentosApi.list({ page_size: 1000 });
+      const data = await empreendimentosApi.list({} as any);
       setEmpreendimentos(data.results || []);
       setEmpreendimentosFiltrados(data.results || []);
     } catch (error) {
@@ -108,8 +108,7 @@ export default function RelatorioEmpreendimentosPage() {
         // Buscar equipamentos do empreendimento
         const equipamentosData = await equipamentosApi.list({
           empreendimento: emp.id,
-          page_size: 1000,
-        });
+        } as any);
         const equipamentos = equipamentosData.results || [];
         const equipamentosIds = equipamentos.map(e => e.id);
 
@@ -131,34 +130,29 @@ export default function RelatorioEmpreendimentosPage() {
         const abastecimentosData = await abastecimentosApi.list({
           data_inicio: periodo.data_inicio,
           data_fim: periodo.data_fim,
-          page_size: 1000,
-        });
-        const abastecimentos = (abastecimentosData.results || []).filter(a =>
+        } as any);
+        const abastecimentos = (abastecimentosData.results || abastecimentosData || []).filter((a: any) =>
           equipamentosIds.includes(a.equipamento)
         );
 
         // Buscar manutenções do período
-        const manutencoesData = await manutencoesApi.list({
-          data_inicio: periodo.data_inicio,
-          data_fim: periodo.data_fim,
-          page_size: 1000,
-        });
-        const manutencoes = (manutencoesData.results || []).filter(m =>
+        const manutencoesData = await manutencoesApi.list() as any;
+        const manutencoes = (manutencoesData.results || manutencoesData || []).filter((m: any) =>
           equipamentosIds.includes(m.equipamento)
         );
 
         // Calcular totais
-        const total_horas = abastecimentos.reduce((sum, a) =>
-          sum + Number(a.horimetro_atual || 0), 0
+        const total_horas = abastecimentos.reduce((sum: any, a: any) =>
+          sum + Number((a as any).horimetro_atual || 0), 0
         );
-        const total_abastecimento_litros = abastecimentos.reduce((sum, a) =>
-          sum + Number(a.quantidade || 0), 0
+        const total_abastecimento_litros = abastecimentos.reduce((sum: any, a: any) =>
+          sum + Number((a as any).quantidade || 0), 0
         );
-        const total_abastecimento_valor = abastecimentos.reduce((sum, a) =>
+        const total_abastecimento_valor = abastecimentos.reduce((sum: any, a: any) =>
           sum + Number(a.valor_total || 0), 0
         );
-        const total_manutencao_valor = manutencoes.reduce((sum, m) =>
-          sum + Number(m.custo_total || 0), 0
+        const total_manutencao_valor = manutencoes.reduce((sum: any, m: any) =>
+          sum + Number((m as any).custo_total || 0), 0
         );
         const custo_total = total_abastecimento_valor + total_manutencao_valor;
         const custo_por_hora = total_horas > 0 ? custo_total / total_horas : 0;
