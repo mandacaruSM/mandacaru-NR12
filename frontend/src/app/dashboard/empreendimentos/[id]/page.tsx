@@ -105,7 +105,7 @@ export default function EditarEmpreendimentoPage() {
 
   const loadTecnicos = async () => {
     try {
-      const res = await api('/tecnicos/');
+      const res = await api<any>('/tecnicos/');
       setTecnicos(res.results || res || []);
     } catch (e) {
       // opcional
