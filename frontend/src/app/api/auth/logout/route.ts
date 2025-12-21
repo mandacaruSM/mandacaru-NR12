@@ -8,25 +8,38 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚪 [API Route] Fazendo logout no backend...');
 
-    // Faz requisição ao backend Django
-    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Envia cookies do Django
-    });
+    // Pega o sessionid para enviar ao Django
+    const sessionId = request.cookies.get('django_session')?.value;
+    const csrfToken = request.cookies.get('django_csrf')?.value;
 
-    if (!response.ok) {
-      console.error('❌ [API Route] Erro no logout');
-    } else {
-      console.log('✅ [API Route] Logout bem-sucedido no backend');
+    if (sessionId) {
+      // Monta cookie header
+      let cookieHeader = `sessionid=${sessionId}`;
+      if (csrfToken) {
+        cookieHeader += `; csrftoken=${csrfToken}`;
+      }
+
+      // Faz requisição ao backend Django
+      const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': cookieHeader,
+        },
+      });
+
+      if (!response.ok) {
+        console.error('❌ [API Route] Erro no logout');
+      } else {
+        console.log('✅ [API Route] Logout bem-sucedido no backend');
+      }
     }
 
-    // Limpa o cookie "access" independentemente do resultado
+    // Limpa TODOS os cookies independentemente do resultado
     const cookieStore = await cookies();
     cookieStore.delete('access');
-    cookieStore.delete('refresh');
+    cookieStore.delete('django_session');
+    cookieStore.delete('django_csrf');
 
     console.log('✅ [API Route] Cookies limpos');
 
@@ -37,7 +50,8 @@ export async function POST(request: NextRequest) {
     // Mesmo com erro, limpa cookies locais
     const cookieStore = await cookies();
     cookieStore.delete('access');
-    cookieStore.delete('refresh');
+    cookieStore.delete('django_session');
+    cookieStore.delete('django_csrf');
 
     return NextResponse.json(
       { error: error.message || 'Erro ao fazer logout' },

@@ -7,21 +7,38 @@ export async function GET(request: NextRequest) {
   try {
     console.log('👤 [API Route] Verificando usuário atual...');
 
-    // Pega todos os cookies da requisição
-    const cookieHeader = request.headers.get('cookie') || '';
+    // Pega o sessionid armazenado nos cookies do Next.js
+    const cookieStore = request.cookies;
+    const sessionId = cookieStore.get('django_session')?.value;
+    const csrfToken = cookieStore.get('django_csrf')?.value;
 
-    // Faz requisição ao backend Django, passando os cookies
+    console.log('🍪 [API Route] SessionID disponível:', sessionId ? 'SIM' : 'NÃO');
+
+    if (!sessionId) {
+      console.log('❌ [API Route] Sem sessionid, usuário não autenticado');
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Monta o header Cookie para o Django
+    let cookieHeader = `sessionid=${sessionId}`;
+    if (csrfToken) {
+      cookieHeader += `; csrftoken=${csrfToken}`;
+    }
+
+    // Faz requisição ao backend Django com o sessionid
     const response = await fetch(`${API_BASE_URL}/me/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': cookieHeader, // Encaminha cookies para o Django
+        'Cookie': cookieHeader,
       },
-      credentials: 'include',
     });
 
     if (!response.ok) {
-      console.log('❌ [API Route] Usuário não autenticado');
+      console.log('❌ [API Route] Django retornou', response.status);
       return NextResponse.json(
         { error: 'Não autenticado' },
         { status: response.status }

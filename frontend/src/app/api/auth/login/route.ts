@@ -32,31 +32,66 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [API Route] Login bem-sucedido');
 
-    // Extrai TODOS os cookies do backend
+    // Extrai cookies do Django do header Set-Cookie
     const setCookieHeaders = response.headers.getSetCookie?.() || [];
-    console.log('🍪 [API Route] Cookies recebidos:', setCookieHeaders.length);
+    console.log('🍪 [API Route] Cookies recebidos do Django:', setCookieHeaders.length);
+
+    // Procura pelo sessionid nos cookies do Django
+    let sessionId = '';
+    let csrfToken = '';
+
+    for (const cookie of setCookieHeaders) {
+      if (cookie.startsWith('sessionid=')) {
+        // Extrai o valor do sessionid
+        const match = cookie.match(/sessionid=([^;]+)/);
+        if (match) sessionId = match[1];
+      }
+      if (cookie.startsWith('csrftoken=')) {
+        // Extrai o valor do csrftoken
+        const match = cookie.match(/csrftoken=([^;]+)/);
+        if (match) csrfToken = match[1];
+      }
+    }
+
+    console.log('🍪 [API Route] SessionID extraído:', sessionId ? 'SIM' : 'NÃO');
 
     // Cria response de sucesso
     const nextResponse = NextResponse.json(data);
 
-    // Define cookie "access" para o middleware poder ler
+    // Define cookies que o middleware e futuras requisições podem usar
     const cookieStore = await cookies();
+
+    // Cookie "access" para o middleware
     cookieStore.set('access', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hora
+      maxAge: 60 * 60 * 24, // 24 horas
       path: '/',
     });
 
-    // Encaminha TODOS os cookies do Django para o cliente
-    // Isso é necessário para manter a sessão do Django
-    if (setCookieHeaders.length > 0) {
-      for (const setCookie of setCookieHeaders) {
-        nextResponse.headers.append('Set-Cookie', setCookie);
-      }
-      console.log('🍪 [API Route] Cookies encaminhados para o cliente');
+    // Armazena sessionid e csrftoken para futuras requisições ao Django
+    if (sessionId) {
+      cookieStore.set('django_session', sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 24 horas
+        path: '/',
+      });
     }
+
+    if (csrfToken) {
+      cookieStore.set('django_csrf', csrfToken, {
+        httpOnly: false, // CSRF precisa ser acessível pelo JS
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 24 horas
+        path: '/',
+      });
+    }
+
+    console.log('🍪 [API Route] Cookies definidos no Next.js');
 
     return nextResponse;
   } catch (error: any) {
