@@ -19,8 +19,8 @@ export default function NovoModeloManutencaoPreventiva() {
     descricao: '',
     tipo_equipamento: 0,
     tipo_medicao: 'HORIMETRO',
-    intervalo: '0',
-    tolerancia: '0',
+    intervalo: 0,
+    tolerancia: 0,
     ativo: true,
   })
 
@@ -57,13 +57,13 @@ export default function NovoModeloManutencaoPreventiva() {
         return
       }
 
-      if (parseFloat(formData.intervalo) <= 0) {
+      if (Number(formData.intervalo) <= 0) {
         setError('Intervalo deve ser maior que zero')
         setLoading(false)
         return
       }
 
-      if (parseFloat(formData.tolerancia) < 0) {
+      if (Number(formData.tolerancia) < 0) {
         setError('Tolerância não pode ser negativa')
         setLoading(false)
         return
