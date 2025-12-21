@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Timeout de 10 segundos para evitar travamento
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout na verificação de autenticação')), 10000)
+        setTimeout(() => reject(new Error('Timeout na verificação de autenticação (60s)')), 60000)
       );
 
       const userData = await Promise.race([

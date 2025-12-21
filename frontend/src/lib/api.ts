@@ -47,26 +47,36 @@ async function apiFetchBase<T>(
   };
 
   try {
+    console.log('📤 API Request:', fetchOptions.method || 'GET', `${baseUrl}${endpoint}`);
     const response = await fetch(`${baseUrl}${endpoint}`, config);
+    console.log('📥 API Response:', response.status, response.statusText, response.url);
 
     if (response.status === 401 && requireAuth) {
       throw new Error('Não autenticado');
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
-      console.error('Erro da API:', error);
+      let error;
+      try {
+        error = await response.json();
+        console.error('Erro da API (JSON):', error);
+      } catch {
+        error = { detail: `Erro HTTP ${response.status}: ${response.statusText}` };
+        console.error('Erro da API (não-JSON):', error);
+      }
       const errorMessage = error.detail || JSON.stringify(error) || `Erro ${response.status}`;
       throw new Error(errorMessage);
     }
 
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ API Success:', data);
+      return data;
     }
     return null as T;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error);
     throw error;
   }
 }

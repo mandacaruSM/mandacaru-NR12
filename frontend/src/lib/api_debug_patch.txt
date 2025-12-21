@@ -1,0 +1,7 @@
+Adicionar após linha 50 (dentro do try da função apiFetchBase):
+
+  try {
++   console.log('📤 API Request:', method || 'GET', `${baseUrl}${endpoint}`);
+    const response = await fetch(`${baseUrl}${endpoint}`, config);
++   console.log('📥 API Response:', response.status, response.statusText);
+
