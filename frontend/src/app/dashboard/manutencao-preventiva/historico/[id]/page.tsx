@@ -62,7 +62,9 @@ export default function DetalhesManutencaoRealizada() {
     return horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`
   }
 
-  const getCorResposta = (resposta: string): string => {
+  const getCorResposta = (resposta: string | null): string => {
+    if (!resposta) return 'bg-gray-100 text-gray-800'
+
     const respostasPositivas = ['OK', 'SIM', 'APROVADO', 'BOM']
     const respostasNegativas = ['NÃO OK', 'NÃO', 'REPROVADO', 'RUIM']
     const respostasNeutras = ['REGULAR']
@@ -291,7 +293,7 @@ export default function DetalhesManutencaoRealizada() {
                         <span
                           className={`inline-flex px-3 py-1 text-sm font-semibold rounded ${getCorResposta(resposta.resposta)}`}
                         >
-                          {resposta.resposta}
+                          {resposta.resposta || 'N/A'}
                         </span>
                       </div>
 
