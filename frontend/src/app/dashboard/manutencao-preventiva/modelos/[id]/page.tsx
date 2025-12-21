@@ -43,12 +43,13 @@ export default function DetalhesModeloManutencao() {
     modelo: id,
     categoria: 'INSPECAO',
     descricao: '',
+    instrucoes: '',
     tipo_resposta: 'CONFORME',
     obrigatorio: true,
-    permite_foto: true,
+    requer_observacao_nao_conforme: false,
     ordem: 0,
     ativo: true,
-  } as any)
+  })
 
   useEffect(() => {
     loadData()
@@ -96,21 +97,23 @@ export default function DetalhesModeloManutencao() {
         modelo: id,
         categoria: item.categoria,
         descricao: item.descricao,
+        instrucoes: (item as any).instrucoes || '',
         tipo_resposta: item.tipo_resposta,
         obrigatorio: item.obrigatorio,
-        permite_foto: (item as any).permite_foto,
+        requer_observacao_nao_conforme: (item as any).requer_observacao_nao_conforme || false,
         ordem: item.ordem,
         ativo: item.ativo,
-      } as any)
+      })
     } else {
       setEditingItem(null)
       setItemFormData({
         modelo: id,
         categoria: 'INSPECAO',
         descricao: '',
+        instrucoes: '',
         tipo_resposta: 'CONFORME',
         obrigatorio: true,
-        permite_foto: true,
+        requer_observacao_nao_conforme: false,
         ordem: itens.length > 0 ? Math.max(...itens.map((i) => i.ordem)) + 1 : 1,
         ativo: true,
       })
@@ -397,6 +400,22 @@ export default function DetalhesModeloManutencao() {
                   />
                 </div>
 
+                {/* Instruções */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Instruções
+                  </label>
+                  <textarea
+                    value={itemFormData.instrucoes}
+                    onChange={(e) =>
+                      setItemFormData((prev) => ({ ...prev, instrucoes: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Instruções detalhadas para execução do item"
+                    rows={3}
+                  />
+                </div>
+
                 {/* Categoria */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -477,13 +496,13 @@ export default function DetalhesModeloManutencao() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={(itemFormData as any).permite_foto}
+                      checked={itemFormData.requer_observacao_nao_conforme}
                       onChange={(e) =>
-                        setItemFormData((prev) => ({ ...prev, permite_foto: e.target.checked } as any))
+                        setItemFormData((prev) => ({ ...prev, requer_observacao_nao_conforme: e.target.checked }))
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Permite anexar foto</label>
+                    <label className="ml-2 text-sm text-gray-700">Requer observação se não conforme</label>
                   </div>
 
                   <div className="flex items-center">
