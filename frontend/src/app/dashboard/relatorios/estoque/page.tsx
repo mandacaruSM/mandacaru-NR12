@@ -31,9 +31,9 @@ export default function RelatorioEstoquePage() {
       // Calcular resumo
       const produtos_list = data.results || [];
       const total_produtos = produtos_list.length;
-      const total_itens = produtos_list.reduce((sum, p) => sum + Number(p.quantidade_estoque || 0), 0);
-      const valor_total = produtos_list.reduce((sum, p) => sum + (Number(p.quantidade_estoque || 0) * Number(p.preco_custo || 0)), 0);
-      const produtos_falta = produtos_list.filter(p => Number(p.quantidade_estoque || 0) < Number(p.estoque_minimo || 0)).length;
+      const total_itens = produtos_list.reduce((sum, p) => sum + Number((p as any).quantidade_estoque || 0), 0);
+      const valor_total = produtos_list.reduce((sum, p) => sum + (Number((p as any).quantidade_estoque || 0) * Number((p as any).preco_custo || 0)), 0);
+      const produtos_falta = produtos_list.filter(p => Number((p as any).quantidade_estoque || 0) < Number((p as any).estoque_minimo || 0)).length;
 
       setResumo({
         total_produtos,
@@ -58,13 +58,13 @@ export default function RelatorioEstoquePage() {
       p.codigo,
       p.nome,
       p.tipo_display || '',
-      p.unidade_medida,
-      p.quantidade_estoque || 0,
-      p.estoque_minimo || 0,
-      Number(p.preco_custo || 0).toFixed(2),
-      Number(p.preco_venda || 0).toFixed(2),
-      (Number(p.quantidade_estoque || 0) * Number(p.preco_custo || 0)).toFixed(2),
-      p.local_estoque_nome || '',
+      (p as any).unidade_medida,
+      (p as any).quantidade_estoque || 0,
+      (p as any).estoque_minimo || 0,
+      Number((p as any).preco_custo || 0).toFixed(2),
+      Number((p as any).preco_venda || 0).toFixed(2),
+      (Number((p as any).quantidade_estoque || 0) * Number((p as any).preco_custo || 0)).toFixed(2),
+      (p as any).local_estoque_nome || '',
     ]);
 
     const csv = [headers, ...rows]
@@ -232,10 +232,10 @@ export default function RelatorioEstoquePage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {produtos.map((produto) => {
-                const qtd = Number(produto.quantidade_estoque || 0);
-                const minimo = Number(produto.estoque_minimo || 0);
+                const qtd = Number((produto as any).quantidade_estoque || 0);
+                const minimo = Number((produto as any).estoque_minimo || 0);
                 const emFalta = qtd < minimo;
-                const valorTotal = qtd * Number(produto.preco_custo || 0);
+                const valorTotal = qtd * Number((produto as any).preco_custo || 0);
 
                 return (
                   <tr key={produto.id} className={emFalta ? 'bg-red-50' : ''}>
@@ -249,7 +249,7 @@ export default function RelatorioEstoquePage() {
                       {produto.tipo_display}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {produto.unidade_medida}
+                      {(produto as any).unidade_medida}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${emFalta ? 'text-red-900' : 'text-gray-900'}`}>
                       {qtd.toFixed(2)}
@@ -259,13 +259,13 @@ export default function RelatorioEstoquePage() {
                       {minimo.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      R$ {Number(produto.preco_custo || 0).toFixed(2)}
+                      R$ {Number((produto as any).preco_custo || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       R$ {valorTotal.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {produto.local_estoque_nome || '-'}
+                      {(produto as any).local_estoque_nome || '-'}
                     </td>
                   </tr>
                 );
