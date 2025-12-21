@@ -36,14 +36,14 @@ export default function RelatorioFaturamentoPage() {
         status: 'APROVADO',
         data_inicio: periodo.data_inicio,
         data_fim: periodo.data_fim,
-      });
+      } as any);
 
       // Buscar ordens concluídas
       const ordens = await ordensServicoApi.list({
         status: 'CONCLUIDA',
         data_inicio: periodo.data_inicio,
         data_fim: periodo.data_fim,
-      });
+      } as any);
 
       const orcamentosList = orcamentos.results || [];
       const ordensList = ordens.results || [];
