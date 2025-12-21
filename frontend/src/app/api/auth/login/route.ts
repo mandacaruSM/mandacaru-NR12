@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ username, password }),
-      credentials: 'include', // Para receber cookies do Django
     });
 
     const data = await response.json();
@@ -33,15 +32,14 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [API Route] Login bem-sucedido');
 
-    // Extrai cookies do backend (se houver)
-    const setCookieHeader = response.headers.get('set-cookie');
+    // Extrai TODOS os cookies do backend
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    console.log('🍪 [API Route] Cookies recebidos:', setCookieHeaders.length);
 
     // Cria response de sucesso
     const nextResponse = NextResponse.json(data);
 
     // Define cookie "access" para o middleware poder ler
-    // Usamos um valor simples apenas para indicar que o usuário está autenticado
-    // O token real está nos cookies HttpOnly do Django
     const cookieStore = await cookies();
     cookieStore.set('access', 'authenticated', {
       httpOnly: true,
@@ -51,9 +49,13 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    // Se o backend retornou cookies, adiciona na response
-    if (setCookieHeader) {
-      nextResponse.headers.set('set-cookie', setCookieHeader);
+    // Encaminha TODOS os cookies do Django para o cliente
+    // Isso é necessário para manter a sessão do Django
+    if (setCookieHeaders.length > 0) {
+      for (const setCookie of setCookieHeaders) {
+        nextResponse.headers.append('Set-Cookie', setCookie);
+      }
+      console.log('🍪 [API Route] Cookies encaminhados para o cliente');
     }
 
     return nextResponse;
