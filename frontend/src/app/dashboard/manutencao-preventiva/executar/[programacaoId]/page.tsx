@@ -431,8 +431,8 @@ export default function ExecutarManutencaoPreventiva() {
                   />
                 </div>
 
-                {/* Foto (placeholder) */}
-                {itemAtual.permite_foto && (
+                {/* Foto (placeholder) - funcionalidade a ser implementada */}
+                {(itemAtual as any).permite_foto && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Foto (opcional)
