@@ -257,13 +257,13 @@ export default function DetalhesManutencaoRealizada() {
         ) : (
           <div className="divide-y divide-gray-200">
             {manutencao.respostas
-              .sort((a, b) => a.item_ordem - b.item_ordem)
+              .sort((a, b) => ((a as any).item_ordem || 0) - ((b as any).item_ordem || 0))
               .map((resposta, index) => (
                 <div key={resposta.id} className="p-6 hover:bg-gray-50">
                   <div className="flex items-start gap-4">
                     {/* Número do Item */}
                     <div className="flex-shrink-0 w-10 h-10 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">
-                      {resposta.item_ordem}
+                      {(resposta as any).item_ordem || index + 1}
                     </div>
 
                     {/* Conteúdo */}
@@ -277,9 +277,11 @@ export default function DetalhesManutencaoRealizada() {
                           <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
                             {CATEGORIA_ITEM_LABELS[resposta.item_categoria]}
                           </span>
-                          <span className="text-xs text-gray-500">
-                            {TIPO_RESPOSTA_LABELS[resposta.item_tipo_resposta]}
-                          </span>
+                          {(resposta as any).item_tipo_resposta && (
+                            <span className="text-xs text-gray-500">
+                              {(TIPO_RESPOSTA_LABELS as any)[(resposta as any).item_tipo_resposta]}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -304,12 +306,12 @@ export default function DetalhesManutencaoRealizada() {
                       )}
 
                       {/* Foto */}
-                      {resposta.foto_url && (
+                      {(resposta as any).foto_url && (
                         <div className="mt-2">
                           <div className="text-sm text-gray-600 mb-1">Foto:</div>
                           <img
-                            src={resposta.foto_url}
-                            alt={`Foto do item ${resposta.item_ordem}`}
+                            src={(resposta as any).foto_url}
+                            alt={`Foto do item ${(resposta as any).item_ordem || index + 1}`}
                             className="max-w-sm rounded-lg border border-gray-200"
                           />
                         </div>
