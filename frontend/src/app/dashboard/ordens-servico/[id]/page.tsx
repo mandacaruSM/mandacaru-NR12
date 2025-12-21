@@ -2,14 +2,14 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ordensServicoApi, tecnicosApi, type OrdemServico, type Tecnico } from '@/lib/api';
+import { ordensServicoApi, tecnicosApi, type OrdemServico } from '@/lib/api';
 
 export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
+  const [tecnicos, setTecnicos] = useState<any[]>([]);
   const [tecnicoSelecionado, setTecnicoSelecionado] = useState<number | undefined>();
   const [valorAdicional, setValorAdicional] = useState(0);
   const [observacoes, setObservacoes] = useState('');
