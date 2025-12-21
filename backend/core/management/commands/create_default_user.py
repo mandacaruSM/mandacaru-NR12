@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from core.models import UserProfile
+from core.models import Profile
 
 User = get_user_model()
 
@@ -27,9 +27,9 @@ class Command(BaseCommand):
         )
 
         # Criar perfil com todos os módulos habilitados
-        UserProfile.objects.create(
+        Profile.objects.create(
             user=user,
-            role='admin',
+            role='ADMIN',
             modules_enabled=[
                 'dashboard',
                 'clientes',
