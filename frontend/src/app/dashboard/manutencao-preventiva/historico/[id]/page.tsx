@@ -334,7 +334,7 @@ export default function DetalhesManutencaoRealizada() {
             {['OK', 'NÃO OK', 'SIM', 'NÃO', 'APROVADO', 'REPROVADO', 'BOM', 'REGULAR', 'RUIM'].map(
               (tipo) => {
                 const count = manutencao.respostas.filter(
-                  (r) => r.resposta.toUpperCase() === tipo
+                  (r) => r.resposta?.toUpperCase() === tipo
                 ).length
                 if (count === 0) return null
                 return (
