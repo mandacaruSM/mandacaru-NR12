@@ -6,7 +6,7 @@ import { ordensServicoApi, type OrdemServico } from '@/lib/api';
 export default function RelatorioOrdensServicoPage() {
   const [loading, setLoading] = useState(true);
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
-  const [filtros, setFiltros] = useState({
+  const [filtros, setFiltros] = useState<any>({
     data_inicio: '',
     data_fim: '',
     status: '',
