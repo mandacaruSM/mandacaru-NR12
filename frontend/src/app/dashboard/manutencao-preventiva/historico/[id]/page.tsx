@@ -96,7 +96,7 @@ export default function DetalhesManutencaoRealizada() {
   }
 
   const itensRespondidos = manutencao.respostas.length
-  const totalItens = manutencao.modelo_total_itens || manutencao.respostas.length
+  const totalItens = (manutencao as any).modelo_total_itens || manutencao.respostas.length
   const percentualConclusao = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0
 
   return (
