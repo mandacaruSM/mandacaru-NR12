@@ -54,7 +54,7 @@ export default function DetalhesProgramacao() {
       ])
 
       setProgramacao(progData)
-      setNovaLeitura(progData.leitura_atual || '0')
+      setNovaLeitura((progData as any).leitura_atual || '0')
       // Filtrar manutenções desta programação (idealmente deveria vir do backend)
       setManutencoes(manutData.results)
     } catch (err: any) {
@@ -174,9 +174,9 @@ export default function DetalhesProgramacao() {
             <div className="text-lg font-bold text-gray-900 mt-1">
               {formatarLeitura(programacao.leitura_ultima_manutencao, programacao.tipo_medicao)}
             </div>
-            {programacao.data_ultima_manutencao && (
+            {(programacao as any).data_ultima_manutencao && (
               <div className="text-xs text-gray-500 mt-1">
-                {formatarData(programacao.data_ultima_manutencao)}
+                {formatarData((programacao as any).data_ultima_manutencao)}
               </div>
             )}
           </div>
@@ -184,8 +184,8 @@ export default function DetalhesProgramacao() {
           <div>
             <div className="text-sm text-gray-600">Leitura Atual</div>
             <div className="text-lg font-bold text-gray-900 mt-1">
-              {programacao.leitura_atual
-                ? formatarLeitura(programacao.leitura_atual, programacao.tipo_medicao)
+              {(programacao as any).leitura_atual
+                ? formatarLeitura((programacao as any).leitura_atual, programacao.tipo_medicao)
                 : '-'}
             </div>
             <button
@@ -281,7 +281,7 @@ export default function DetalhesProgramacao() {
           <div>
             <div className="text-sm text-gray-600">Tolerância</div>
             <div className="text-base font-medium text-gray-900 mt-1">
-              {formatarLeitura(programacao.modelo_tolerancia, programacao.tipo_medicao)}
+              {formatarLeitura((programacao as any).modelo_tolerancia, programacao.tipo_medicao)}
             </div>
           </div>
         </div>
@@ -385,7 +385,7 @@ export default function DetalhesProgramacao() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
-                  Atual: {formatarLeitura(programacao.leitura_atual || '0', programacao.tipo_medicao)}
+                  Atual: {formatarLeitura((programacao as any).leitura_atual || '0', programacao.tipo_medicao)}
                 </p>
               </div>
 

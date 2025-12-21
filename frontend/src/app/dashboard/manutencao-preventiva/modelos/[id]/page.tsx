@@ -43,12 +43,12 @@ export default function DetalhesModeloManutencao() {
     modelo: id,
     categoria: 'INSPECAO',
     descricao: '',
-    tipo_resposta: 'OK_NAO_OK',
+    tipo_resposta: 'CONFORME',
     obrigatorio: true,
     permite_foto: true,
     ordem: 0,
     ativo: true,
-  })
+  } as any)
 
   useEffect(() => {
     loadData()
@@ -98,17 +98,17 @@ export default function DetalhesModeloManutencao() {
         descricao: item.descricao,
         tipo_resposta: item.tipo_resposta,
         obrigatorio: item.obrigatorio,
-        permite_foto: item.permite_foto,
+        permite_foto: (item as any).permite_foto,
         ordem: item.ordem,
         ativo: item.ativo,
-      })
+      } as any)
     } else {
       setEditingItem(null)
       setItemFormData({
         modelo: id,
         categoria: 'INSPECAO',
         descricao: '',
-        tipo_resposta: 'OK_NAO_OK',
+        tipo_resposta: 'CONFORME',
         obrigatorio: true,
         permite_foto: true,
         ordem: itens.length > 0 ? Math.max(...itens.map((i) => i.ordem)) + 1 : 1,
@@ -338,7 +338,7 @@ export default function DetalhesModeloManutencao() {
                       <span>{CATEGORIA_ITEM_LABELS[item.categoria]}</span>
                       <span>•</span>
                       <span>{TIPO_RESPOSTA_LABELS[item.tipo_resposta]}</span>
-                      {item.permite_foto && (
+                      {(item as any).permite_foto && (
                         <>
                           <span>•</span>
                           <span>📷 Permite foto</span>
@@ -477,9 +477,9 @@ export default function DetalhesModeloManutencao() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={itemFormData.permite_foto}
+                      checked={(itemFormData as any).permite_foto}
                       onChange={(e) =>
-                        setItemFormData((prev) => ({ ...prev, permite_foto: e.target.checked }))
+                        setItemFormData((prev) => ({ ...prev, permite_foto: e.target.checked } as any))
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                     />

@@ -33,7 +33,7 @@ export default function NovaProgramacaoManutencao() {
   const [formData, setFormData] = useState<ProgramacaoManutencaoFormData>({
     equipamento: 0,
     modelo: 0,
-    leitura_inicial: '0',
+    leitura_inicial: 0,
     ativo: true,
   })
 
@@ -102,13 +102,13 @@ export default function NovaProgramacaoManutencao() {
     setFormData((prev) => ({
       ...prev,
       equipamento: equipamentoId,
-      leitura_inicial: equipamento?.horimetro || equipamento?.km || '0',
+      leitura_inicial: (equipamento as any)?.horimetro || (equipamento as any)?.km || 0,
     }))
 
     // Filtrar modelos compatíveis com o tipo do equipamento
     if (equipamento) {
       const modelosCompativeis = modelos.filter(
-        (m) => m.tipo_equipamento === equipamento.tipo_equipamento_id
+        (m) => m.tipo_equipamento === (equipamento as any).tipo_equipamento_id
       )
       if (modelosCompativeis.length > 0 && !modelosCompativeis.find((m) => m.id === formData.modelo)) {
         setFormData((prev) => ({ ...prev, modelo: 0 }))
@@ -142,7 +142,7 @@ export default function NovaProgramacaoManutencao() {
         return
       }
 
-      if (parseFloat(formData.leitura_inicial) < 0) {
+      if (Number(formData.leitura_inicial) < 0) {
         setError('Leitura inicial não pode ser negativa')
         setLoading(false)
         return
@@ -160,7 +160,7 @@ export default function NovaProgramacaoManutencao() {
   }
 
   const modelosFiltrados = selectedEquipamento
-    ? modelos.filter((m) => m.tipo_equipamento === selectedEquipamento.tipo_equipamento_id)
+    ? modelos.filter((m) => m.tipo_equipamento === (selectedEquipamento as any).tipo_equipamento_id)
     : modelos
 
   return (
@@ -210,7 +210,7 @@ export default function NovaProgramacaoManutencao() {
             <option value="" className="text-gray-900">Selecione um cliente</option>
             {clientes.map((cliente) => (
               <option key={cliente.id} value={cliente.id} className="text-gray-900">
-                {cliente.nome}
+                {(cliente as any).nome}
               </option>
             ))}
           </select>
@@ -270,21 +270,21 @@ export default function NovaProgramacaoManutencao() {
               <div className="text-sm space-y-1 text-gray-900">
                 <div>
                   <span className="font-medium text-gray-900">Tipo:</span>{' '}
-                  {selectedEquipamento.tipo_equipamento_nome}
+                  {(selectedEquipamento as any).tipo_equipamento_nome}
                 </div>
                 <div>
                   <span className="font-medium text-gray-900">Empreendimento:</span>{' '}
                   {selectedEquipamento.empreendimento_nome}
                 </div>
-                {selectedEquipamento.horimetro && (
+                {(selectedEquipamento as any).horimetro && (
                   <div>
                     <span className="font-medium text-gray-900">Horímetro atual:</span>{' '}
-                    {selectedEquipamento.horimetro} horas
+                    {(selectedEquipamento as any).horimetro} horas
                   </div>
                 )}
-                {selectedEquipamento.km && (
+                {(selectedEquipamento as any).km && (
                   <div>
-                    <span className="font-medium text-gray-900">KM atual:</span> {selectedEquipamento.km} km
+                    <span className="font-medium text-gray-900">KM atual:</span> {(selectedEquipamento as any).km} km
                   </div>
                 )}
               </div>
@@ -345,7 +345,7 @@ export default function NovaProgramacaoManutencao() {
           {selectedEquipamento && modelosFiltrados.length === 0 && (
             <p className="text-sm text-red-600 mt-2">
               Não há modelos de manutenção cadastrados para o tipo{' '}
-              {selectedEquipamento.tipo_equipamento_nome}.{' '}
+              {(selectedEquipamento as any).tipo_equipamento_nome}.{' '}
               <Link
                 href="/dashboard/manutencao-preventiva/modelos/novo"
                 className="font-medium underline"
@@ -366,7 +366,7 @@ export default function NovaProgramacaoManutencao() {
               type="number"
               value={formData.leitura_inicial}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, leitura_inicial: e.target.value }))
+                setFormData((prev) => ({ ...prev, leitura_inicial: Number(e.target.value) }))
               }
               required
               min="0"
@@ -394,7 +394,7 @@ export default function NovaProgramacaoManutencao() {
               <div>
                 <span className="font-medium text-gray-900">Próxima manutenção em:</span>{' '}
                 {formatarLeitura(
-                  (parseFloat(formData.leitura_inicial) + parseFloat(selectedModelo.intervalo)).toString(),
+                  (Number(formData.leitura_inicial) + Number(selectedModelo.intervalo)).toString(),
                   selectedModelo.tipo_medicao
                 )}
               </div>
@@ -402,9 +402,9 @@ export default function NovaProgramacaoManutencao() {
                 <span className="font-medium text-gray-900">Alerta antecipado em:</span>{' '}
                 {formatarLeitura(
                   (
-                    parseFloat(formData.leitura_inicial) +
-                    parseFloat(selectedModelo.intervalo) -
-                    parseFloat(selectedModelo.tolerancia)
+                    Number(formData.leitura_inicial) +
+                    Number(selectedModelo.intervalo) -
+                    Number(selectedModelo.tolerancia)
                   ).toString(),
                   selectedModelo.tipo_medicao
                 )}

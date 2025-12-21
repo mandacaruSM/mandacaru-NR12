@@ -94,7 +94,7 @@ export default function NovoOrcamentoPage() {
     const itemToAdd = {
       ...novoItem,
       produto: novoItem.produto || null,
-    };
+    } as any;
 
     setItens([...itens, itemToAdd]);
     setNovoItem({
@@ -151,7 +151,7 @@ export default function NovoOrcamentoPage() {
         itens: itens as ItemOrcamento[],
       };
       console.log('Payload enviado:', JSON.stringify(payload, null, 2));
-      await orcamentosApi.create(payload);
+      await orcamentosApi.create(payload as any);
       router.push('/dashboard/orcamentos');
     } catch (error: any) {
       console.error('Erro ao criar orçamento:', error);
@@ -317,7 +317,7 @@ export default function NovoOrcamentoPage() {
                 </select>
               </div>
 
-              {novoItem.tipo === 'PRODUTO' && (
+              {(novoItem as any).tipo === 'PRODUTO' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">Produto</label>
                   <select
@@ -329,7 +329,7 @@ export default function NovoOrcamentoPage() {
                         ...novoItem,
                         produto: prodId,
                         descricao: prod?.nome || '',
-                        valor_unitario: prod?.preco_venda || 0,
+                        valor_unitario: (prod as any)?.preco_venda || 0,
                       });
                     }}
                     className="w-full px-3 py-2 border rounded text-black bg-white"
@@ -344,7 +344,7 @@ export default function NovoOrcamentoPage() {
                 </div>
               )}
 
-              <div className={novoItem.tipo === 'PRODUTO' ? 'col-span-2' : 'col-span-3'}>
+              <div className={(novoItem as any).tipo === 'PRODUTO' ? 'col-span-2' : 'col-span-3'}>
                 <label className="block text-sm font-medium text-gray-900 mb-1">Descrição</label>
                 <input
                   type="text"

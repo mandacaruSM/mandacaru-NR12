@@ -251,13 +251,13 @@ export default function ChecklistDetailPage() {
       </div>
 
       {/* Respostas */}
-      {checklist.respostas && Array.isArray(checklist.respostas) && checklist.respostas.length > 0 && (
+      {(checklist as any).respostas && Array.isArray((checklist as any).respostas) && (checklist as any).respostas.length > 0 && (
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Respostas do Checklist</h2>
           </div>
           <div className="divide-y">
-            {checklist.respostas.map((resposta, index) => (
+            {(checklist as any).respostas.map((resposta: any, index: number) => (
               <div key={index} className="p-6 hover:bg-gray-50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">

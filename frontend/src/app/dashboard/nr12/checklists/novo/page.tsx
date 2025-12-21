@@ -67,9 +67,9 @@ export default function NovoChecklistPage() {
         if (equipamento) {
           setEquipamentoSelecionado(equipamentoId);
           // Pré-selecionar modelo baseado no tipo do equipamento
-          if (equipamento.tipo_equipamento) {
+          if ((equipamento as any).tipo_equipamento) {
             const modeloCompativel = modelos.find(
-              m => m.tipo_equipamento === equipamento.tipo_equipamento
+              m => m.tipo_equipamento === (equipamento as any).tipo_equipamento
             );
             if (modeloCompativel) {
               setModeloSelecionado(modeloCompativel.id);

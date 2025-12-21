@@ -37,7 +37,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
   async function loadTecnicos() {
     try {
       const data = await tecnicosApi.list();
-      setTecnicos(data.results || []);
+      setTecnicos(Array.isArray(data) ? data : (data as any).results || []);
     } catch (error) {
       console.error('Erro ao carregar técnicos:', error);
     }

@@ -51,8 +51,8 @@ export default function EditarModeloManutencaoPreventiva() {
         descricao: modelo.descricao || '',
         tipo_equipamento: modelo.tipo_equipamento,
         tipo_medicao: modelo.tipo_medicao,
-        intervalo: modelo.intervalo,
-        tolerancia: modelo.tolerancia,
+        intervalo: Number(modelo.intervalo),
+        tolerancia: Number(modelo.tolerancia),
         ativo: modelo.ativo,
       })
     } catch (err: any) {

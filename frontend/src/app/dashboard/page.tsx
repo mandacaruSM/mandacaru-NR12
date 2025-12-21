@@ -50,11 +50,11 @@ export default function DashboardPage() {
       setLoading(true);
 
       const [clientesRes, equipamentosRes, operadoresRes, supervisoresRes, osRes] = await Promise.all([
-        clientesApi.list({ page_size: 1 }),
-        equipamentosApi.list({ page_size: 1 }),
-        operadoresApi.list({ page_size: 1 }),
-        supervisoresApi.list({ page_size: 1 }),
-        ordensServicoApi.list({ status: 'ABERTA', page_size: 1 }),
+        clientesApi.list({ page_size: 1 } as any),
+        equipamentosApi.list({ page_size: 1 } as any),
+        operadoresApi.list({ page_size: 1 } as any),
+        supervisoresApi.list({ page_size: 1 } as any),
+        ordensServicoApi.list({ status: 'ABERTA', page_size: 1 } as any),
       ]);
 
       setStatsData({

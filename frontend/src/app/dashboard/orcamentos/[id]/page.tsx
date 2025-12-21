@@ -478,15 +478,15 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
             <span>Valor dos Produtos:</span>
             <span>R$ {Number(orcamento.valor_produtos || 0).toFixed(2)}</span>
           </div>
-          {(Number(orcamento.km_deslocado || 0) > 0 || Number(orcamento.valor_deslocamento || 0) > 0) && (
+          {(Number((orcamento as any).km_deslocado || 0) > 0 || Number(orcamento.valor_deslocamento || 0) > 0) && (
             <>
               <div className="flex justify-between text-xs text-gray-600">
                 <span>KM Deslocado:</span>
-                <span>{Number(orcamento.km_deslocado || 0).toFixed(2)} km</span>
+                <span>{Number((orcamento as any).km_deslocado || 0).toFixed(2)} km</span>
               </div>
               <div className="flex justify-between text-xs text-gray-600">
                 <span>Valor do KM:</span>
-                <span>R$ {Number(orcamento.valor_km || 0).toFixed(2)}</span>
+                <span>R$ {Number((orcamento as any).valor_km || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs text-gray-900">
                 <span>Valor de Deslocamento:</span>
