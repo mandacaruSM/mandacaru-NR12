@@ -34,6 +34,8 @@ export default function NovaProgramacaoManutencao() {
     equipamento: 0,
     modelo: 0,
     leitura_inicial: 0,
+    leitura_ultima_manutencao: 0,
+    leitura_proxima_manutencao: 0,
     ativo: true,
   })
 
