@@ -44,7 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       console.log('🔍 Verificando autenticação...');
-      const userData = await authApi.me();
+
+      // Timeout de 10 segundos para evitar travamento
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout na verificação de autenticação')), 10000)
+      );
+
+      const userData = await Promise.race([
+        authApi.me(),
+        timeoutPromise
+      ]) as User;
+
       console.log('✅ Usuário autenticado:', userData.username);
       setUser(userData);
     } catch (error: any) {
