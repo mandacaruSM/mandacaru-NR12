@@ -8,15 +8,15 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚪 [API Route] Fazendo logout no backend...');
 
-    // Pega o sessionid para enviar ao Django
-    const sessionId = request.cookies.get('django_session')?.value;
-    const csrfToken = request.cookies.get('django_csrf')?.value;
+    // Pega os tokens JWT para enviar ao Django
+    const accessToken = request.cookies.get('access')?.value;
+    const refreshToken = request.cookies.get('refresh')?.value;
 
-    if (sessionId) {
-      // Monta cookie header
-      let cookieHeader = `sessionid=${sessionId}`;
-      if (csrfToken) {
-        cookieHeader += `; csrftoken=${csrfToken}`;
+    if (accessToken) {
+      // Monta cookie header com os tokens JWT
+      let cookieHeader = `access=${accessToken}`;
+      if (refreshToken) {
+        cookieHeader += `; refresh=${refreshToken}`;
       }
 
       // Faz requisição ao backend Django
@@ -38,8 +38,7 @@ export async function POST(request: NextRequest) {
     // Limpa TODOS os cookies independentemente do resultado
     const cookieStore = await cookies();
     cookieStore.delete('access');
-    cookieStore.delete('django_session');
-    cookieStore.delete('django_csrf');
+    cookieStore.delete('refresh');
 
     console.log('✅ [API Route] Cookies limpos');
 
@@ -50,8 +49,7 @@ export async function POST(request: NextRequest) {
     // Mesmo com erro, limpa cookies locais
     const cookieStore = await cookies();
     cookieStore.delete('access');
-    cookieStore.delete('django_session');
-    cookieStore.delete('django_csrf');
+    cookieStore.delete('refresh');
 
     return NextResponse.json(
       { error: error.message || 'Erro ao fazer logout' },

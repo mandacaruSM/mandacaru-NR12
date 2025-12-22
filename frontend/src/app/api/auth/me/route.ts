@@ -7,28 +7,28 @@ export async function GET(request: NextRequest) {
   try {
     console.log('👤 [API Route] Verificando usuário atual...');
 
-    // Pega o sessionid armazenado nos cookies do Next.js
+    // Pega os tokens JWT armazenados nos cookies do Next.js
     const cookieStore = request.cookies;
-    const sessionId = cookieStore.get('django_session')?.value;
-    const csrfToken = cookieStore.get('django_csrf')?.value;
+    const accessToken = cookieStore.get('access')?.value;
+    const refreshToken = cookieStore.get('refresh')?.value;
 
-    console.log('🍪 [API Route] SessionID disponível:', sessionId ? 'SIM' : 'NÃO');
+    console.log('🍪 [API Route] Access token disponível:', accessToken ? 'SIM' : 'NÃO');
 
-    if (!sessionId) {
-      console.log('❌ [API Route] Sem sessionid, usuário não autenticado');
+    if (!accessToken) {
+      console.log('❌ [API Route] Sem access token, usuário não autenticado');
       return NextResponse.json(
         { error: 'Não autenticado' },
         { status: 401 }
       );
     }
 
-    // Monta o header Cookie para o Django
-    let cookieHeader = `sessionid=${sessionId}`;
-    if (csrfToken) {
-      cookieHeader += `; csrftoken=${csrfToken}`;
+    // Monta o header Cookie para o Django com os tokens JWT
+    let cookieHeader = `access=${accessToken}`;
+    if (refreshToken) {
+      cookieHeader += `; refresh=${refreshToken}`;
     }
 
-    // Faz requisição ao backend Django com o sessionid
+    // Faz requisição ao backend Django com os tokens JWT
     const response = await fetch(`${API_BASE_URL}/me/`, {
       method: 'GET',
       headers: {

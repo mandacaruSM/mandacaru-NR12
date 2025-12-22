@@ -32,66 +32,53 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [API Route] Login bem-sucedido');
 
-    // Extrai cookies do Django do header Set-Cookie
+    // Extrai cookies JWT do Django (access e refresh tokens)
     const setCookieHeaders = response.headers.getSetCookie?.() || [];
     console.log('🍪 [API Route] Cookies recebidos do Django:', setCookieHeaders.length);
 
-    // Procura pelo sessionid nos cookies do Django
-    let sessionId = '';
-    let csrfToken = '';
+    let accessToken = '';
+    let refreshToken = '';
 
+    // Extrai os tokens JWT dos cookies do Django
     for (const cookie of setCookieHeaders) {
-      if (cookie.startsWith('sessionid=')) {
-        // Extrai o valor do sessionid
-        const match = cookie.match(/sessionid=([^;]+)/);
-        if (match) sessionId = match[1];
+      if (cookie.startsWith('access=')) {
+        const match = cookie.match(/access=([^;]+)/);
+        if (match) accessToken = match[1];
       }
-      if (cookie.startsWith('csrftoken=')) {
-        // Extrai o valor do csrftoken
-        const match = cookie.match(/csrftoken=([^;]+)/);
-        if (match) csrfToken = match[1];
+      if (cookie.startsWith('refresh=')) {
+        const match = cookie.match(/refresh=([^;]+)/);
+        if (match) refreshToken = match[1];
       }
     }
 
-    console.log('🍪 [API Route] SessionID extraído:', sessionId ? 'SIM' : 'NÃO');
-
-    // Cria response de sucesso
-    const nextResponse = NextResponse.json(data);
+    console.log('🍪 [API Route] Access token extraído:', accessToken ? 'SIM' : 'NÃO');
+    console.log('🍪 [API Route] Refresh token extraído:', refreshToken ? 'SIM' : 'NÃO');
 
     // Define cookies que o middleware e futuras requisições podem usar
     const cookieStore = await cookies();
 
-    // Cookie "access" para o middleware
-    cookieStore.set('access', 'authenticated', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 horas
-      path: '/',
-    });
-
-    // Armazena sessionid e csrftoken para futuras requisições ao Django
-    if (sessionId) {
-      cookieStore.set('django_session', sessionId, {
+    // Armazena os tokens JWT do Django
+    if (accessToken) {
+      cookieStore.set('access', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24, // 24 horas
+        maxAge: 60 * 60 * 2, // 2 horas (mesmo tempo do Django)
         path: '/',
       });
     }
 
-    if (csrfToken) {
-      cookieStore.set('django_csrf', csrfToken, {
-        httpOnly: false, // CSRF precisa ser acessível pelo JS
+    if (refreshToken) {
+      cookieStore.set('refresh', refreshToken, {
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24, // 24 horas
+        maxAge: 60 * 60 * 24 * 7, // 7 dias (mesmo tempo do Django)
         path: '/',
       });
     }
 
-    console.log('🍪 [API Route] Cookies definidos no Next.js');
+    console.log('🍪 [API Route] Cookies JWT definidos no Next.js');
 
     return nextResponse;
   } catch (error: any) {
