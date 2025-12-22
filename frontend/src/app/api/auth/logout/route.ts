@@ -13,18 +13,12 @@ export async function POST(request: NextRequest) {
     const refreshToken = request.cookies.get('refresh')?.value;
 
     if (accessToken) {
-      // Monta cookie header com os tokens JWT
-      let cookieHeader = `access=${accessToken}`;
-      if (refreshToken) {
-        cookieHeader += `; refresh=${refreshToken}`;
-      }
-
-      // Faz requisição ao backend Django
+      // Faz requisição ao backend Django com JWT no Authorization header
       const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': cookieHeader,
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
 

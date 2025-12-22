@@ -22,18 +22,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Monta o header Cookie para o Django com os tokens JWT
-    let cookieHeader = `access=${accessToken}`;
-    if (refreshToken) {
-      cookieHeader += `; refresh=${refreshToken}`;
-    }
-
-    // Faz requisição ao backend Django com os tokens JWT
+    // Faz requisição ao backend Django com JWT no Authorization header
     const response = await fetch(`${API_BASE_URL}/me/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': cookieHeader,
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
