@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
     console.log('🍪 [API Route] Access token extraído:', accessToken ? 'SIM' : 'NÃO');
     console.log('🍪 [API Route] Refresh token extraído:', refreshToken ? 'SIM' : 'NÃO');
 
+    // Cria response de sucesso
+    const nextResponse = NextResponse.json(data);
+
     // Define cookies que o middleware e futuras requisições podem usar
     const cookieStore = await cookies();
 
