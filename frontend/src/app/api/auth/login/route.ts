@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
     if (accessToken) {
       cookieStore.set('access', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: "lax",
-        maxAge: 60 * 60 * 2, // 2 horas (mesmo tempo do Django)
+        secure: true,
+        sameSite: "none",
+        maxAge: 60 * 60 * 2, // 2 horas
         path: '/',
       });
     }
@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
     if (refreshToken) {
       cookieStore.set('refresh', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 dias (mesmo tempo do Django)
+        secure: true,
+        sameSite: "none",
+        maxAge: 60 * 60 * 24 * 7, // 7 dias
         path: '/',
       });
     }
