@@ -45,6 +45,6 @@ services:
     startCommand: "npm start"
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://nr12-backend.onrender.com
+        value: https://nr12-backend.onrender.com/api/v1
       - key: NODE_VERSION
         value: 20.11.0

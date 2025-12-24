@@ -147,6 +147,12 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "mandacaru_bot")
 TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
 
+# Configurações de segurança para cookies em produção
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True  # Envia cookies apenas via HTTPS
+    CSRF_COOKIE_SECURE = True     # Envia CSRF token apenas via HTTPS
+    SECURE_SSL_REDIRECT = False   # Render já faz redirect HTTPS
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

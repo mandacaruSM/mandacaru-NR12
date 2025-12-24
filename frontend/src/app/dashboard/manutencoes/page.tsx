@@ -45,10 +45,14 @@ export default function ManutencoesPage() {
   async function excluir(id: number) {
     if (!confirm('Tem certeza que deseja excluir esta manutenção?')) return;
     try {
-      const API_BASE_V0 = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:8000/api';
-      await fetch(`${API_BASE_V0}/manutencoes/${id}/`, {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const accessToken = localStorage.getItem('access_token');
+      await fetch(`${API_BASE}/manutencoes/${id}/`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: {
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
       });
       setItems(prev => prev.filter(i => i.id !== id));
     } catch (e: any) {

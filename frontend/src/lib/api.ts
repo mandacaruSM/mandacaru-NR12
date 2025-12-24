@@ -1,6 +1,5 @@
 // frontend/src/lib/api.ts - CORRIGIDO E OTIMIZADO
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-const API_BASE_V0 = process.env.NEXT_PUBLIC_API_URL?.replace('/v1', '') || 'http://localhost:8000/api';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
@@ -15,16 +14,6 @@ async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   return apiFetchBase<T>(API_BASE, endpoint, options);
-}
-
-/**
- * Wrapper para fetch usando API_BASE_V0 (para manutenções e técnicos)
- */
-async function apiFetchV0<T>(
-  endpoint: string,
-  options: FetchOptions = {}
-): Promise<T> {
-  return apiFetchBase<T>(API_BASE_V0, endpoint, options);
 }
 
 /**
