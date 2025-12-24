@@ -26,15 +26,11 @@ async function apiFetchBase<T>(
 ): Promise<T> {
   const { requireAuth = true, skipRedirect = false, ...fetchOptions } = options;
 
-  // ✅ Pega o token do localStorage para enviar no header
-  const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-
   const config: RequestInit = {
     ...fetchOptions,
-    credentials: 'include',
+    credentials: 'include', // Envia cookies automaticamente
     headers: {
       'Content-Type': 'application/json',
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
       ...fetchOptions.headers,
     },
   };

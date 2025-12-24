@@ -54,14 +54,36 @@ export async function POST(request: NextRequest) {
     console.log('🔑 [API Route] Access token extraído:', accessToken ? 'SIM' : 'NÃO');
     console.log('🔑 [API Route] Refresh token extraído:', refreshToken ? 'SIM' : 'NÃO');
 
-    // Retorna os tokens no body para o frontend armazenar
-    return NextResponse.json({
-      ...data,
-      tokens: {
-        access: accessToken,
-        refresh: refreshToken,
-      },
-    });
+    // Cria response de sucesso
+    const nextResponse = NextResponse.json(data);
+
+    // Define cookies HTTP-only no Next.js para que middleware possa acessar
+    const cookieStore = await cookies();
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (accessToken) {
+      cookieStore.set('access', accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 60 * 60 * 2, // 2 horas
+        path: '/',
+      });
+      console.log('🍪 [API Route] Cookie access definido');
+    }
+
+    if (refreshToken) {
+      cookieStore.set('refresh', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 dias
+        path: '/',
+      });
+      console.log('🍪 [API Route] Cookie refresh definido');
+    }
+
+    return nextResponse;
   } catch (error: any) {
     console.error('❌ [API Route] Erro na requisição:', error);
     return NextResponse.json(
