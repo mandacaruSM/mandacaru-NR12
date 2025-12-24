@@ -32,56 +32,16 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [API Route] Login bem-sucedido');
 
-    // Extrai cookies JWT do Django (access e refresh tokens)
-    const setCookieHeaders = response.headers.getSetCookie?.() || [];
-    console.log('🍪 [API Route] Cookies recebidos do Django:', setCookieHeaders.length);
-
-    let accessToken = '';
-    let refreshToken = '';
-
-    // Extrai os tokens JWT dos cookies do Django
-    for (const cookie of setCookieHeaders) {
-      if (cookie.startsWith('access=')) {
-        const match = cookie.match(/access=([^;]+)/);
-        if (match) accessToken = match[1];
-      }
-      if (cookie.startsWith('refresh=')) {
-        const match = cookie.match(/refresh=([^;]+)/);
-        if (match) refreshToken = match[1];
-      }
-    }
-
-    console.log('🍪 [API Route] Access token extraído:', accessToken ? 'SIM' : 'NÃO');
-    console.log('🍪 [API Route] Refresh token extraído:', refreshToken ? 'SIM' : 'NÃO');
-
-    // Cria response de sucesso
+    // Cria response de sucesso com os dados do usuário
     const nextResponse = NextResponse.json(data);
 
-    // Define cookies que o middleware e futuras requisições podem usar
-    const cookieStore = await cookies();
+    // Repassa os cookies Set-Cookie do Django para o cliente
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    console.log('🍪 [API Route] Repassando', setCookieHeaders.length, 'cookies do Django');
 
-    // Armazena os tokens JWT do Django
-    if (accessToken) {
-      cookieStore.set('access', accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 60 * 60 * 2, // 2 horas
-        path: '/',
-      });
+    for (const cookie of setCookieHeaders) {
+      nextResponse.headers.append('Set-Cookie', cookie);
     }
-
-    if (refreshToken) {
-      cookieStore.set('refresh', refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 60 * 60 * 24 * 7, // 7 dias
-        path: '/',
-      });
-    }
-
-    console.log('🍪 [API Route] Cookies JWT definidos no Next.js');
 
     return nextResponse;
   } catch (error: any) {
