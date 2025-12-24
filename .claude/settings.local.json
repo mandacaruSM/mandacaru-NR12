@@ -47,7 +47,8 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "Bash(git rm:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

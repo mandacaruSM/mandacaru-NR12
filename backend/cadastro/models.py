@@ -64,6 +64,13 @@ class Cliente(models.Model):
 
     class Meta:
         ordering = ["nome_razao"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tipo_pessoa', 'documento'],
+                condition=~models.Q(documento=''),
+                name='unique_cliente_documento'
+            )
+        ]
 
     def __str__(self):
         return self.nome_razao

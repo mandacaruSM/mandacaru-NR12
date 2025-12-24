@@ -2,16 +2,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Mostra mensagem de sucesso se vindo do registro
+  useEffect(() => {
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage('Conta criada com sucesso! Faça login para continuar.')
+    }
+  }, [searchParams])
 
   // Redirecionar se já estiver logado
   useEffect(() => {
@@ -68,7 +78,20 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Faça login para acessar o sistema
           </p>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Não tem uma conta?{' '}
+            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              Criar conta
+            </Link>
+          </p>
         </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="rounded-md bg-green-50 p-4">
+            <div className="text-sm text-green-800">{successMessage}</div>
+          </div>
+        )}
 
         {/* Formulário */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

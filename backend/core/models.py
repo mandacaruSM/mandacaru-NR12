@@ -5,6 +5,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
+from .validators import validate_cpf
 import secrets
 
 
@@ -50,8 +51,9 @@ class Operador(models.Model):
     # ==================== DADOS PESSOAIS ====================
     nome_completo = models.CharField(max_length=200, verbose_name="Nome Completo")
     cpf = models.CharField(
-        max_length=14, 
-        unique=True, 
+        max_length=14,
+        unique=True,
+        validators=[validate_cpf],
         verbose_name="CPF",
         help_text="Formato: 000.000.000-00"
     )
@@ -249,6 +251,7 @@ class Supervisor(models.Model):
     cpf = models.CharField(
         max_length=14,
         unique=True,
+        validators=[validate_cpf],
         verbose_name="CPF",
         help_text="Formato: 000.000.000-00"
     )

@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from core.validators import validate_cpf
 
 class Tecnico(models.Model):
     # Campo antigo mantido para compatibilidade
@@ -12,6 +13,7 @@ class Tecnico(models.Model):
         unique=True,
         null=True,
         blank=True,
+        validators=[validate_cpf],
         verbose_name="CPF",
         help_text="Formato: 000.000.000-00"
     )
