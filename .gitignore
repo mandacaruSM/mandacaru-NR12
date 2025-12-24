@@ -37,6 +37,11 @@ nul
 *.bat
 *.ps1
 
+# Sensitive files
+cookies.txt
+*cookies*.txt
+*.session
+
 # Documentation files (se não quiser enviar)
 COMO_*.md
 CORRECAO_*.md
@@ -56,6 +61,8 @@ backend/test_*.py
 backend/testar_*.py
 backend/gerar_codigo_bot.py
 backend/imghdr.py
+backend/tests/fixtures/*.png
+backend/tests/start_bot.py
 
 # Force rebuild marker
 frontend/.force-rebuild.txt

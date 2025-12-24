@@ -45,7 +45,9 @@
       "Bash(git fetch:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
