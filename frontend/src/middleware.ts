@@ -3,6 +3,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  // ✅ Ignorar requisições de prefetch do Next.js
+  // Prefetch não deve disparar lógica de autenticação ou redirecionamentos
+  const isPrefetch =
+    request.headers.get('x-middleware-prefetch') === '1' ||
+    request.headers.get('purpose') === 'prefetch';
+
+  if (isPrefetch) {
+    console.log('⏭️  Middleware: Ignorando prefetch');
+    return NextResponse.next();
+  }
+
   const accessToken = request.cookies.get('access')?.value;
   const { pathname } = request.nextUrl;
 
