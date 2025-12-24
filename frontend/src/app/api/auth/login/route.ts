@@ -32,18 +32,36 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [API Route] Login bem-sucedido');
 
-    // Cria response de sucesso com os dados do usuário
-    const nextResponse = NextResponse.json(data);
-
-    // Repassa os cookies Set-Cookie do Django para o cliente
+    // Extrai tokens do response do Django
     const setCookieHeaders = response.headers.getSetCookie?.() || [];
-    console.log('🍪 [API Route] Repassando', setCookieHeaders.length, 'cookies do Django');
+    console.log('🍪 [API Route] Cookies recebidos do Django:', setCookieHeaders.length);
 
+    let accessToken = '';
+    let refreshToken = '';
+
+    // Extrai tokens dos cookies do Django
     for (const cookie of setCookieHeaders) {
-      nextResponse.headers.append('Set-Cookie', cookie);
+      if (cookie.startsWith('access=')) {
+        const match = cookie.match(/access=([^;]+)/);
+        if (match) accessToken = match[1];
+      }
+      if (cookie.startsWith('refresh=')) {
+        const match = cookie.match(/refresh=([^;]+)/);
+        if (match) refreshToken = match[1];
+      }
     }
 
-    return nextResponse;
+    console.log('🔑 [API Route] Access token extraído:', accessToken ? 'SIM' : 'NÃO');
+    console.log('🔑 [API Route] Refresh token extraído:', refreshToken ? 'SIM' : 'NÃO');
+
+    // Retorna os tokens no body para o frontend armazenar
+    return NextResponse.json({
+      ...data,
+      tokens: {
+        access: accessToken,
+        refresh: refreshToken,
+      },
+    });
   } catch (error: any) {
     console.error('❌ [API Route] Erro na requisição:', error);
     return NextResponse.json(

@@ -45,14 +45,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔍 Verificando autenticação...');
 
-      // ✅ Chama a rota API local que encaminha cookies ao backend
-      const response = await fetch('/api/auth/me', {
+      // ✅ Pega o token do localStorage
+      const accessToken = localStorage.getItem('access_token');
+
+      if (!accessToken) {
+        console.log('❌ Sem token no localStorage');
+        setUser(null);
+        setLoading(false);
+        isCheckingAuth.current = false;
+        return;
+      }
+
+      // ✅ Faz requisição direta ao backend com o token
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${API_BASE_URL}/me/`, {
         method: 'GET',
-        credentials: 'include', // Importante para enviar cookies
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        console.log('❌ Não autenticado');
+        console.log('❌ Token inválido ou expirado');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         setUser(null);
         return;
       }
@@ -73,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔐 Tentando fazer login...');
 
-      // ✅ Chama a rota API local que define cookies HttpOnly
+      // ✅ Chama a rota API local que extrai tokens do Django
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -86,6 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao fazer login');
+      }
+
+      // ✅ Armazena tokens no localStorage para usar nas próximas requisições
+      if (data.tokens?.access) {
+        localStorage.setItem('access_token', data.tokens.access);
+        console.log('🔑 Access token armazenado no localStorage');
+      }
+      if (data.tokens?.refresh) {
+        localStorage.setItem('refresh_token', data.tokens.refresh);
+        console.log('🔑 Refresh token armazenado no localStorage');
       }
 
       // ✅ Recarrega dados do usuário após login bem-sucedido
@@ -114,6 +141,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('❌ Erro ao fazer logout:', error);
     } finally {
+      // ✅ Limpa tokens do localStorage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      console.log('🗑️ Tokens removidos do localStorage');
+
       setUser(null);
       hasCheckedAuth.current = false; // Reset para permitir nova verificação
       router.push('/login');
