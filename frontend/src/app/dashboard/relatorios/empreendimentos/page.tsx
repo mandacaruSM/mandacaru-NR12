@@ -71,7 +71,7 @@ export default function RelatorioEmpreendimentosPage() {
 
   async function loadClientes() {
     try {
-      const data = await clientesApi.list({} as any);
+      const data = await clientesApi.list({});
       setClientes(data.results || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
@@ -80,7 +80,7 @@ export default function RelatorioEmpreendimentosPage() {
 
   async function loadEmpreendimentos() {
     try {
-      const data = await empreendimentosApi.list({} as any);
+      const data = await empreendimentosApi.list({});
       setEmpreendimentos(data.results || []);
       setEmpreendimentosFiltrados(data.results || []);
     } catch (error) {

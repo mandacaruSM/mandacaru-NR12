@@ -21,7 +21,7 @@ export default function ClientesPage() {
     try {
       setLoading(true);
       setError('');
-      const response = await clientesApi.list(search);
+      const response = await clientesApi.list(search ? { search } : {});
       setClientes(response.results);
     } catch (err: any) {
       const errorMsg = err.message || 'Erro ao carregar clientes';
