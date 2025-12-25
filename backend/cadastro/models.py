@@ -59,8 +59,14 @@ class Cliente(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         # Gera QR code automaticamente após salvar
+        # Se falhar, não impede o salvamento do cliente
         if not self.qr_code:
-            self.gerar_qr_code()
+            try:
+                self.gerar_qr_code()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Erro ao gerar QR code para cliente {self.id}: {e}")
 
     class Meta:
         ordering = ["nome_razao"]
@@ -103,7 +109,7 @@ class Empreendimento(models.Model):
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
-    
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     qr_code = models.ImageField(upload_to='qrcodes/empreendimentos/', blank=True, null=True, verbose_name="QR Code")
 
@@ -128,8 +134,14 @@ class Empreendimento(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         # Gera QR code automaticamente após salvar
+        # Se falhar, não impede o salvamento do empreendimento
         if not self.qr_code:
-            self.gerar_qr_code()
+            try:
+                self.gerar_qr_code()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Erro ao gerar QR code para empreendimento {self.id}: {e}")
 
     class Meta:
         ordering = ["nome"]
