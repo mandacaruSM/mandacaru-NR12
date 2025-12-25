@@ -37,46 +37,75 @@ async function apiFetchBase<T>(
     },
   };
 
-  try {
-    console.log('📤 API Request:', fetchOptions.method || 'GET', `${baseUrl}${endpoint}`);
-    const response = await fetch(`${baseUrl}${endpoint}`, config);
-    console.log('📥 API Response:', response.status, response.statusText, response.url);
+  // Retry para cold start do Render (502/503/504)
+  const maxRetries = 2;
+  const retryDelay = 2000; // 2 segundos
 
-    // ✅ Bloqueia redirects - se acontecer, é um erro de configuração
-    if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location');
-      console.error(`🔀 Redirect ${response.status} detectado:`, location);
-      throw new Error(`Redirect ${response.status} para: ${location}. Verifique trailing slashes.`);
-    }
-
-    if (response.status === 401 && requireAuth) {
-      throw new Error('Não autenticado');
-    }
-
-    if (!response.ok) {
-      let error;
-      try {
-        error = await response.json();
-        console.error('Erro da API (JSON):', error);
-      } catch {
-        error = { detail: `Erro HTTP ${response.status}: ${response.statusText}` };
-        console.error('Erro da API (não-JSON):', error);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`🔄 Tentativa ${attempt + 1}/${maxRetries + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
-      const errorMessage = error.detail || JSON.stringify(error) || `Erro ${response.status}`;
-      throw new Error(errorMessage);
-    }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log('✅ API Success:', data);
-      return data;
+      console.log('📤 API Request:', fetchOptions.method || 'GET', `${baseUrl}${endpoint}`);
+      const response = await fetch(`${baseUrl}${endpoint}`, config);
+      console.log('📥 API Response:', response.status, response.statusText, response.url);
+
+      // ✅ Retry em caso de cold start (502/503/504)
+      if ([502, 503, 504].includes(response.status) && attempt < maxRetries) {
+        console.warn(`⚠️ Backend iniciando (${response.status}). Aguardando...`);
+        continue; // Próxima tentativa
+      }
+
+      // ✅ Bloqueia redirects - se acontecer, é um erro de configuração
+      if ([301, 302, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        console.error(`🔀 Redirect ${response.status} detectado:`, location);
+        throw new Error(`Redirect ${response.status} para: ${location}. Verifique trailing slashes.`);
+      }
+
+      if (response.status === 401 && requireAuth) {
+        throw new Error('Não autenticado');
+      }
+
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+          console.error('Erro da API (JSON):', error);
+        } catch {
+          error = { detail: `Erro HTTP ${response.status}: ${response.statusText}` };
+          console.error('Erro da API (não-JSON):', error);
+        }
+        const errorMessage = error.detail || JSON.stringify(error) || `Erro ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        console.log('✅ API Success:', data);
+        return data;
+      }
+      return null as T;
+    } catch (error) {
+      // Se for última tentativa, lança o erro
+      if (attempt === maxRetries) {
+        console.error('❌ API Error (todas tentativas falharam):', error);
+        throw error;
+      }
+      // Se não for cold start (502/503/504), lança erro imediatamente
+      if (error instanceof Error && !error.message.includes('502') && !error.message.includes('503') && !error.message.includes('504')) {
+        console.error('❌ API Error:', error);
+        throw error;
+      }
+      console.warn(`⚠️ Tentativa ${attempt + 1} falhou, tentando novamente...`);
     }
-    return null as T;
-  } catch (error) {
-    console.error('❌ API Error:', error);
-    throw error;
   }
+
+  // Não deveria chegar aqui
+  throw new Error('Erro desconhecido na requisição');
 }
 
 // ============================================
