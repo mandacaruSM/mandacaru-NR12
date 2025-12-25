@@ -177,7 +177,7 @@ export const clientesApi = {
   },
 
   create: async (data: Partial<Cliente>) => {
-    return apiFetch<Cliente>('/cadastro/clientes', {
+    return apiFetch<Cliente>('/cadastro/clientes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -244,7 +244,7 @@ export const empreendimentosApi = {
   },
 
   create: async (data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>('/cadastro/empreendimentos', {
+    return apiFetch<Empreendimento>('/cadastro/empreendimentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -287,7 +287,7 @@ export const tiposEquipamentoApi = {
   },
 
   create: async (data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento', {
+    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -507,7 +507,7 @@ export const equipamentosApi = {
   },
 
   create: async (data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>('/equipamentos/equipamentos', {
+    return apiFetch<Equipamento>('/equipamentos/equipamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -614,7 +614,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist', {
+      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -655,7 +655,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>('/nr12/itens-checklist', {
+      return apiFetch<ItemChecklist>('/nr12/itens-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -708,7 +708,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ChecklistRealizado>) => {
-      return apiFetch<ChecklistRealizado>('/nr12/checklists', {
+      return apiFetch<ChecklistRealizado>('/nr12/checklists/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -746,7 +746,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<RespostaItemChecklist>) => {
-      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist', {
+      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -767,7 +767,7 @@ export const manutencoesApi = {
     return apiFetch<any>(`/manutencoes/${id}/`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/manutencoes', {
+    return apiFetch<any>('/manutencoes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -797,7 +797,7 @@ export const tecnicosApi = {
     return apiFetch<any>(`/tecnicos/${id}/`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/tecnicos', {
+    return apiFetch<any>('/tecnicos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -870,7 +870,7 @@ export const abastecimentosApi = {
 
   create: async (data: FormData | any) => {
     const isFormData = data instanceof FormData;
-    return apiFetch<Abastecimento>('/abastecimentos', {
+    return apiFetch<Abastecimento>('/abastecimentos/', {
       method: 'POST',
       body: isFormData ? data : JSON.stringify(data),
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
@@ -1025,7 +1025,7 @@ export const almoxarifadoApi = {
     },
 
     create: async (data: any) => {
-      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos', {
+      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1114,7 +1114,7 @@ export const orcamentosApi = {
   },
 
   create: async (data: Partial<Orcamento>) => {
-    return apiFetch<Orcamento>('/orcamentos', {
+    return apiFetch<Orcamento>('/orcamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -1370,7 +1370,7 @@ export const financeiroApi = {
     },
 
     create: async (data: Partial<ContaReceber>) => {
-      return apiFetch<ContaReceber>('/financeiro/contas-receber', {
+      return apiFetch<ContaReceber>('/financeiro/contas-receber/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1428,7 +1428,7 @@ export const financeiroApi = {
     },
 
     create: async (data: Partial<ContaPagar>) => {
-      return apiFetch<ContaPagar>('/financeiro/contas-pagar', {
+      return apiFetch<ContaPagar>('/financeiro/contas-pagar/', {
         method: 'POST',
         body: JSON.stringify(data),
       });

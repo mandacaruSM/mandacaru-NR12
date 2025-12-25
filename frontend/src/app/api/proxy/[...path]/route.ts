@@ -47,51 +47,78 @@ export async function DELETE(
 
 async function proxyRequest(request: NextRequest, path: string[], method: string) {
   try {
-    // Reconstrói o path
-    const targetPath = path.join('/');
-    const searchParams = request.nextUrl.searchParams.toString();
-    const queryString = searchParams ? `?${searchParams}` : '';
+    // ✅ Preserva trailing slash da URL original
+    // Ex: /api/proxy/cadastro/clientes/ -> afterProxy = /cadastro/clientes/
+    const afterProxy = request.nextUrl.pathname.replace(/^\/api\/proxy/, '');
+    const queryString = request.nextUrl.search || '';
+
+    // Normaliza base URL sem barra no final
+    const base = API_BASE_URL.replace(/\/+$/, '');
+    const targetUrl = `${base}${afterProxy}${queryString}`;
 
     // Lê cookies de autenticação
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('access')?.value;
-    const refreshToken = cookieStore.get('refresh')?.value;
 
-    // Prepara headers para o backend
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    // Headers: não force JSON sempre (FormData/arquivos quebram)
+    const headers: HeadersInit = {};
+    const contentType = request.headers.get('content-type');
+    if (contentType) {
+      headers['Content-Type'] = contentType;
+    } else if (method !== 'GET' && method !== 'DELETE') {
+      headers['Content-Type'] = 'application/json';
+    }
 
-    // Adiciona token JWT no Authorization header
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
     // Prepara body (se houver)
-    let body: string | undefined;
+    let body: BodyInit | undefined;
     if (method !== 'GET' && method !== 'DELETE') {
-      const text = await request.text();
-      body = text || undefined;
+      // Se for multipart/form-data, repassa como arrayBuffer
+      if (contentType?.includes('multipart/form-data')) {
+        body = await request.arrayBuffer();
+      } else {
+        const text = await request.text();
+        body = text || undefined;
+      }
     }
 
-    console.log(`🔀 [Proxy] ${method} /${targetPath}${queryString}`);
-    if (body) {
+    console.log(`🔀 [Proxy] ${method} ${afterProxy}${queryString}`);
+    console.log(`🎯 [Proxy] Target: ${targetUrl}`);
+    if (body && typeof body === 'string') {
       console.log(`📦 [Proxy] Body:`, body.substring(0, 200));
     }
 
-    // Faz requisição ao backend Django
-    const response = await fetch(`${API_BASE_URL}/${targetPath}${queryString}`, {
+    // ✅ CRÍTICO: não seguir redirects automaticamente
+    const response = await fetch(targetUrl, {
       method,
       headers,
       body,
+      redirect: 'manual',
     });
 
     console.log(`📨 [Proxy] Response status: ${response.status}`);
 
-    const contentType = response.headers.get('content-type');
+    // ✅ Detecta redirect que estava quebrando POST
+    if ([301, 302, 307, 308].includes(response.status)) {
+      const location = response.headers.get('location') || '';
+      console.warn(`⚠️ [Proxy] Redirect ${response.status} -> ${location}`);
+      console.error(`❌ [Proxy] ERRO: Endpoint com trailing slash incorreta!`);
+      return NextResponse.json(
+        {
+          error: `API redirect ${response.status}. Endpoint deve ter trailing slash consistente.`,
+          location
+        },
+        { status: response.status }
+      );
+    }
+
+    const respContentType = response.headers.get('content-type');
 
     // Retorna JSON se for JSON
-    if (contentType?.includes('application/json')) {
+    if (respContentType?.includes('application/json')) {
       const data = await response.json();
       console.log(`📥 [Proxy] Response data:`, data);
 
