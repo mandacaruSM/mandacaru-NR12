@@ -7,3 +7,6 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --no-input
 python manage.py migrate
+
+# Criar usuário admin padrão (se não existir)
+python manage.py create_default_user
