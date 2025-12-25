@@ -1,8 +1,8 @@
 # 🚀 Status do Deploy - NR12 ERP
 
 **Data:** 2024-12-24
-**Hora Última Atualização:** 22:15 UTC
-**Status:** ✅ DEPLOY COMPLETO - MELHORIAS DE PREFETCH APLICADAS
+**Hora Última Atualização:** 22:30 UTC
+**Status:** 🔄 AGUARDANDO REDEPLOY - Criação automática de usuário admin
 
 ---
 
@@ -139,27 +139,53 @@ Acesse os logs no Render e procure por:
 
 | Commit | Descrição | Status |
 |--------|-----------|--------|
-| eb914f8 | Fix: Previne interferência de prefetch no middleware | ✅ Pushed |
-| 7091faf | Docs: Solução completa com cookies | ✅ Pushed |
-| 0193e7e | Fix: Migra para autenticação com cookies HTTP-only | ✅ Pushed |
-| fc8180a | Docs: Resumo de correções para produção | ✅ Pushed |
+| d769aaa | Fix: Criação automática de usuário admin | ✅ Pushed 🔄 Deploy |
+| f3525d6 | Docs: Status com melhorias de prefetch | ✅ Deployed |
+| eb914f8 | Fix: Previne interferência de prefetch | ✅ Deployed |
+| 7091faf | Docs: Solução completa com cookies | ✅ Deployed |
+| 0193e7e | Fix: Autenticação com cookies HTTP-only | ✅ Deployed |
 
-### 🆕 Última Melhoria (eb914f8)
+### 🆕 FIX CRÍTICO (d769aaa) - EM DEPLOY
 
-**Problema resolvido:** Prefetch do Next.js causando requisições desnecessárias ao middleware
+**Problema resolvido:** Banco de dados vazio, sem usuário admin para login
+
+**Causa raiz:**
+- Comando `create_default_user` não estava no `build.sh`
+- Deploy não criava usuário automaticamente
+- Usuário ficava bloqueado sem conseguir logar
+
+**Solução implementada:**
+```bash
+# Adicionado ao backend/build.sh
+python manage.py create_default_user
+```
+
+**Credenciais que serão criadas:**
+- Username: `admin`
+- Password: `admin123`
+- Email: `admin@nr12.com`
+- Role: ADMIN (todos os módulos)
+
+**Ações após deploy:**
+1. ✅ Aguardar rebuild do backend (~3-5 min)
+2. ✅ Verificar logs: "✅ Usuário criado com sucesso!"
+3. ✅ Testar login: admin / admin123
+4. ⚠️ **ALTERAR SENHA** após primeiro login!
+
+**Documentação:** [CRIAR_USUARIO_ADMIN.md](CRIAR_USUARIO_ADMIN.md)
+
+---
+
+### Melhoria Anterior (eb914f8) - DEPLOYED
+
+**Problema resolvido:** Prefetch do Next.js causando requisições desnecessárias
 
 **Mudanças:**
-1. Middleware agora ignora requisições de prefetch (headers: x-middleware-prefetch, purpose)
-2. Links do menu lateral com `prefetch={false}` para evitar tráfego extra
-3. Logs mais limpos sem requisições fantasma
+1. Middleware ignora headers de prefetch
+2. Links do menu com `prefetch={false}`
+3. Logs mais limpos
 
-**Benefícios:**
-- ✅ Menos processamento no Edge Runtime
-- ✅ Navegação mais previsível
-- ✅ Sem interferência de prefetch nos cookies
-- ✅ Debugging simplificado
-
-Veja detalhes completos em: [MELHORIAS_PREFETCH.md](MELHORIAS_PREFETCH.md)
+**Documentação:** [MELHORIAS_PREFETCH.md](MELHORIAS_PREFETCH.md)
 
 ---
 
