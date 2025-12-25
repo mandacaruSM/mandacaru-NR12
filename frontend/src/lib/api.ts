@@ -144,10 +144,32 @@ export interface Cliente {
   atualizado_em: string;
 }
 
+// ============================================
+// HELPER: Converte objeto de parâmetros para query string
+// ============================================
+function toQuery(params: Record<string, any> = {}): string {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      q.set(k, String(v));
+    }
+  });
+  const s = q.toString();
+  return s ? `?${s}` : '';
+}
+
+export type ClienteListParams = {
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+};
+
 export const clientesApi = {
-  list: async (search?: string) => {
-    const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    return apiFetch<{ results: Cliente[]; count: number }>(`/cadastro/clientes/${params}`);
+  list: async (params: ClienteListParams = {}) => {
+    return apiFetch<{ results: Cliente[]; count: number }>(
+      `/cadastro/clientes${toQuery(params)}`
+    );
   },
 
   get: async (id: number) => {
@@ -202,14 +224,19 @@ export interface Empreendimento {
   atualizado_em: string;
 }
 
-export const empreendimentosApi = {
-  list: async (filters?: { cliente?: number; search?: string }) => {
-    const params = new URLSearchParams();
-    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
-    if (filters?.search) params.append('search', filters.search);
+export type EmpreendimentoListParams = {
+  cliente?: number;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+};
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiFetch<{ results: Empreendimento[]; count: number }>(`/cadastro/empreendimentos/${query}`);
+export const empreendimentosApi = {
+  list: async (params: EmpreendimentoListParams = {}) => {
+    return apiFetch<{ results: Empreendimento[]; count: number }>(
+      `/cadastro/empreendimentos${toQuery(params)}`
+    );
   },
 
   get: async (id: number) => {
@@ -459,15 +486,20 @@ export interface Equipamento {
   atualizado_em: string;
 }
 
-export const equipamentosApi = {
-  list: async (filters?: { cliente?: number; empreendimento?: number; search?: string }) => {
-    const params = new URLSearchParams();
-    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
-    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
-    if (filters?.search) params.append('search', filters.search);
+export type EquipamentoListParams = {
+  cliente?: number;
+  empreendimento?: number;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+};
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiFetch<{ results: Equipamento[]; count: number }>(`/equipamentos/equipamentos/${query}`);
+export const equipamentosApi = {
+  list: async (params: EquipamentoListParams = {}) => {
+    return apiFetch<{ results: Equipamento[]; count: number }>(
+      `/equipamentos/equipamentos${toQuery(params)}`
+    );
   },
 
   get: async (id: number) => {
@@ -1189,23 +1221,22 @@ export interface OrdemServico {
   updated_at?: string;
 }
 
-export const ordensServicoApi = {
-  list: async (filters?: {
-    status?: string;
-    cliente?: number;
-    empreendimento?: number;
-    tecnico_responsavel?: number;
-    search?: string;
-  }) => {
-    const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
-    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
-    if (filters?.tecnico_responsavel) params.append('tecnico_responsavel', filters.tecnico_responsavel.toString());
-    if (filters?.search) params.append('search', filters.search);
+export type OrdemServicoListParams = {
+  status?: string;
+  cliente?: number;
+  empreendimento?: number;
+  tecnico_responsavel?: number;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+};
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiFetch<{ results: OrdemServico[]; count: number }>(`/ordens-servico/${query}`);
+export const ordensServicoApi = {
+  list: async (params: OrdemServicoListParams = {}) => {
+    return apiFetch<{ results: OrdemServico[]; count: number }>(
+      `/ordens-servico${toQuery(params)}`
+    );
   },
 
   get: async (id: number) => {
