@@ -154,6 +154,10 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = False   # Render já faz redirect HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+    # ✅ CRITICAL: Configurações para cookies cross-domain (frontend e backend em domínios diferentes)
+    SESSION_COOKIE_SAMESITE = 'None'  # Permite cookies cross-domain via HTTPS
+    CSRF_COOKIE_SAMESITE = 'None'     # Permite CSRF cross-domain via HTTPS
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

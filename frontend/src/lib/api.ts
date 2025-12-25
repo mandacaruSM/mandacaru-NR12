@@ -1,5 +1,7 @@
 // frontend/src/lib/api.ts - CORRIGIDO E OTIMIZADO
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// ✅ CRITICAL: Usa proxy local (/api/proxy) para enviar cookies ao backend
+// O proxy lê cookies HTTP-only e adiciona Authorization header
+const API_BASE = '/api/proxy';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
