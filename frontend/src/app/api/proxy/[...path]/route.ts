@@ -75,6 +75,9 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
     }
 
     console.log(`🔀 [Proxy] ${method} /${targetPath}${queryString}`);
+    if (body) {
+      console.log(`📦 [Proxy] Body:`, body.substring(0, 200));
+    }
 
     // Faz requisição ao backend Django
     const response = await fetch(`${API_BASE_URL}/${targetPath}${queryString}`, {
@@ -83,11 +86,20 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
       body,
     });
 
+    console.log(`📨 [Proxy] Response status: ${response.status}`);
+
     const contentType = response.headers.get('content-type');
 
     // Retorna JSON se for JSON
     if (contentType?.includes('application/json')) {
       const data = await response.json();
+      console.log(`📥 [Proxy] Response data:`, data);
+
+      // Se não for 2xx, loga como erro
+      if (!response.ok) {
+        console.error(`❌ [Proxy] Erro ${response.status}:`, data);
+      }
+
       return NextResponse.json(data, { status: response.status });
     }
 

@@ -47,10 +47,15 @@ export default function NovoClientePage() {
     setLoading(true);
     setError('');
 
+    console.log('📝 Dados do formulário:', formData);
+
     try {
-      await clientesApi.create(formData);
+      console.log('🚀 Enviando requisição para criar cliente...');
+      const result = await clientesApi.create(formData);
+      console.log('✅ Cliente criado com sucesso:', result);
       router.push('/dashboard/clientes');
     } catch (err: any) {
+      console.error('❌ Erro ao criar cliente:', err);
       setError(err.message || 'Erro ao cadastrar cliente');
     } finally {
       setLoading(false);
