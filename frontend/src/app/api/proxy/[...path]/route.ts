@@ -47,14 +47,17 @@ export async function DELETE(
 
 async function proxyRequest(request: NextRequest, path: string[], method: string) {
   try {
-    // ✅ Preserva trailing slash da URL original
-    // Ex: /api/proxy/cadastro/clientes/ -> afterProxy = /cadastro/clientes/
+    // ✅ Extrai path sem /api/proxy
     const afterProxy = request.nextUrl.pathname.replace(/^\/api\/proxy/, '');
     const queryString = request.nextUrl.search || '';
 
     // Normaliza base URL sem barra no final
     const base = API_BASE_URL.replace(/\/+$/, '');
-    const targetUrl = `${base}${afterProxy}${queryString}`;
+
+    // ✅ SEMPRE adiciona trailing slash para o Django (DRF exige)
+    // Frontend chama SEM slash, proxy adiciona ANTES de enviar ao backend
+    const normalized = afterProxy.endsWith('/') ? afterProxy : `${afterProxy}/`;
+    const targetUrl = `${base}${normalized}${queryString}`;
 
     // Lê cookies de autenticação
     const cookieStore = await cookies();

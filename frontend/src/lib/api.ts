@@ -42,6 +42,13 @@ async function apiFetchBase<T>(
     const response = await fetch(`${baseUrl}${endpoint}`, config);
     console.log('📥 API Response:', response.status, response.statusText, response.url);
 
+    // ✅ Bloqueia redirects - se acontecer, é um erro de configuração
+    if ([301, 302, 307, 308].includes(response.status)) {
+      const location = response.headers.get('location');
+      console.error(`🔀 Redirect ${response.status} detectado:`, location);
+      throw new Error(`Redirect ${response.status} para: ${location}. Verifique trailing slashes.`);
+    }
+
     if (response.status === 401 && requireAuth) {
       throw new Error('Não autenticado');
     }
@@ -95,7 +102,7 @@ export interface User {
 
 export const authApi = {
   login: async (credentials: LoginCredentials) => {
-    return apiFetch<{ detail: string }>('/auth/login/', {
+    return apiFetch<{ detail: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
       requireAuth: false,
@@ -103,18 +110,18 @@ export const authApi = {
   },
 
   logout: async () => {
-    return apiFetch<{ detail: string }>('/auth/logout/', {
+    return apiFetch<{ detail: string }>('/auth/logout', {
       method: 'POST',
     });
   },
 
   me: async () => {
     // Alinhado ao backend: GET /api/v1/me/
-    return apiFetch<User>('/me/');
+    return apiFetch<User>('/me');
   },
 
   health: async () => {
-    return apiFetch<{ status: string }>('/health/', {
+    return apiFetch<{ status: string }>('/health', {
       requireAuth: false,
     });
   },
@@ -173,25 +180,25 @@ export const clientesApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Cliente>(`/cadastro/clientes/${id}/`);
+    return apiFetch<Cliente>(`/cadastro/clientes/${id}`);
   },
 
   create: async (data: Partial<Cliente>) => {
-    return apiFetch<Cliente>('/cadastro/clientes/', {
+    return apiFetch<Cliente>('/cadastro/clientes', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Cliente>) => {
-    return apiFetch<Cliente>(`/cadastro/clientes/${id}/`, {
+    return apiFetch<Cliente>(`/cadastro/clientes/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/cadastro/clientes/${id}/`, {
+    return apiFetch<void>(`/cadastro/clientes/${id}`, {
       method: 'DELETE',
     });
   },
@@ -240,25 +247,25 @@ export const empreendimentosApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}/`);
+    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}`);
   },
 
   create: async (data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>('/cadastro/empreendimentos/', {
+    return apiFetch<Empreendimento>('/cadastro/empreendimentos', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}/`, {
+    return apiFetch<Empreendimento>(`/cadastro/empreendimentos/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/cadastro/empreendimentos/${id}/`, {
+    return apiFetch<void>(`/cadastro/empreendimentos/${id}`, {
       method: 'DELETE',
     });
   },
@@ -279,29 +286,29 @@ export interface TipoEquipamento {
 
 export const tiposEquipamentoApi = {
   list: async () => {
-    return apiFetch<{ results: TipoEquipamento[]; count: number }>('/equipamentos/tipos-equipamento/');
+    return apiFetch<{ results: TipoEquipamento[]; count: number }>('/equipamentos/tipos-equipamento');
   },
 
   get: async (id: number) => {
-    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}/`);
+    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}`);
   },
 
   create: async (data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento/', {
+    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}/`, {
+    return apiFetch<TipoEquipamento>(`/equipamentos/tipos-equipamento/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/equipamentos/tipos-equipamento/${id}/`, {
+    return apiFetch<void>(`/equipamentos/tipos-equipamento/${id}`, {
       method: 'DELETE',
     });
   },
@@ -382,7 +389,7 @@ export const operadoresApi = {
     );
   },
   async retrieve(id: number) {
-    return apiFetch<Operador>(`/operadores/${id}/`);
+    return apiFetch<Operador>(`/operadores/${id}`);
   },
   async create(data: Partial<Operador>) {
     return apiFetch<Operador>(`/operadores/`, {
@@ -392,24 +399,24 @@ export const operadoresApi = {
     });
   },
   async update(id: number, data: Partial<Operador>) {
-    return apiFetch<Operador>(`/operadores/${id}/`, {
+    return apiFetch<Operador>(`/operadores/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
   async remove(id: number) {
-    return apiFetch<void>(`/operadores/${id}/`, { method: "DELETE" });
+    return apiFetch<void>(`/operadores/${id}`, { method: "DELETE" });
   },
   async vincularEquipamento(operadorId: number, equipamentoId: number, observacoes?: string) {
-    return apiFetch<{ detail: string; autorizacao_id?: number }>(`/operadores/${operadorId}/vincular_equipamento/`, {
+    return apiFetch<{ detail: string; autorizacao_id?: number }>(`/operadores/${operadorId}vincular_equipamento/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ equipamento_id: equipamentoId, observacoes }),
     });
   },
   async desvincularEquipamento(operadorId: number, equipamentoId: number) {
-    return apiFetch<{ detail: string }>(`/operadores/${operadorId}/desvincular_equipamento/`, {
+    return apiFetch<{ detail: string }>(`/operadores/${operadorId}desvincular_equipamento/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ equipamento_id: equipamentoId }),
@@ -429,7 +436,7 @@ export const supervisoresApi = {
     );
   },
   async retrieve(id: number) {
-    return apiFetch<Supervisor>(`/supervisores/${id}/`);
+    return apiFetch<Supervisor>(`/supervisores/${id}`);
   },
   async create(data: Partial<Supervisor>) {
     return apiFetch<Supervisor>(`/supervisores/`, {
@@ -439,14 +446,14 @@ export const supervisoresApi = {
     });
   },
   async update(id: number, data: Partial<Supervisor>) {
-    return apiFetch<Supervisor>(`/supervisores/${id}/`, {
+    return apiFetch<Supervisor>(`/supervisores/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
   async remove(id: number) {
-    return apiFetch<void>(`/supervisores/${id}/`, { method: "DELETE" });
+    return apiFetch<void>(`/supervisores/${id}`, { method: "DELETE" });
   },
 };
 
@@ -492,25 +499,25 @@ export const equipamentosApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}/`);
+    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}`);
   },
 
   create: async (data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>('/equipamentos/equipamentos/', {
+    return apiFetch<Equipamento>('/equipamentos/equipamentos', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}/`, {
+    return apiFetch<Equipamento>(`/equipamentos/equipamentos/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/equipamentos/equipamentos/${id}/`, {
+    return apiFetch<void>(`/equipamentos/equipamentos/${id}`, {
       method: 'DELETE',
     });
   },
@@ -599,31 +606,31 @@ export const nr12Api = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ModeloChecklist & { itens: ItemChecklist[] }>(`/nr12/modelos-checklist/${id}/`);
+      return apiFetch<ModeloChecklist & { itens: ItemChecklist[] }>(`/nr12/modelos-checklist/${id}`);
     },
 
     create: async (data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist/', {
+      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     update: async (id: number, data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/`, {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
     delete: async (id: number) => {
-      return apiFetch<void>(`/nr12/modelos-checklist/${id}/`, {
+      return apiFetch<void>(`/nr12/modelos-checklist/${id}`, {
         method: 'DELETE',
       });
     },
 
     duplicar: async (id: number) => {
-      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/duplicar/`, {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}duplicar/`, {
         method: 'POST',
       });
     },
@@ -640,31 +647,31 @@ export const nr12Api = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`);
+      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}`);
     },
 
     create: async (data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>('/nr12/itens-checklist/', {
+      return apiFetch<ItemChecklist>('/nr12/itens-checklist', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     update: async (id: number, data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}/`, {
+      return apiFetch<ItemChecklist>(`/nr12/itens-checklist/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
     delete: async (id: number) => {
-      return apiFetch<void>(`/nr12/itens-checklist/${id}/`, {
+      return apiFetch<void>(`/nr12/itens-checklist/${id}`, {
         method: 'DELETE',
       });
     },
 
     reordenar: async (itens: { id: number; ordem: number }[]) => {
-      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar/', {
+      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar', {
         method: 'POST',
         body: JSON.stringify({ itens }),
       });
@@ -693,25 +700,25 @@ export const nr12Api = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ChecklistRealizado & { respostas: RespostaItemChecklist[] }>(`/nr12/checklists/${id}/`);
+      return apiFetch<ChecklistRealizado & { respostas: RespostaItemChecklist[] }>(`/nr12/checklists/${id}`);
     },
 
     create: async (data: Partial<ChecklistRealizado>) => {
-      return apiFetch<ChecklistRealizado>('/nr12/checklists/', {
+      return apiFetch<ChecklistRealizado>('/nr12/checklists', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     finalizar: async (id: number, observacoes?: string) => {
-      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/finalizar/`, {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}finalizar/`, {
         method: 'POST',
         body: JSON.stringify({ observacoes_gerais: observacoes }),
       });
     },
 
     cancelar: async (id: number, motivo?: string) => {
-      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/cancelar/`, {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}cancelar/`, {
         method: 'POST',
         body: JSON.stringify({ motivo_cancelamento: motivo }),
       });
@@ -735,7 +742,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<RespostaItemChecklist>) => {
-      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist/', {
+      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -750,25 +757,25 @@ export const nr12Api = {
 
 export const manutencoesApi = {
   list: async () => {
-    return apiFetch<any[]>('/manutencoes/');
+    return apiFetch<any[]>('/manutencoes');
   },
   get: async (id: number) => {
-    return apiFetch<any>(`/manutencoes/${id}/`);
+    return apiFetch<any>(`/manutencoes/${id}`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/manutencoes/', {
+    return apiFetch<any>('/manutencoes', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   update: async (id: number, data: any) => {
-    return apiFetch<any>(`/manutencoes/${id}/`, {
+    return apiFetch<any>(`/manutencoes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
   delete: async (id: number) => {
-    return apiFetch<void>(`/manutencoes/${id}/`, {
+    return apiFetch<void>(`/manutencoes/${id}`, {
       method: 'DELETE',
     });
   },
@@ -780,25 +787,25 @@ export const manutencoesApi = {
 
 export const tecnicosApi = {
   list: async () => {
-    return apiFetch<any[]>('/tecnicos/');
+    return apiFetch<any[]>('/tecnicos');
   },
   get: async (id: number) => {
-    return apiFetch<any>(`/tecnicos/${id}/`);
+    return apiFetch<any>(`/tecnicos/${id}`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/tecnicos/', {
+    return apiFetch<any>('/tecnicos', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   update: async (id: number, data: any) => {
-    return apiFetch<any>(`/tecnicos/${id}/`, {
+    return apiFetch<any>(`/tecnicos/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
   delete: async (id: number) => {
-    return apiFetch<void>(`/tecnicos/${id}/`, {
+    return apiFetch<void>(`/tecnicos/${id}`, {
       method: 'DELETE',
     });
   },
@@ -854,12 +861,12 @@ export const abastecimentosApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Abastecimento>(`/abastecimentos/${id}/`);
+    return apiFetch<Abastecimento>(`/abastecimentos/${id}`);
   },
 
   create: async (data: FormData | any) => {
     const isFormData = data instanceof FormData;
-    return apiFetch<Abastecimento>('/abastecimentos/', {
+    return apiFetch<Abastecimento>('/abastecimentos', {
       method: 'POST',
       body: isFormData ? data : JSON.stringify(data),
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
@@ -868,7 +875,7 @@ export const abastecimentosApi = {
 
   update: async (id: number, data: FormData | any) => {
     const isFormData = data instanceof FormData;
-    return apiFetch<Abastecimento>(`/abastecimentos/${id}/`, {
+    return apiFetch<Abastecimento>(`/abastecimentos/${id}`, {
       method: 'PATCH',
       body: isFormData ? data : JSON.stringify(data),
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
@@ -876,7 +883,7 @@ export const abastecimentosApi = {
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/abastecimentos/${id}/`, {
+    return apiFetch<void>(`/abastecimentos/${id}`, {
       method: 'DELETE',
     });
   },
@@ -950,11 +957,11 @@ export const almoxarifadoApi = {
     },
 
     get: async (id: number) => {
-      return apiFetch<Produto>(`/almoxarifado/produtos/${id}/`);
+      return apiFetch<Produto>(`/almoxarifado/produtos/${id}`);
     },
 
     combustiveis: async () => {
-      return apiFetch<Produto[]>('/almoxarifado/produtos/combustiveis/');
+      return apiFetch<Produto[]>('/almoxarifado/produtos/combustiveis');
     },
   },
 
@@ -968,7 +975,7 @@ export const almoxarifadoApi = {
     },
 
     get: async (id: number) => {
-      return apiFetch<LocalEstoque>(`/almoxarifado/locais/${id}/`);
+      return apiFetch<LocalEstoque>(`/almoxarifado/locais/${id}`);
     },
   },
 
@@ -984,7 +991,7 @@ export const almoxarifadoApi = {
     },
 
     get: async (id: number) => {
-      return apiFetch<Estoque>(`/almoxarifado/estoque/${id}/`);
+      return apiFetch<Estoque>(`/almoxarifado/estoque/${id}`);
     },
 
     resumo: async () => {
@@ -1014,14 +1021,14 @@ export const almoxarifadoApi = {
     },
 
     create: async (data: any) => {
-      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos/', {
+      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     ultimos: async () => {
-      return apiFetch<MovimentoEstoque[]>('/almoxarifado/movimentos/ultimos/');
+      return apiFetch<MovimentoEstoque[]>('/almoxarifado/movimentos/ultimos');
     },
   },
 };
@@ -1099,43 +1106,43 @@ export const orcamentosApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}/`);
+    return apiFetch<Orcamento>(`/orcamentos/${id}`);
   },
 
   create: async (data: Partial<Orcamento>) => {
-    return apiFetch<Orcamento>('/orcamentos/', {
+    return apiFetch<Orcamento>('/orcamentos', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<Orcamento>) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/orcamentos/${id}/`, {
+    return apiFetch<void>(`/orcamentos/${id}`, {
       method: 'DELETE',
     });
   },
 
   aprovar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}/aprovar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}aprovar/`, {
       method: 'POST',
     });
   },
 
   rejeitar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}/rejeitar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}rejeitar/`, {
       method: 'POST',
     });
   },
 
   enviar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}/enviar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}enviar/`, {
       method: 'POST',
     });
   },
@@ -1229,30 +1236,30 @@ export const ordensServicoApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}/`);
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}`);
   },
 
   update: async (id: number, data: Partial<OrdemServico>) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   iniciar: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}/iniciar/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}iniciar/`, {
       method: 'POST',
     });
   },
 
   concluir: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}/concluir/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}concluir/`, {
       method: 'POST',
     });
   },
 
   cancelar: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}/cancelar/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}cancelar/`, {
       method: 'POST',
     });
   },
@@ -1355,18 +1362,18 @@ export const financeiroApi = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}/`);
+      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}`);
     },
 
     create: async (data: Partial<ContaReceber>) => {
-      return apiFetch<ContaReceber>('/financeiro/contas-receber/', {
+      return apiFetch<ContaReceber>('/financeiro/contas-receber', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     update: async (id: number, data: Partial<ContaReceber>) => {
-      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}/`, {
+      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
@@ -1377,7 +1384,7 @@ export const financeiroApi = {
       forma_pagamento: string;
       comprovante?: string;
     }) => {
-      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}/receber/`, {
+      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}receber/`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1413,18 +1420,18 @@ export const financeiroApi = {
     },
 
     get: async (id: number) => {
-      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}/`);
+      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}`);
     },
 
     create: async (data: Partial<ContaPagar>) => {
-      return apiFetch<ContaPagar>('/financeiro/contas-pagar/', {
+      return apiFetch<ContaPagar>('/financeiro/contas-pagar', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     update: async (id: number, data: Partial<ContaPagar>) => {
-      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}/`, {
+      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
@@ -1435,7 +1442,7 @@ export const financeiroApi = {
       forma_pagamento: string;
       comprovante?: string;
     }) => {
-      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}/pagar/`, {
+      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}pagar/`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
