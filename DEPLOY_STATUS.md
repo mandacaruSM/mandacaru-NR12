@@ -1,8 +1,8 @@
 # 🚀 Status do Deploy - NR12 ERP
 
 **Data:** 2024-12-24
-**Hora Última Atualização:** 22:30 UTC
-**Status:** 🔄 AGUARDANDO REDEPLOY - Criação automática de usuário admin
+**Hora Última Atualização:** 23:15 UTC
+**Status:** 🔄 AGUARDANDO REDEPLOY - FIX CRÍTICO de Autenticação Cross-Domain
 
 ---
 
@@ -139,13 +139,68 @@ Acesse os logs no Render e procure por:
 
 | Commit | Descrição | Status |
 |--------|-----------|--------|
-| d769aaa | Fix: Criação automática de usuário admin | ✅ Pushed 🔄 Deploy |
+| 1721d3b | 🔥 Fix CRITICAL: Autenticação cross-domain via proxy | ✅ Pushed 🔄 Deploy |
+| 7432b33 | Docs: Status com fix de usuário admin | ✅ Pushed |
+| d769aaa | Fix: Criação automática de usuário admin | ✅ Pushed |
 | f3525d6 | Docs: Status com melhorias de prefetch | ✅ Deployed |
 | eb914f8 | Fix: Previne interferência de prefetch | ✅ Deployed |
-| 7091faf | Docs: Solução completa com cookies | ✅ Deployed |
-| 0193e7e | Fix: Autenticação com cookies HTTP-only | ✅ Deployed |
 
-### 🆕 FIX CRÍTICO (d769aaa) - EM DEPLOY
+### 🔥 FIX MAIS CRÍTICO (1721d3b) - EM DEPLOY
+
+**Problema resolvido:** Requisições API retornando 401 após login bem-sucedido
+
+**Sintomas:**
+- ✅ Login funcionava
+- ❌ Todas as requisições subsequentes retornavam 401
+- ❌ Erro: "Não autenticado"
+- ❌ Dashboard vazio sem dados
+
+**Causa raiz - COOKIES CROSS-DOMAIN:**
+```
+Frontend: nr12-frontend.onrender.com (cookies definidos aqui)
+Backend:  nr12-backend.onrender.com (requisições iam direto)
+         ↑
+         Domínios diferentes = Navegador NÃO envia cookies!
+```
+
+**Solução - PROXY NEXT.JS:**
+
+1. **Proxy genérico criado**: `/api/proxy/[...path]/route.ts`
+   - Intercepta TODAS as requisições API
+   - Lê cookies HTTP-only (access, refresh)
+   - Adiciona `Authorization: Bearer <token>` no header
+   - Encaminha para backend Django
+   - Retorna resposta ao browser
+
+2. **API client atualizado**: `lib/api.ts`
+   ```typescript
+   // ANTES: const API_BASE = 'https://nr12-backend.onrender.com/api/v1'
+   // DEPOIS: const API_BASE = '/api/proxy'
+   ```
+
+3. **Django settings**: `SameSite=None` para cookies cross-domain
+
+**Arquitetura final:**
+```
+Browser → /api/proxy/* (Next.js)
+            ↓ (lê cookies)
+            Authorization: Bearer <token>
+            ↓
+         Django Backend
+            ✅ JWT validado
+```
+
+**Benefícios:**
+- ✅ Cookies HTTP-only protegidos (XSS-proof)
+- ✅ Sem CORS issues (requisições same-origin)
+- ✅ Transparente para código React (zero mudanças)
+- ✅ Escalável (um proxy para toda API)
+
+**Documentação:** [SOLUCAO_CROSS_DOMAIN_COOKIES.md](SOLUCAO_CROSS_DOMAIN_COOKIES.md)
+
+---
+
+### Fix Anterior (d769aaa) - EM DEPLOY
 
 **Problema resolvido:** Banco de dados vazio, sem usuário admin para login
 
