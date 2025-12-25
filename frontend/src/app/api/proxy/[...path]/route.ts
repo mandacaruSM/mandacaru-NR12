@@ -91,29 +91,15 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
       console.log(`📦 [Proxy] Body:`, body.substring(0, 200));
     }
 
-    // ✅ CRÍTICO: não seguir redirects automaticamente
+    // ✅ Seguir redirects automaticamente (Render pode redirecionar HTTP → HTTPS)
     const response = await fetch(targetUrl, {
       method,
       headers,
       body,
-      redirect: 'manual',
+      redirect: 'follow',
     });
 
     console.log(`📨 [Proxy] Response status: ${response.status}`);
-
-    // ✅ Detecta redirect que estava quebrando POST
-    if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location') || '';
-      console.warn(`⚠️ [Proxy] Redirect ${response.status} -> ${location}`);
-      console.error(`❌ [Proxy] ERRO: Endpoint com trailing slash incorreta!`);
-      return NextResponse.json(
-        {
-          error: `API redirect ${response.status}. Endpoint deve ter trailing slash consistente.`,
-          location
-        },
-        { status: response.status }
-      );
-    }
 
     const respContentType = response.headers.get('content-type');
 
