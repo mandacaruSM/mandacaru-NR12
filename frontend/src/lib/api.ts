@@ -368,17 +368,6 @@ export type ListParams = {
   ativo?: boolean;
 };
 
-function toQuery(params: Record<string, any> = {}) {
-  const q = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== "") {
-      q.set(k, String(v));
-    }
-  });
-  const s = q.toString();
-  return s ? `?${s}` : "";
-}
-
 export const operadoresApi = {
   async list(params: ListParams = {}) {
     return apiFetch<{ results: Operador[]; count: number }>(
