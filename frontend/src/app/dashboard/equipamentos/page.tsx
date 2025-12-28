@@ -103,7 +103,7 @@ export default function EquipamentosPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando equipamentos...</p>
+          <p className="mt-4 text-gray-900">Carregando equipamentos...</p>
         </div>
       </div>
     );
@@ -117,7 +117,7 @@ export default function EquipamentosPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Equipamentos</h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-900 mt-1">
                 {equipamentos.length} equipamento{equipamentos.length !== 1 ? 's' : ''} cadastrado{equipamentos.length !== 1 ? 's' : ''}
               </p>
             </div>

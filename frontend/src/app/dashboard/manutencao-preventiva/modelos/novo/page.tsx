@@ -71,7 +71,8 @@ export default function NovoModeloManutencaoPreventiva() {
 
       const modelo = await createModeloManutencaoPreventiva(formData)
       alert('Modelo criado com sucesso!')
-      router.push(`/dashboard/manutencao-preventiva/modelos/${modelo.id}`)
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = `/dashboard/manutencao-preventiva/modelos/${modelo.id}`
     } catch (err: any) {
       console.error('Erro ao criar modelo:', err)
       setError(err.message || 'Erro ao criar modelo')
@@ -96,7 +97,7 @@ export default function NovoModeloManutencaoPreventiva() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Novo Modelo de Manutenção</h1>
-          <p className="text-gray-600 mt-1">Crie um template de manutenção preventiva</p>
+          <p className="text-gray-900 mt-1">Crie um template de manutenção preventiva</p>
         </div>
         <Link
           href="/dashboard/manutencao-preventiva/modelos"
@@ -117,7 +118,7 @@ export default function NovoModeloManutencaoPreventiva() {
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
         {/* Nome */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Nome do Modelo <span className="text-red-500">*</span>
           </label>
           <input
@@ -133,7 +134,7 @@ export default function NovoModeloManutencaoPreventiva() {
 
         {/* Descrição */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Descrição</label>
           <textarea
             name="descricao"
             value={formData.descricao}
@@ -146,7 +147,7 @@ export default function NovoModeloManutencaoPreventiva() {
 
         {/* Tipo de Equipamento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Tipo de Equipamento <span className="text-red-500">*</span>
           </label>
           <select
@@ -163,14 +164,14 @@ export default function NovoModeloManutencaoPreventiva() {
               </option>
             ))}
           </select>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Este modelo será aplicado a equipamentos deste tipo
           </p>
         </div>
 
         {/* Tipo de Medição */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Tipo de Medição <span className="text-red-500">*</span>
           </label>
           <select
@@ -183,7 +184,7 @@ export default function NovoModeloManutencaoPreventiva() {
             <option value="HORIMETRO">Horímetro (horas)</option>
             <option value="ODOMETRO">Odômetro (km)</option>
           </select>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Define como a manutenção será agendada: por horas de uso ou quilometragem
           </p>
         </div>
@@ -191,7 +192,7 @@ export default function NovoModeloManutencaoPreventiva() {
         {/* Intervalo e Tolerância */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Intervalo <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -206,17 +207,17 @@ export default function NovoModeloManutencaoPreventiva() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ex: 250"
               />
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
+              <span className="absolute right-3 top-2 text-gray-900 text-sm">
                 {formData.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-900 mt-1">
               Intervalo entre manutenções (ex: a cada 250h ou 10.000km)
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Tolerância <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -231,11 +232,11 @@ export default function NovoModeloManutencaoPreventiva() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ex: 10"
               />
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
+              <span className="absolute right-3 top-2 text-gray-900 text-sm">
                 {formData.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-900 mt-1">
               Margem de antecedência para avisos (ex: avisar 10h antes)
             </p>
           </div>
@@ -250,8 +251,8 @@ export default function NovoModeloManutencaoPreventiva() {
             onChange={handleChange}
             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <label className="ml-2 text-sm font-medium text-gray-700">Modelo ativo</label>
-          <p className="ml-2 text-sm text-gray-500">
+          <label className="ml-2 text-sm font-medium text-gray-900">Modelo ativo</label>
+          <p className="ml-2 text-sm text-gray-900">
             (Somente modelos ativos podem ser usados em programações)
           </p>
         </div>
@@ -286,7 +287,7 @@ export default function NovoModeloManutencaoPreventiva() {
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Link
             href="/dashboard/manutencao-preventiva/modelos"
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancelar
           </Link>

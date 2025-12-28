@@ -72,7 +72,7 @@ export default function RelatorioOrdensServicoPage() {
           </div>
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-900">Relatório de Ordens de Serviço</h1>
-            <p className="text-sm text-gray-600 mt-1">Análise completa de ordens de serviço</p>
+            <p className="text-sm text-gray-900 mt-1">Análise completa de ordens de serviço</p>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function RelatorioOrdensServicoPage() {
       <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Relatório de Ordens de Serviço</h1>
-          <p className="text-sm text-gray-600 mt-1">Análise completa de ordens de serviço</p>
+          <p className="text-sm text-gray-900 mt-1">Análise completa de ordens de serviço</p>
         </div>
         <button
           onClick={handleImprimir}
@@ -153,27 +153,27 @@ export default function RelatorioOrdensServicoPage() {
       {/* Resumo */}
       <div className="grid grid-cols-6 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-gray-900">Total</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.total}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Abertas</p>
+          <p className="text-sm text-gray-900">Abertas</p>
           <p className="text-2xl font-bold text-blue-900">{resumo.abertas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Em Execução</p>
+          <p className="text-sm text-gray-900">Em Execução</p>
           <p className="text-2xl font-bold text-yellow-900">{resumo.em_execucao}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Concluídas</p>
+          <p className="text-sm text-gray-900">Concluídas</p>
           <p className="text-2xl font-bold text-green-900">{resumo.concluidas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Canceladas</p>
+          <p className="text-sm text-gray-900">Canceladas</p>
           <p className="text-2xl font-bold text-red-900">{resumo.canceladas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Valor Total</p>
+          <p className="text-sm text-gray-900">Valor Total</p>
           <p className="text-xl font-bold text-gray-900">R$ {Number(resumo.valor_total).toFixed(2)}</p>
         </div>
       </div>

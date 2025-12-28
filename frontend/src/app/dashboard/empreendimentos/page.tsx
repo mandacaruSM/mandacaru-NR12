@@ -87,7 +87,7 @@ export default function EmpreendimentosPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando empreendimentos...</p>
+          <p className="mt-4 text-gray-900">Carregando empreendimentos...</p>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function EmpreendimentosPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Empreendimentos</h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-900 mt-1">
                 {empreendimentos.length} empreendimento{empreendimentos.length !== 1 ? 's' : ''} cadastrado{empreendimentos.length !== 1 ? 's' : ''}
               </p>
             </div>

@@ -85,7 +85,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <p className="flex-1 text-sm font-medium">{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                className="flex-shrink-0 text-gray-400 hover:text-gray-900"
               >
                 ✕
               </button>

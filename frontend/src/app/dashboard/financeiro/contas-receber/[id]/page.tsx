@@ -81,7 +81,7 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
           <h1 className="text-2xl font-bold text-gray-900">
             Conta a Receber {conta.numero}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             {conta.tipo_display}
           </p>
         </div>
@@ -185,14 +185,14 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Conta</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-gray-600">Cliente</p>
+              <p className="text-sm text-gray-900">Cliente</p>
               <p className="text-gray-900 font-medium">{conta.cliente_nome}</p>
               {conta.cliente_cpf_cnpj && (
-                <p className="text-sm text-gray-600">{conta.cliente_cpf_cnpj}</p>
+                <p className="text-sm text-gray-900">{conta.cliente_cpf_cnpj}</p>
               )}
             </div>
             <div>
-              <p className="text-sm text-gray-600">Origem</p>
+              <p className="text-sm text-gray-900">Origem</p>
               {conta.orcamento_numero && (
                 <p className="text-gray-900 font-medium">Orçamento {conta.orcamento_numero}</p>
               )}
@@ -205,7 +205,7 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
             </div>
             {conta.descricao && (
               <div>
-                <p className="text-sm text-gray-600">Descrição</p>
+                <p className="text-sm text-gray-900">Descrição</p>
                 <p className="text-gray-900">{conta.descricao}</p>
               </div>
             )}
@@ -216,20 +216,20 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Datas</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-gray-600">Data de Emissão</p>
+              <p className="text-sm text-gray-900">Data de Emissão</p>
               <p className="text-gray-900 font-medium">
                 {new Date(conta.data_emissao!).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Data de Vencimento</p>
+              <p className="text-sm text-gray-900">Data de Vencimento</p>
               <p className="text-gray-900 font-medium">
                 {new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
               </p>
             </div>
             {conta.data_pagamento && (
               <div>
-                <p className="text-sm text-gray-600">Data de Pagamento</p>
+                <p className="text-sm text-gray-900">Data de Pagamento</p>
                 <p className="text-gray-900 font-medium">
                   {new Date(conta.data_pagamento).toLocaleDateString('pt-BR')}
                 </p>
@@ -284,12 +284,12 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações de Pagamento</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Forma de Pagamento</p>
+              <p className="text-sm text-gray-900">Forma de Pagamento</p>
               <p className="text-gray-900 font-medium">{conta.forma_pagamento}</p>
             </div>
             {conta.comprovante && (
               <div>
-                <p className="text-sm text-gray-600">Comprovante</p>
+                <p className="text-sm text-gray-900">Comprovante</p>
                 <p className="text-gray-900 font-medium">{conta.comprovante}</p>
               </div>
             )}
@@ -310,12 +310,12 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações de Controle</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-600">Criado por</p>
+            <p className="text-sm text-gray-900">Criado por</p>
             <p className="text-gray-900">{conta.criado_por_nome || '-'}</p>
           </div>
           {conta.recebido_por_nome && (
             <div>
-              <p className="text-sm text-gray-600">Recebido por</p>
+              <p className="text-sm text-gray-900">Recebido por</p>
               <p className="text-gray-900">{conta.recebido_por_nome}</p>
             </div>
           )}

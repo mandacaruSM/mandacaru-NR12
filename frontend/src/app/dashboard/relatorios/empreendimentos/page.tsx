@@ -244,7 +244,7 @@ export default function RelatorioEmpreendimentosPage() {
           </div>
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-900">Relatório por Empreendimento</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-900 mt-1">
               Análise detalhada de horas, abastecimento e manutenção
             </p>
           </div>
@@ -254,7 +254,7 @@ export default function RelatorioEmpreendimentosPage() {
       <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Relatório por Empreendimento</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Análise detalhada de horas, abastecimento e manutenção
           </p>
         </div>
@@ -348,25 +348,25 @@ export default function RelatorioEmpreendimentosPage() {
       {/* Resumo Geral */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total Horas</p>
+          <p className="text-sm text-gray-900">Total Horas</p>
           <p className="text-2xl font-bold text-gray-900">
             {resumoGeral.total_horas.toFixed(2)}h
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total Abast. (L)</p>
+          <p className="text-sm text-gray-900">Total Abast. (L)</p>
           <p className="text-2xl font-bold text-blue-900">
             {resumoGeral.total_abastecimento_litros.toFixed(2)}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Custo Abast.</p>
+          <p className="text-sm text-gray-900">Custo Abast.</p>
           <p className="text-xl font-bold text-orange-900">
             R$ {Number(resumoGeral.total_abastecimento_valor).toFixed(2)}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Custo Manutenção</p>
+          <p className="text-sm text-gray-900">Custo Manutenção</p>
           <p className="text-xl font-bold text-red-900">
             R$ {Number(resumoGeral.total_manutencao_valor).toFixed(2)}
           </p>
@@ -486,20 +486,20 @@ export default function RelatorioEmpreendimentosPage() {
 
       {/* Período do Relatório */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg print-only">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-900">
           <span className="font-semibold">Período:</span> {new Date(periodo.data_inicio).toLocaleDateString('pt-BR')} a {new Date(periodo.data_fim).toLocaleDateString('pt-BR')}
         </p>
         {filtros.cliente && (
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             <span className="font-semibold">Cliente:</span> {clientes.find(c => c.id === filtros.cliente)?.nome_razao || '-'}
           </p>
         )}
         {filtros.empreendimento && (
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             <span className="font-semibold">Empreendimento:</span> {empreendimentos.find(e => e.id === filtros.empreendimento)?.nome || '-'}
           </p>
         )}
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-900 mt-1">
           <span className="font-semibold">Data de emissão:</span> {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
         </p>
       </div>

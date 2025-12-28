@@ -81,23 +81,23 @@ export default function OrcamentosPage() {
       {/* Cards de Resumo */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-gray-900">Total</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.total}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Rascunhos</p>
+          <p className="text-sm text-gray-900">Rascunhos</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.rascunhos}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Enviados</p>
+          <p className="text-sm text-gray-900">Enviados</p>
           <p className="text-2xl font-bold text-blue-900">{resumo.enviados}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Aprovados</p>
+          <p className="text-sm text-gray-900">Aprovados</p>
           <p className="text-2xl font-bold text-green-900">{resumo.aprovados}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Rejeitados</p>
+          <p className="text-sm text-gray-900">Rejeitados</p>
           <p className="text-2xl font-bold text-red-900">{resumo.rejeitados}</p>
         </div>
       </div>

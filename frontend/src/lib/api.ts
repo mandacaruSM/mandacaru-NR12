@@ -28,14 +28,20 @@ async function apiFetchBase<T>(
 ): Promise<T> {
   const { requireAuth = true, skipRedirect = false, ...fetchOptions } = options;
 
+  // ✅ CRÍTICO: Não force Content-Type para permitir FormData funcionar
+  // FormData precisa que o browser defina Content-Type com boundary automático
+  const headers: Record<string, string> = { ...fetchOptions.headers as Record<string, string> };
+
+  // Só define Content-Type se não foi especificado E o body não é FormData
+  if (!headers['Content-Type'] && fetchOptions.body && !(fetchOptions.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const config: RequestInit = {
     ...fetchOptions,
     credentials: 'include', // Envia cookies automaticamente
     redirect: 'manual', // ✅ CRÍTICO: Bloqueia redirects silenciosos
-    headers: {
-      'Content-Type': 'application/json',
-      ...fetchOptions.headers,
-    },
+    headers,
   };
 
   // Retry para cold start do Render (502/503/504)

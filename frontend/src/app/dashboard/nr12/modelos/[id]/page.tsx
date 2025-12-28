@@ -130,7 +130,7 @@ export default function DetalhesModeloPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando modelo...</p>
+          <p className="mt-4 text-gray-900">Carregando modelo...</p>
         </div>
       </div>
     );
@@ -153,7 +153,7 @@ export default function DetalhesModeloPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
               <Link href="/dashboard/nr12" className="hover:text-purple-600">
                 NR12
               </Link>
@@ -165,7 +165,7 @@ export default function DetalhesModeloPage() {
               <span>{modelo.nome}</span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">{modelo.nome}</h1>
-            <p className="text-gray-600 mt-1">{modelo.tipo_equipamento_nome}</p>
+            <p className="text-gray-900 mt-1">{modelo.tipo_equipamento_nome}</p>
           </div>
           <div className="flex gap-3">
             <Link
@@ -189,7 +189,7 @@ export default function DetalhesModeloPage() {
         <div className="p-6 border-b flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Itens do Checklist</h2>
-            <p className="text-sm text-gray-600">{itens.length} itens cadastrados</p>
+            <p className="text-sm text-gray-900">{itens.length} itens cadastrados</p>
           </div>
           <button
             onClick={() => setShowAddItem(!showAddItem)}
@@ -368,7 +368,7 @@ export default function DetalhesModeloPage() {
                           </span>
                         )}
                         {!item.ativo && (
-                          <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs">
+                          <span className="px-2 py-1 bg-gray-200 text-gray-900 rounded text-xs">
                             Inativo
                           </span>
                         )}
@@ -377,7 +377,7 @@ export default function DetalhesModeloPage() {
                       <p className="text-gray-900 font-medium mb-1">{item.pergunta}</p>
                       
                       {item.descricao_ajuda && (
-                        <p className="text-sm text-gray-600">{item.descricao_ajuda}</p>
+                        <p className="text-sm text-gray-900">{item.descricao_ajuda}</p>
                       )}
                     </div>
 

@@ -198,7 +198,8 @@ export default function NovoChecklistPage() {
       console.log('✅ Checklist criado:', checklist.id);
 
       toast.success('Checklist realizado com sucesso!');
-      router.push(`/dashboard/nr12/checklists/${checklist.id}`);
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = `/dashboard/nr12/checklists/${checklist.id}`;
     } catch (err: any) {
       console.error('❌ Erro ao salvar checklist:', err);
       toast.error('Erro ao salvar checklist: ' + err.message);
@@ -212,7 +213,7 @@ export default function NovoChecklistPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -226,7 +227,7 @@ export default function NovoChecklistPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/nr12" className="hover:text-blue-600">NR12</Link>
           <span>/</span>
           <Link href="/dashboard/nr12/checklists" className="hover:text-blue-600">Checklists</Link>
@@ -234,7 +235,7 @@ export default function NovoChecklistPage() {
           <span>Novo</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Realizar Checklist</h1>
-        <p className="text-gray-600 mt-1">Preencha o checklist de segurança NR12</p>
+        <p className="text-gray-900 mt-1">Preencha o checklist de segurança NR12</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -251,7 +252,7 @@ export default function NovoChecklistPage() {
                   className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
                 >
                   <h3 className="font-semibold text-gray-900">{modelo.nome}</h3>
-                  <p className="text-sm text-gray-600">{modelo.tipo_equipamento_nome}</p>
+                  <p className="text-sm text-gray-900">{modelo.tipo_equipamento_nome}</p>
                   <p className="text-xs text-gray-500 mt-1">{modelo.total_itens} itens</p>
                 </button>
               ))}
@@ -300,7 +301,7 @@ export default function NovoChecklistPage() {
                   className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
                 >
                   <h3 className="font-semibold text-gray-900">{eq.codigo}</h3>
-                  <p className="text-sm text-gray-600">{eq.descricao}</p>
+                  <p className="text-sm text-gray-900">{eq.descricao}</p>
                   <p className="text-xs text-gray-500">{eq.cliente_nome}</p>
                 </button>
               ))}
@@ -314,7 +315,7 @@ export default function NovoChecklistPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-900">
                     Pergunta {currentItemIndex + 1} de {itensChecklist.length}
                   </span>
                   <span className="text-sm font-medium text-blue-600">{Math.round(progresso)}%</span>
@@ -333,7 +334,7 @@ export default function NovoChecklistPage() {
                 </span>
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{itemAtual.pergunta}</h2>
                 {itemAtual.descricao_ajuda && (
-                  <p className="text-sm text-gray-600">{itemAtual.descricao_ajuda}</p>
+                  <p className="text-sm text-gray-900">{itemAtual.descricao_ajuda}</p>
                 )}
               </div>
 

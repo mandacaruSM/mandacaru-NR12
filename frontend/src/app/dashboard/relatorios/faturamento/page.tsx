@@ -113,7 +113,7 @@ export default function RelatorioFaturamentoPage() {
           </div>
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-900">Relatório de Faturamento</h1>
-            <p className="text-sm text-gray-600 mt-1">Análise de faturamento por período</p>
+            <p className="text-sm text-gray-900 mt-1">Análise de faturamento por período</p>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@ export default function RelatorioFaturamentoPage() {
       <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Relatório de Faturamento</h1>
-          <p className="text-sm text-gray-600 mt-1">Análise de faturamento por período</p>
+          <p className="text-sm text-gray-900 mt-1">Análise de faturamento por período</p>
         </div>
         <button
           onClick={handleImprimir}
@@ -166,19 +166,19 @@ export default function RelatorioFaturamentoPage() {
       {/* Resumo Geral */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Orçamentos Aprovados</p>
+          <p className="text-sm text-gray-900">Orçamentos Aprovados</p>
           <p className="text-2xl font-bold text-gray-900">{dadosFaturamento.orcamentos_aprovados}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Valor Orçamentos</p>
+          <p className="text-sm text-gray-900">Valor Orçamentos</p>
           <p className="text-xl font-bold text-blue-900">R$ {Number(dadosFaturamento.valor_orcamentos).toFixed(2)}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">OS Concluídas</p>
+          <p className="text-sm text-gray-900">OS Concluídas</p>
           <p className="text-2xl font-bold text-gray-900">{dadosFaturamento.ordens_concluidas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Valor OS</p>
+          <p className="text-sm text-gray-900">Valor OS</p>
           <p className="text-xl font-bold text-green-900">R$ {Number(dadosFaturamento.valor_ordens).toFixed(2)}</p>
         </div>
         <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-lg shadow">

@@ -192,7 +192,7 @@ export default function DashboardPage() {
                   {stat.icon}
                 </div>
                 <svg
-                  className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors"
+                  className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+              <p className="text-sm font-medium text-gray-900 mb-1">{stat.title}</p>
               <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
               {stat.change && (
                 <div className="flex items-center">
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                         ? 'text-green-600 bg-green-50'
                         : stat.changeType === 'negative'
                         ? 'text-red-600 bg-red-50'
-                        : 'text-gray-600 bg-gray-50'
+                        : 'text-gray-900 bg-gray-50'
                     } px-2 py-1 rounded-full`}
                   >
                     {stat.change}
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {activity.action}
                     </p>
-                    <p className="text-sm text-gray-600 truncate">{activity.detail}</p>
+                    <p className="text-sm text-gray-900 truncate">{activity.detail}</p>
                     <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
                   </div>
                 </li>

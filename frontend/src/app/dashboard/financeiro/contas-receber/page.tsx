@@ -71,23 +71,23 @@ export default function ContasReceberPage() {
       {/* Cards de Resumo */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-gray-900">Total</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.total}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Abertas</p>
+          <p className="text-sm text-gray-900">Abertas</p>
           <p className="text-2xl font-bold text-blue-900">{resumo.abertas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Pagas</p>
+          <p className="text-sm text-gray-900">Pagas</p>
           <p className="text-2xl font-bold text-green-900">{resumo.pagas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Vencidas</p>
+          <p className="text-sm text-gray-900">Vencidas</p>
           <p className="text-2xl font-bold text-red-900">{resumo.vencidas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Valor Aberto</p>
+          <p className="text-sm text-gray-900">Valor Aberto</p>
           <p className="text-xl font-bold text-gray-900">R$ {Number(resumo.valor_aberto || 0).toFixed(2)}</p>
         </div>
       </div>

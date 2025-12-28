@@ -88,7 +88,7 @@ export default function HistoricoManutencaoPreventiva() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Histórico de Manutenções</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-900 mt-1">
             Visualize todas as manutenções preventivas realizadas
           </p>
         </div>
@@ -104,26 +104,26 @@ export default function HistoricoManutencaoPreventiva() {
       {estatisticas && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Total</div>
+            <div className="text-sm font-medium text-gray-900">Total</div>
             <div className="text-3xl font-bold text-gray-900 mt-2">{estatisticas.total}</div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Concluídas</div>
+            <div className="text-sm font-medium text-gray-900">Concluídas</div>
             <div className="text-3xl font-bold text-green-600 mt-2">
               {estatisticas.concluidas}
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Em Andamento</div>
+            <div className="text-sm font-medium text-gray-900">Em Andamento</div>
             <div className="text-3xl font-bold text-blue-600 mt-2">
               {estatisticas.em_andamento}
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Canceladas</div>
+            <div className="text-sm font-medium text-gray-900">Canceladas</div>
             <div className="text-3xl font-bold text-red-600 mt-2">{estatisticas.canceladas}</div>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function HistoricoManutencaoPreventiva() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Status</label>
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
@@ -148,7 +148,7 @@ export default function HistoricoManutencaoPreventiva() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Resultado</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Resultado</label>
             <select
               value={filtroResultado}
               onChange={(e) => setFiltroResultado(e.target.value)}
@@ -162,7 +162,7 @@ export default function HistoricoManutencaoPreventiva() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Origem</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Origem</label>
             <select
               value={filtroOrigem}
               onChange={(e) => setFiltroOrigem(e.target.value)}
@@ -176,7 +176,7 @@ export default function HistoricoManutencaoPreventiva() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Data Início</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Data Início</label>
             <input
               type="date"
               value={filtroDataInicio}
@@ -186,7 +186,7 @@ export default function HistoricoManutencaoPreventiva() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Data Fim</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Data Fim</label>
             <input
               type="date"
               value={filtroDataFim}
@@ -207,7 +207,7 @@ export default function HistoricoManutencaoPreventiva() {
       {/* Lista de Manutenções */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {manutencoes.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
+          <div className="px-6 py-12 text-center text-gray-900">
             <p className="text-lg">Nenhuma manutenção encontrada</p>
           </div>
         ) : (
@@ -215,34 +215,34 @@ export default function HistoricoManutencaoPreventiva() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Equipamento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Modelo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Técnico
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Data/Hora
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Leitura
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Resultado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Origem
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -257,7 +257,7 @@ export default function HistoricoManutencaoPreventiva() {
                       <div className="text-sm font-medium text-gray-900">
                         {manutencao.equipamento_codigo}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-900">
                         {manutencao.equipamento_descricao}
                       </div>
                     </td>
@@ -272,7 +272,7 @@ export default function HistoricoManutencaoPreventiva() {
                         {formatarData(manutencao.data_hora_inicio)}
                       </div>
                       {manutencao.data_hora_fim && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-900">
                           Fim: {formatarData(manutencao.data_hora_fim)}
                         </div>
                       )}
@@ -332,7 +332,7 @@ export default function HistoricoManutencaoPreventiva() {
                     <div className="text-sm font-medium text-gray-900">
                       {item.equipamento__codigo}
                     </div>
-                    <div className="text-xs text-gray-500">{item.equipamento__descricao}</div>
+                    <div className="text-xs text-gray-900">{item.equipamento__descricao}</div>
                   </div>
                   <div className="text-lg font-bold text-gray-900">{item.total}</div>
                 </div>

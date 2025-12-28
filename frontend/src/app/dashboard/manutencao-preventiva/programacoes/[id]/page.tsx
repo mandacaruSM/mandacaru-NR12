@@ -126,7 +126,7 @@ export default function DetalhesProgramacao() {
           <h1 className="text-3xl font-bold text-gray-900">
             Programação #{id} - {programacao.equipamento_codigo}
           </h1>
-          <p className="text-gray-600 mt-1">{programacao.modelo_nome}</p>
+          <p className="text-gray-900 mt-1">{programacao.modelo_nome}</p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -170,19 +170,19 @@ export default function DetalhesProgramacao() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-gray-600">Última Manutenção</div>
+            <div className="text-sm text-gray-900">Última Manutenção</div>
             <div className="text-lg font-bold text-gray-900 mt-1">
               {formatarLeitura(programacao.leitura_ultima_manutencao, programacao.tipo_medicao)}
             </div>
             {(programacao as any).data_ultima_manutencao && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-900 mt-1">
                 {formatarData((programacao as any).data_ultima_manutencao)}
               </div>
             )}
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Leitura Atual</div>
+            <div className="text-sm text-gray-900">Leitura Atual</div>
             <div className="text-lg font-bold text-gray-900 mt-1">
               {(programacao as any).leitura_atual
                 ? formatarLeitura((programacao as any).leitura_atual, programacao.tipo_medicao)
@@ -197,19 +197,19 @@ export default function DetalhesProgramacao() {
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Próxima Manutenção</div>
+            <div className="text-sm text-gray-900">Próxima Manutenção</div>
             <div className="text-lg font-bold text-gray-900 mt-1">
               {formatarLeitura(programacao.leitura_proxima_manutencao, programacao.tipo_medicao)}
             </div>
             {programacao.falta_para_manutencao && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-900 mt-1">
                 Falta: {formatarLeitura(programacao.falta_para_manutencao, programacao.tipo_medicao)}
               </div>
             )}
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Progresso</div>
+            <div className="text-sm text-gray-900">Progresso</div>
             <div className="mt-2">
               {programacao.percentual_concluido !== undefined && (
                 <div>
@@ -242,19 +242,19 @@ export default function DetalhesProgramacao() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Equipamento</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-sm text-gray-600">Código</div>
+            <div className="text-sm text-gray-900">Código</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {programacao.equipamento_codigo}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Descrição</div>
+            <div className="text-sm text-gray-900">Descrição</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {programacao.equipamento_descricao}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Tipo de Medição</div>
+            <div className="text-sm text-gray-900">Tipo de Medição</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {programacao.tipo_medicao_display}
             </div>
@@ -267,19 +267,19 @@ export default function DetalhesProgramacao() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Modelo de Manutenção</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-sm text-gray-600">Nome do Modelo</div>
+            <div className="text-sm text-gray-900">Nome do Modelo</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {programacao.modelo_nome}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Intervalo</div>
+            <div className="text-sm text-gray-900">Intervalo</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {formatarLeitura(programacao.modelo_intervalo, programacao.tipo_medicao)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Tolerância</div>
+            <div className="text-sm text-gray-900">Tolerância</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {formatarLeitura((programacao as any).modelo_tolerancia, programacao.tipo_medicao)}
             </div>
@@ -291,13 +291,13 @@ export default function DetalhesProgramacao() {
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Histórico de Manutenções</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Manutenções preventivas realizadas neste equipamento
           </p>
         </div>
 
         {manutencoes.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-12 text-center text-gray-900">
             <p className="text-lg">Nenhuma manutenção realizada ainda</p>
           </div>
         ) : (
@@ -305,19 +305,19 @@ export default function DetalhesProgramacao() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                     Data
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                     Técnico
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                     Leitura
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase">
                     Ações
                   </th>
                 </tr>
@@ -367,7 +367,7 @@ export default function DetalhesProgramacao() {
               </div>
 
               <div className="p-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Nova Leitura
                 </label>
                 <div className="relative">
@@ -380,11 +380,11 @@ export default function DetalhesProgramacao() {
                     step="0.01"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="absolute right-3 top-2 text-gray-500 text-sm">
+                  <span className="absolute right-3 top-2 text-gray-900 text-sm">
                     {programacao.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-900 mt-2">
                   Atual: {formatarLeitura((programacao as any).leitura_atual || '0', programacao.tipo_medicao)}
                 </p>
               </div>
@@ -393,7 +393,7 @@ export default function DetalhesProgramacao() {
                 <button
                   type="button"
                   onClick={() => setShowAtualizarModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancelar
                 </button>

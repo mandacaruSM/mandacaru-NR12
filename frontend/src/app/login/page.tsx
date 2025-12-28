@@ -61,7 +61,7 @@ function LoginForm() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Redirecionando...</p>
+          <p className="mt-4 text-gray-900">Redirecionando...</p>
         </div>
       </div>
     );
@@ -75,10 +75,10 @@ function LoginForm() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Mandacaru ERP
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-900">
             Faça login para acessar o sistema
           </p>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-900">
             Não tem uma conta?{' '}
             <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
               Criar conta
@@ -215,7 +215,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     }>

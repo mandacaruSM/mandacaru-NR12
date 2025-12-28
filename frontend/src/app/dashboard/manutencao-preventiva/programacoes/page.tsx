@@ -97,7 +97,7 @@ export default function ProgramacoesManutencaoPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Programações de Manutenção</h1>
-          <p className="text-gray-600 mt-1">Gerencie as programações de manutenção preventiva</p>
+          <p className="text-gray-900 mt-1">Gerencie as programações de manutenção preventiva</p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -126,7 +126,7 @@ export default function ProgramacoesManutencaoPage() {
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Buscar Equipamento
             </label>
             <input
@@ -139,7 +139,7 @@ export default function ProgramacoesManutencaoPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Status</label>
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
@@ -165,7 +165,7 @@ export default function ProgramacoesManutencaoPage() {
       {/* Programações List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {programacoes.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
+          <div className="px-6 py-12 text-center text-gray-900">
             <p className="text-lg">Nenhuma programação encontrada</p>
             <Link
               href="/dashboard/manutencao-preventiva/programacoes/nova"
@@ -179,28 +179,28 @@ export default function ProgramacoesManutencaoPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Equipamento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Modelo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Tipo Medição
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Última Manutenção
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Próxima Manutenção
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Progresso
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -212,11 +212,11 @@ export default function ProgramacoesManutencaoPage() {
                       <div className="text-sm font-medium text-gray-900">
                         {prog.equipamento_codigo}
                       </div>
-                      <div className="text-sm text-gray-500">{prog.equipamento_descricao}</div>
+                      <div className="text-sm text-gray-900">{prog.equipamento_descricao}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{prog.modelo_nome}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-900">
                         Intervalo: {formatarLeitura(prog.modelo_intervalo, prog.tipo_medicao)}
                       </div>
                     </td>
@@ -233,7 +233,7 @@ export default function ProgramacoesManutencaoPage() {
                         {formatarLeitura(prog.leitura_proxima_manutencao, prog.tipo_medicao)}
                       </div>
                       {prog.falta_para_manutencao && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-900">
                           Falta: {formatarLeitura(prog.falta_para_manutencao, prog.tipo_medicao)}
                         </div>
                       )}
@@ -253,7 +253,7 @@ export default function ProgramacoesManutencaoPage() {
                               style={{ width: `${Math.min(prog.percentual_concluido, 100)}%` }}
                             />
                           </div>
-                          <div className="text-xs text-gray-600 mt-1">
+                          <div className="text-xs text-gray-900 mt-1">
                             {prog.percentual_concluido.toFixed(0)}%
                           </div>
                         </div>

@@ -209,7 +209,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
       .text-blue-600 {
         color: #2563eb !important;
       }
-      .text-gray-600 {
+      .text-gray-900 {
         color: #4b5563;
       }
       .text-gray-900 {
@@ -272,7 +272,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
           <h1 className="text-2xl font-bold text-gray-900">
             Ordem de Serviço {os.numero}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Orçamento: {os.orcamento_numero} - {os.orcamento_tipo_display}
           </p>
         </div>
@@ -369,18 +369,18 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da OS</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-gray-600">Cliente</p>
+              <p className="text-sm text-gray-900">Cliente</p>
               <p className="text-gray-900 font-medium">{os.cliente_nome}</p>
             </div>
             {os.empreendimento_nome && (
               <div>
-                <p className="text-sm text-gray-600">Empreendimento</p>
+                <p className="text-sm text-gray-900">Empreendimento</p>
                 <p className="text-gray-900 font-medium">{os.empreendimento_nome}</p>
               </div>
             )}
             {os.equipamento_codigo && (
               <div>
-                <p className="text-sm text-gray-600">Equipamento</p>
+                <p className="text-sm text-gray-900">Equipamento</p>
                 <p className="text-gray-900 font-medium">
                   {os.equipamento_codigo} - {os.equipamento_descricao}
                 </p>
@@ -393,20 +393,20 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Datas</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-gray-600">Data de Abertura</p>
+              <p className="text-sm text-gray-900">Data de Abertura</p>
               <p className="text-gray-900 font-medium">
                 {new Date(os.data_abertura!).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Data Prevista</p>
+              <p className="text-sm text-gray-900">Data Prevista</p>
               <p className="text-gray-900 font-medium">
                 {new Date(os.data_prevista).toLocaleDateString('pt-BR')}
               </p>
             </div>
             {os.data_inicio && (
               <div>
-                <p className="text-sm text-gray-600">Data de Início</p>
+                <p className="text-sm text-gray-900">Data de Início</p>
                 <p className="text-gray-900 font-medium">
                   {new Date(os.data_inicio).toLocaleDateString('pt-BR')}
                 </p>
@@ -414,7 +414,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
             )}
             {os.data_conclusao && (
               <div>
-                <p className="text-sm text-gray-600">Data de Conclusão</p>
+                <p className="text-sm text-gray-900">Data de Conclusão</p>
                 <p className="text-gray-900 font-medium">
                   {new Date(os.data_conclusao).toLocaleDateString('pt-BR')}
                 </p>
@@ -588,18 +588,18 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações de Controle</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-600">Aberta por</p>
+            <p className="text-sm text-gray-900">Aberta por</p>
             <p className="text-gray-900">{os.aberto_por_nome || '-'}</p>
           </div>
           {os.tecnico_nome && (
             <div>
-              <p className="text-sm text-gray-600">Técnico Responsável</p>
+              <p className="text-sm text-gray-900">Técnico Responsável</p>
               <p className="text-gray-900">{os.tecnico_nome}</p>
             </div>
           )}
           {os.concluido_por_nome && (
             <div>
-              <p className="text-sm text-gray-600">Concluída por</p>
+              <p className="text-sm text-gray-900">Concluída por</p>
               <p className="text-gray-900">{os.concluido_por_nome}</p>
             </div>
           )}
@@ -608,7 +608,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
 
       {/* Rodapé */}
       <div className="mt-6 pt-4 border-t border-gray-300 text-center">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-gray-900">
           Criado por <span className="font-semibold text-gray-900">Mandacaru Soluções em Mineração</span>
         </p>
         <p className="text-xs text-gray-500 mt-1">

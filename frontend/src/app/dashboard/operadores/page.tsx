@@ -52,7 +52,7 @@ export default function OperadoresPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Operadores 👷</h1>
-          <p className="text-gray-600">Total: {count}</p>
+          <p className="text-gray-900">Total: {count}</p>
         </div>
         <Link
           href="/dashboard/operadores/novo"
@@ -118,7 +118,7 @@ export default function OperadoresPage() {
                         ✓ {(op as any).telegram_chat_id}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-900">
                         Não vinculado
                       </span>
                     )}

@@ -64,23 +64,23 @@ export default function OrdensServicoPage() {
       {/* Cards de Resumo */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-gray-900">Total</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.total}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Abertas</p>
+          <p className="text-sm text-gray-900">Abertas</p>
           <p className="text-2xl font-bold text-blue-900">{resumo.abertas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Em Execução</p>
+          <p className="text-sm text-gray-900">Em Execução</p>
           <p className="text-2xl font-bold text-yellow-900">{resumo.em_execucao}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Concluídas</p>
+          <p className="text-sm text-gray-900">Concluídas</p>
           <p className="text-2xl font-bold text-green-900">{resumo.concluidas}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Canceladas</p>
+          <p className="text-sm text-gray-900">Canceladas</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.canceladas}</p>
         </div>
       </div>

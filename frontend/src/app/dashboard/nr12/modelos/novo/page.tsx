@@ -63,7 +63,8 @@ export default function NovoModeloPage() {
     try {
       const modelo = await nr12Api.modelos.create(formData);
       toast.success('Modelo cadastrado com sucesso!');
-      router.push(`/dashboard/nr12/modelos/${modelo.id}`);
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = `/dashboard/nr12/modelos/${modelo.id}`;
     } catch (err: any) {
       const errorMsg = err.message || 'Erro ao cadastrar modelo';
       setError(errorMsg);
@@ -78,7 +79,7 @@ export default function NovoModeloPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -88,7 +89,7 @@ export default function NovoModeloPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/nr12/modelos" className="hover:text-purple-600">
             Modelos
           </Link>
@@ -96,7 +97,7 @@ export default function NovoModeloPage() {
           <span>Novo Modelo</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Novo Modelo de Checklist</h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-900 mt-1">
           Crie um template de checklist vinculado a um tipo de equipamento
         </p>
       </div>

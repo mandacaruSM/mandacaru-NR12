@@ -31,7 +31,7 @@ export default function FinanceiroPage() {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Financeiro</h1>
-        <p className="text-gray-600 mt-1">Gestão financeira do sistema</p>
+        <p className="text-gray-900 mt-1">Gestão financeira do sistema</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -48,7 +48,7 @@ export default function FinanceiroPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                 {module.title}
               </h2>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-900 text-sm">
                 {module.description}
               </p>
             </div>

@@ -124,7 +124,7 @@ export default function ChecklistDetailPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando checklist...</p>
+          <p className="mt-4 text-gray-900">Carregando checklist...</p>
         </div>
       </div>
     );
@@ -160,7 +160,7 @@ export default function ChecklistDetailPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               Checklist #{checklist.id}
             </h1>
-            <p className="text-gray-600 mt-1">{checklist.modelo_nome}</p>
+            <p className="text-gray-900 mt-1">{checklist.modelo_nome}</p>
           </div>
         </div>
         {getStatusBadge(checklist.status)}
@@ -175,7 +175,7 @@ export default function ChecklistDetailPage() {
               <Wrench className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Equipamento</p>
+              <p className="text-sm text-gray-900">Equipamento</p>
               <p className="font-medium text-gray-900">{checklist.equipamento_codigo || "N/A"}</p>
               <p className="text-xs text-gray-500">{checklist.equipamento_descricao || ""}</p>
             </div>
@@ -189,7 +189,7 @@ export default function ChecklistDetailPage() {
               <User className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Operador</p>
+              <p className="text-sm text-gray-900">Operador</p>
               <p className="font-medium text-gray-900">{checklist.operador_nome_display || checklist.operador_nome || "N/A"}</p>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function ChecklistDetailPage() {
               <Calendar className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Data/Hora</p>
+              <p className="text-sm text-gray-900">Data/Hora</p>
               <p className="font-medium text-gray-900 text-sm">
                 {formatarData(checklist.data_hora_inicio)}
               </p>
@@ -217,7 +217,7 @@ export default function ChecklistDetailPage() {
               <FileText className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Origem</p>
+              <p className="text-sm text-gray-900">Origem</p>
               <p className="font-medium text-gray-900">{checklist.origem}</p>
             </div>
           </div>
@@ -235,17 +235,17 @@ export default function ChecklistDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-3xl font-bold text-gray-900">{checklist.total_respostas || 0}</p>
-            <p className="text-sm text-gray-600 mt-1">Total de Respostas</p>
+            <p className="text-sm text-gray-900 mt-1">Total de Respostas</p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <p className="text-3xl font-bold text-green-600">
               {(checklist.total_respostas || 0) - (checklist.total_nao_conformidades || 0)}
             </p>
-            <p className="text-sm text-gray-600 mt-1">Conformes</p>
+            <p className="text-sm text-gray-900 mt-1">Conformes</p>
           </div>
           <div className="text-center p-4 bg-red-50 rounded-lg">
             <p className="text-3xl font-bold text-red-600">{checklist.total_nao_conformidades || 0}</p>
-            <p className="text-sm text-gray-600 mt-1">Não Conformidades</p>
+            <p className="text-sm text-gray-900 mt-1">Não Conformidades</p>
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ export default function ChecklistDetailPage() {
                     </p>
                     {resposta.observacao && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-900">
                           <strong>Observação:</strong> {resposta.observacao}
                         </p>
                       </div>

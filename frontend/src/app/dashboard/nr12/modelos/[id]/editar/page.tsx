@@ -93,7 +93,7 @@ export default function EditarModeloPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ export default function EditarModeloPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/nr12" className="hover:text-purple-600">NR12</Link>
           <span>/</span>
           <Link href="/dashboard/nr12/modelos" className="hover:text-purple-600">Modelos</Link>
@@ -115,7 +115,7 @@ export default function EditarModeloPage() {
           <span>Editar</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Editar Modelo de Checklist</h1>
-        <p className="text-gray-600 mt-1">Atualize as informações do modelo</p>
+        <p className="text-gray-900 mt-1">Atualize as informações do modelo</p>
       </div>
 
       {/* Formulário */}

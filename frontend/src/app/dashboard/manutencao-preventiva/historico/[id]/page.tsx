@@ -109,7 +109,7 @@ export default function DetalhesManutencaoRealizada() {
           <h1 className="text-3xl font-bold text-gray-900">
             Manutenção Preventiva #{id}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-900 mt-1">
             {manutencao.equipamento_codigo} - {manutencao.equipamento_descricao}
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function DetalhesManutencaoRealizada() {
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Status</div>
+          <div className="text-sm text-gray-900">Status</div>
           <div className="mt-2">
             <span
               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${STATUS_MANUTENCAO_COLORS[manutencao.status]}`}
@@ -150,7 +150,7 @@ export default function DetalhesManutencaoRealizada() {
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Resultado</div>
+          <div className="text-sm text-gray-900">Resultado</div>
           <div className="mt-2">
             {manutencao.resultado_geral ? (
               <span
@@ -165,15 +165,15 @@ export default function DetalhesManutencaoRealizada() {
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Itens Respondidos</div>
+          <div className="text-sm text-gray-900">Itens Respondidos</div>
           <div className="text-2xl font-bold text-gray-900 mt-1">
             {itensRespondidos} / {totalItens}
           </div>
-          <div className="text-xs text-gray-500">{percentualConclusao.toFixed(0)}% completo</div>
+          <div className="text-xs text-gray-900">{percentualConclusao.toFixed(0)}% completo</div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Duração</div>
+          <div className="text-sm text-gray-900">Duração</div>
           <div className="text-2xl font-bold text-gray-900 mt-1">{calcularDuracao()}</div>
         </div>
       </div>
@@ -183,50 +183,50 @@ export default function DetalhesManutencaoRealizada() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Informações Gerais</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <div className="text-sm text-gray-600">Data/Hora Início</div>
+            <div className="text-sm text-gray-900">Data/Hora Início</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {formatarDataHora(manutencao.data_hora_inicio)}
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Data/Hora Fim</div>
+            <div className="text-sm text-gray-900">Data/Hora Fim</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {formatarDataHora(manutencao.data_hora_fim)}
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Técnico</div>
+            <div className="text-sm text-gray-900">Técnico</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {manutencao.tecnico_nome_display || 'Não informado'}
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Equipamento</div>
+            <div className="text-sm text-gray-900">Equipamento</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {manutencao.equipamento_codigo}
             </div>
-            <div className="text-sm text-gray-500">{manutencao.equipamento_descricao}</div>
+            <div className="text-sm text-gray-900">{manutencao.equipamento_descricao}</div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Modelo de Manutenção</div>
+            <div className="text-sm text-gray-900">Modelo de Manutenção</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {manutencao.modelo_nome}
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Leitura do Equipamento</div>
+            <div className="text-sm text-gray-900">Leitura do Equipamento</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {manutencao.leitura_equipamento}
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-gray-600">Origem</div>
+            <div className="text-sm text-gray-900">Origem</div>
             <div className="text-base font-medium text-gray-900 mt-1">
               {manutencao.origem === 'WEB' ? '🖥️ Web' : manutencao.origem === 'BOT' ? '💬 Telegram' : '📱 Mobile'}
             </div>
@@ -235,7 +235,7 @@ export default function DetalhesManutencaoRealizada() {
 
         {manutencao.observacoes_gerais && (
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="text-sm font-medium text-gray-700 mb-2">Observações Gerais</div>
+            <div className="text-sm font-medium text-gray-900 mb-2">Observações Gerais</div>
             <div className="text-base text-gray-900 bg-gray-50 p-3 rounded">
               {manutencao.observacoes_gerais}
             </div>
@@ -247,13 +247,13 @@ export default function DetalhesManutencaoRealizada() {
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Checklist</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Respostas dos itens verificados durante a manutenção
           </p>
         </div>
 
         {manutencao.respostas.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-12 text-center text-gray-900">
             <p className="text-lg">Nenhuma resposta registrada</p>
           </div>
         ) : (
@@ -276,11 +276,11 @@ export default function DetalhesManutencaoRealizada() {
                           {resposta.item_descricao}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                          <span className="text-xs bg-gray-100 text-gray-900 px-2 py-0.5 rounded">
                             {CATEGORIA_ITEM_LABELS[resposta.item_categoria]}
                           </span>
                           {(resposta as any).item_tipo_resposta && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-900">
                               {(TIPO_RESPOSTA_LABELS as any)[(resposta as any).item_tipo_resposta]}
                             </span>
                           )}
@@ -289,7 +289,7 @@ export default function DetalhesManutencaoRealizada() {
 
                       {/* Resposta */}
                       <div className="mb-2">
-                        <div className="text-sm text-gray-600 mb-1">Resposta:</div>
+                        <div className="text-sm text-gray-900 mb-1">Resposta:</div>
                         <span
                           className={`inline-flex px-3 py-1 text-sm font-semibold rounded ${getCorResposta(resposta.resposta)}`}
                         >
@@ -300,7 +300,7 @@ export default function DetalhesManutencaoRealizada() {
                       {/* Observação */}
                       {resposta.observacao && (
                         <div>
-                          <div className="text-sm text-gray-600 mb-1">Observação:</div>
+                          <div className="text-sm text-gray-900 mb-1">Observação:</div>
                           <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
                             {resposta.observacao}
                           </div>
@@ -310,7 +310,7 @@ export default function DetalhesManutencaoRealizada() {
                       {/* Foto */}
                       {(resposta as any).foto_url && (
                         <div className="mt-2">
-                          <div className="text-sm text-gray-600 mb-1">Foto:</div>
+                          <div className="text-sm text-gray-900 mb-1">Foto:</div>
                           <img
                             src={(resposta as any).foto_url}
                             alt={`Foto do item ${(resposta as any).item_ordem || index + 1}`}
@@ -340,7 +340,7 @@ export default function DetalhesManutencaoRealizada() {
                 return (
                   <div key={tipo} className="text-center">
                     <div className="text-2xl font-bold text-gray-900">{count}</div>
-                    <div className="text-sm text-gray-600">{tipo}</div>
+                    <div className="text-sm text-gray-900">{tipo}</div>
                   </div>
                 )
               }

@@ -59,7 +59,7 @@ export default function ClientesPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando clientes...</p>
+          <p className="mt-4 text-gray-900">Carregando clientes...</p>
         </div>
       </div>
     );
@@ -72,7 +72,7 @@ export default function ClientesPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-900 mt-1">
               {clientes.length} cliente{clientes.length !== 1 ? 's' : ''} cadastrado{clientes.length !== 1 ? 's' : ''}
             </p>
           </div>

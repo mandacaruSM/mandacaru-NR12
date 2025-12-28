@@ -197,7 +197,8 @@ export default function NovoEmpreendimentoPage() {
       }
 
       toast.success('Empreendimento cadastrado com sucesso!');
-      router.push('/dashboard/empreendimentos');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/empreendimentos';
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || 'Erro ao cadastrar empreendimento';
       setError(errorMsg);
@@ -212,7 +213,7 @@ export default function NovoEmpreendimentoPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -222,7 +223,7 @@ export default function NovoEmpreendimentoPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/empreendimentos" className="hover:text-blue-600">
             Empreendimentos
           </Link>

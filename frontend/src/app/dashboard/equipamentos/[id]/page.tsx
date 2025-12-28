@@ -107,7 +107,7 @@ export default function EditarEquipamentoPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando equipamento...</p>
+          <p className="mt-4 text-gray-900">Carregando equipamento...</p>
         </div>
       </div>
     );
@@ -128,7 +128,7 @@ export default function EditarEquipamentoPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/equipamentos" className="hover:text-blue-600">
             Equipamentos
           </Link>

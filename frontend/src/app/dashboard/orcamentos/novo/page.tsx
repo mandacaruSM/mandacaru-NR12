@@ -152,7 +152,8 @@ export default function NovoOrcamentoPage() {
       };
       console.log('Payload enviado:', JSON.stringify(payload, null, 2));
       await orcamentosApi.create(payload as any);
-      router.push('/dashboard/orcamentos');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/orcamentos';
     } catch (error: any) {
       console.error('Erro ao criar orçamento:', error);
       console.error('Mensagem de erro:', error.message);
@@ -475,7 +476,7 @@ export default function NovoOrcamentoPage() {
                 disabled
                 className="w-full px-3 py-2 border rounded text-gray-900 bg-gray-100 cursor-not-allowed"
               />
-              <span className="text-xs text-gray-600">Calculado automaticamente</span>
+              <span className="text-xs text-gray-900">Calculado automaticamente</span>
             </div>
           </div>
 

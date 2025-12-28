@@ -52,7 +52,7 @@ export default function SupervisoresPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Supervisores 🧑‍💼</h1>
-          <p className="text-gray-600">Total: {count}</p>
+          <p className="text-gray-900">Total: {count}</p>
         </div>
         <Link
           href="/dashboard/supervisores/novo"

@@ -84,7 +84,8 @@ export default function NovoOperadorPage() {
         ativo,
       } as any);
       toast.success('Operador criado com sucesso');
-      router.push('/dashboard/operadores');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/operadores';
     } catch (e: any) {
       toast.error(e.message || 'Erro ao criar operador');
     } finally {
@@ -97,7 +98,7 @@ export default function NovoOperadorPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Novo Operador</h1>
-          <p className="text-gray-600">Cadastro básico de operador</p>
+          <p className="text-gray-900">Cadastro básico de operador</p>
         </div>
         <Link href="/dashboard/operadores" className="text-blue-600 hover:underline">
           Voltar

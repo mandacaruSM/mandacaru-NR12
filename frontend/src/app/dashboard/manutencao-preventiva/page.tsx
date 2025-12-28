@@ -79,7 +79,7 @@ export default function ManutencaoPreventivaDashboardPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Manutenção Preventiva</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-900 mt-1">
             Gerenciamento de manutenções programadas por horímetro/odômetro
           </p>
         </div>
@@ -109,22 +109,22 @@ export default function ManutencaoPreventivaDashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-600">Total de Programações</div>
+          <div className="text-sm font-medium text-gray-900">Total de Programações</div>
           <div className="text-3xl font-bold text-gray-900 mt-2">{dashboard.total}</div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-600">Ativas</div>
+          <div className="text-sm font-medium text-gray-900">Ativas</div>
           <div className="text-3xl font-bold text-green-600 mt-2">{dashboard.ativas}</div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-600">Pendentes</div>
+          <div className="text-sm font-medium text-gray-900">Pendentes</div>
           <div className="text-3xl font-bold text-yellow-600 mt-2">{dashboard.pendentes}</div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-600">Em Atraso</div>
+          <div className="text-sm font-medium text-gray-900">Em Atraso</div>
           <div className="text-3xl font-bold text-red-600 mt-2">{dashboard.em_atraso}</div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function ManutencaoPreventivaDashboardPage() {
         </div>
 
         {dashboard.proximas_manutencoes.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-500">
+          <div className="px-6 py-8 text-center text-gray-900">
             Nenhuma manutenção pendente ou em atraso
           </div>
         ) : (
@@ -167,19 +167,19 @@ export default function ManutencaoPreventivaDashboardPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Equipamento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Modelo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Próxima Manutenção
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -191,7 +191,7 @@ export default function ManutencaoPreventivaDashboardPage() {
                       <div className="text-sm font-medium text-gray-900">
                         {prog.equipamento__codigo}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-900">
                         {prog.equipamento__descricao}
                       </div>
                     </td>
@@ -237,7 +237,7 @@ export default function ManutencaoPreventivaDashboardPage() {
           className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Programações</h3>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-900 text-sm">
             Gerenciar todas as programações de manutenção preventiva
           </p>
         </Link>
@@ -247,7 +247,7 @@ export default function ManutencaoPreventivaDashboardPage() {
           className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Histórico</h3>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-900 text-sm">
             Ver histórico de manutenções realizadas e estatísticas
           </p>
         </Link>
@@ -257,7 +257,7 @@ export default function ManutencaoPreventivaDashboardPage() {
           className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Modelos</h3>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-900 text-sm">
             Criar e gerenciar modelos de manutenção preventiva
           </p>
         </Link>

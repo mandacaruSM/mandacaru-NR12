@@ -52,7 +52,7 @@ export default function OperadorDetalhePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Operador #{item.id}</h1>
-          <p className="text-gray-600">Detalhes do operador</p>
+          <p className="text-gray-900">Detalhes do operador</p>
         </div>
         <div className="space-x-3">
           <Link href={`/dashboard/operadores/${item.id}/editar`} className="px-4 py-2 bg-gray-800 text-white rounded-lg">

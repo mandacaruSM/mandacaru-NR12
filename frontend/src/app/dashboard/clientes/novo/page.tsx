@@ -53,7 +53,8 @@ export default function NovoClientePage() {
       console.log('🚀 Enviando requisição para criar cliente...');
       const result = await clientesApi.create(formData);
       console.log('✅ Cliente criado com sucesso:', result);
-      router.push('/dashboard/clientes');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/clientes';
     } catch (err: any) {
       console.error('❌ Erro ao criar cliente:', err);
       setError(err.message || 'Erro ao cadastrar cliente');
@@ -66,7 +67,7 @@ export default function NovoClientePage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
           <Link href="/dashboard/clientes" className="hover:text-blue-600">
             Clientes
           </Link>

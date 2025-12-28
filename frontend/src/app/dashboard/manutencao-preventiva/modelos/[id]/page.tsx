@@ -205,7 +205,7 @@ export default function DetalhesModeloManutencao() {
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{modelo.nome}</h1>
-          <p className="text-gray-600 mt-1">{modelo.descricao}</p>
+          <p className="text-gray-900 mt-1">{modelo.descricao}</p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -239,28 +239,28 @@ export default function DetalhesModeloManutencao() {
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Tipo de Equipamento</div>
+          <div className="text-sm text-gray-900">Tipo de Equipamento</div>
           <div className="text-lg font-bold text-gray-900 mt-1">
             {modelo.tipo_equipamento_nome}
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Tipo de Medição</div>
+          <div className="text-sm text-gray-900">Tipo de Medição</div>
           <div className="text-lg font-bold text-gray-900 mt-1">
             {modelo.tipo_medicao_display}
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Intervalo</div>
+          <div className="text-sm text-gray-900">Intervalo</div>
           <div className="text-lg font-bold text-gray-900 mt-1">
             {formatarLeitura(modelo.intervalo, modelo.tipo_medicao)}
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Tolerância</div>
+          <div className="text-sm text-gray-900">Tolerância</div>
           <div className="text-lg font-bold text-gray-900 mt-1">
             {formatarLeitura(modelo.tolerancia, modelo.tipo_medicao)}
           </div>
@@ -272,7 +272,7 @@ export default function DetalhesModeloManutencao() {
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Itens do Checklist</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-900 mt-1">
               {itens.length} {itens.length === 1 ? 'item' : 'itens'} cadastrados
             </p>
           </div>
@@ -285,7 +285,7 @@ export default function DetalhesModeloManutencao() {
         </div>
 
         {itens.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-12 text-center text-gray-900">
             <p className="text-lg mb-4">Nenhum item cadastrado</p>
             <button
               onClick={() => openItemModal()}
@@ -306,20 +306,20 @@ export default function DetalhesModeloManutencao() {
                     <button
                       onClick={() => moveItem(item.id, 'up')}
                       disabled={index === 0}
-                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       ▲
                     </button>
                     <button
                       onClick={() => moveItem(item.id, 'down')}
                       disabled={index === itens.length - 1}
-                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="text-gray-400 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       ▼
                     </button>
                   </div>
 
-                  <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center font-bold text-gray-600 mr-3">
+                  <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center font-bold text-gray-900 mr-3">
                     {item.ordem}
                   </div>
 
@@ -337,7 +337,7 @@ export default function DetalhesModeloManutencao() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-900">
                       <span>{CATEGORIA_ITEM_LABELS[item.categoria]}</span>
                       <span>•</span>
                       <span>{TIPO_RESPOSTA_LABELS[item.tipo_resposta]}</span>
@@ -385,7 +385,7 @@ export default function DetalhesModeloManutencao() {
               <div className="p-6 space-y-4">
                 {/* Descrição */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Descrição <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -402,7 +402,7 @@ export default function DetalhesModeloManutencao() {
 
                 {/* Instruções */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Instruções
                   </label>
                   <textarea
@@ -418,7 +418,7 @@ export default function DetalhesModeloManutencao() {
 
                 {/* Categoria */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Categoria <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -442,7 +442,7 @@ export default function DetalhesModeloManutencao() {
 
                 {/* Tipo de Resposta */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Tipo de Resposta <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -466,7 +466,7 @@ export default function DetalhesModeloManutencao() {
 
                 {/* Ordem */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Ordem</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Ordem</label>
                   <input
                     type="number"
                     value={itemFormData.ordem}
@@ -490,7 +490,7 @@ export default function DetalhesModeloManutencao() {
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Item obrigatório</label>
+                    <label className="ml-2 text-sm text-gray-900">Item obrigatório</label>
                   </div>
 
                   <div className="flex items-center">
@@ -502,7 +502,7 @@ export default function DetalhesModeloManutencao() {
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Requer observação se não conforme</label>
+                    <label className="ml-2 text-sm text-gray-900">Requer observação se não conforme</label>
                   </div>
 
                   <div className="flex items-center">
@@ -514,7 +514,7 @@ export default function DetalhesModeloManutencao() {
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Item ativo</label>
+                    <label className="ml-2 text-sm text-gray-900">Item ativo</label>
                   </div>
                 </div>
               </div>
@@ -523,7 +523,7 @@ export default function DetalhesModeloManutencao() {
                 <button
                   type="button"
                   onClick={() => setShowItemModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancelar
                 </button>

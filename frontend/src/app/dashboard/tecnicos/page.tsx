@@ -59,7 +59,7 @@ export default function TecnicosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Técnicos 👨‍🔧</h1>
-          <p className="text-gray-600">Total: {items.length}</p>
+          <p className="text-gray-900">Total: {items.length}</p>
         </div>
         <Link
           href="/dashboard/tecnicos/novo"

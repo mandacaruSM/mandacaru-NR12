@@ -190,8 +190,8 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
         throw new Error(text || res.statusText);
       }
 
-      // CORRIGIDO: Usar router.push ao invés de window.location.href
-      router.push('/dashboard/manutencoes');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/manutencoes';
     } catch (e: any) {
       console.error('Erro ao salvar manutenção:', e);
       setErro(e.message || 'Erro ao salvar');
@@ -205,7 +205,7 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando formulário...</p>
+          <p className="mt-4 text-gray-900">Carregando formulário...</p>
         </div>
       </div>
     );
@@ -365,7 +365,7 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
             {form.tipo !== 'preventiva' ? (
               <span className="text-xs text-gray-500">Disponível apenas para manutenções preventivas</span>
             ) : (
-              <span className="text-xs text-gray-600">Informe o horímetro/km para a próxima manutenção preventiva</span>
+              <span className="text-xs text-gray-900">Informe o horímetro/km para a próxima manutenção preventiva</span>
             )}
           </label>
         </div>

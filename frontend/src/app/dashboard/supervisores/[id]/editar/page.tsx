@@ -93,7 +93,7 @@ export default function EditarSupervisorPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Editar Supervisor #{id}</h1>
-          <p className="text-gray-600">Atualize os dados do supervisor</p>
+          <p className="text-gray-900">Atualize os dados do supervisor</p>
         </div>
         <Link href={`/dashboard/supervisores/${id}`} className="text-blue-600 hover:underline">Cancelar</Link>
       </div>

@@ -92,7 +92,7 @@ export default function TecnicoDetailPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Carregando...</span>
+        <span className="ml-3 text-gray-900">Carregando...</span>
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function TecnicoDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Detalhes do Técnico 👨‍🔧</h1>
-          <p className="text-gray-600 mt-1">{item.nome}</p>
+          <p className="text-gray-900 mt-1">{item.nome}</p>
         </div>
         <div className="flex gap-3">
           <Link

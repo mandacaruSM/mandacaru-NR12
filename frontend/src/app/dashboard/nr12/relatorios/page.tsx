@@ -73,7 +73,7 @@ export default function RelatoriosPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando estatísticas...</p>
+          <p className="mt-4 text-gray-900">Carregando estatísticas...</p>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ export default function RelatoriosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Relatórios NR12</h1>
-          <p className="text-gray-600 mt-1">Indicadores e estatísticas dos checklists</p>
+          <p className="text-gray-900 mt-1">Indicadores e estatísticas dos checklists</p>
         </div>
 
         {/* Filtro de Período */}
@@ -132,7 +132,7 @@ export default function RelatoriosPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total de Checklists</p>
+              <p className="text-sm text-gray-900">Total de Checklists</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -145,7 +145,7 @@ export default function RelatoriosPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Taxa de Conformidade</p>
+              <p className="text-sm text-gray-900">Taxa de Conformidade</p>
               <p className="text-3xl font-bold text-green-600 mt-2">{taxaConformidade}%</p>
               <p className="text-xs text-gray-500 mt-1">
                 {stats.aprovados} aprovados
@@ -161,7 +161,7 @@ export default function RelatoriosPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Com Restrições</p>
+              <p className="text-sm text-gray-900">Com Restrições</p>
               <p className="text-3xl font-bold text-yellow-600 mt-2">
                 {stats.aprovados_restricao}
               </p>
@@ -179,7 +179,7 @@ export default function RelatoriosPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Reprovados</p>
+              <p className="text-sm text-gray-900">Reprovados</p>
               <p className="text-3xl font-bold text-red-600 mt-2">{stats.reprovados}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {calcularPercentual(stats.reprovados, stats.total)}% do total
@@ -238,7 +238,7 @@ export default function RelatoriosPage() {
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-800">Cancelados</span>
-              <span className="text-2xl font-bold text-gray-600">{stats.cancelados}</span>
+              <span className="text-2xl font-bold text-gray-900">{stats.cancelados}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div

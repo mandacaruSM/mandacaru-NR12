@@ -71,7 +71,7 @@ export default function AbastecimentoDetalhesPage() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando abastecimento...</p>
+          <p className="mt-4 text-gray-900">Carregando abastecimento...</p>
         </div>
       </div>
     );
@@ -130,7 +130,7 @@ export default function AbastecimentoDetalhesPage() {
               <h2 className="text-lg font-semibold text-gray-900">
                 Abastecimento #{item.id}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-900 mt-1">
                 {formatarData(item.data)}
               </p>
             </div>
@@ -149,7 +149,7 @@ export default function AbastecimentoDetalhesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-lg font-semibold text-gray-900">{item.equipamento_codigo}</p>
-                  <p className="text-sm text-gray-600">{item.equipamento_descricao}</p>
+                  <p className="text-sm text-gray-900">{item.equipamento_descricao}</p>
                 </div>
                 <Link
                   href={`/dashboard/equipamentos/${item.equipamento}`}
@@ -159,7 +159,7 @@ export default function AbastecimentoDetalhesPage() {
                 </Link>
               </div>
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-900">
                   <span className="font-medium">Leitura no abastecimento:</span>{' '}
                   {parseFloat(item.horimetro_km).toFixed(2)}
                 </p>
@@ -172,19 +172,19 @@ export default function AbastecimentoDetalhesPage() {
             <h3 className="text-sm font-medium text-gray-500 mb-3">Valores</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Quantidade</p>
+                <p className="text-sm text-gray-900">Quantidade</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {parseFloat(item.quantidade_litros).toFixed(2)} L
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Valor Total</p>
+                <p className="text-sm text-gray-900">Valor Total</p>
                 <p className="text-2xl font-bold text-green-600 mt-1">
                   {formatarValor(item.valor_total)}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Valor Unitário</p>
+                <p className="text-sm text-gray-900">Valor Unitário</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {item.valor_unitario ? formatarValor(item.valor_unitario) : 'N/A'}<span className="text-sm">/L</span>
                 </p>
@@ -203,7 +203,7 @@ export default function AbastecimentoDetalhesPage() {
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Operador</p>
-                    <p className="text-sm text-gray-600">{item.operador_nome}</p>
+                    <p className="text-sm text-gray-900">{item.operador_nome}</p>
                   </div>
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function AbastecimentoDetalhesPage() {
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Local</p>
-                    <p className="text-sm text-gray-600">{item.local}</p>
+                    <p className="text-sm text-gray-900">{item.local}</p>
                   </div>
                 </div>
               )}
@@ -228,7 +228,7 @@ export default function AbastecimentoDetalhesPage() {
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Nota Fiscal</p>
-                    <p className="text-sm text-gray-600">{item.numero_nota}</p>
+                    <p className="text-sm text-gray-900">{item.numero_nota}</p>
                   </div>
                 </div>
               )}
@@ -240,7 +240,7 @@ export default function AbastecimentoDetalhesPage() {
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Observações</p>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{item.observacoes}</p>
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{item.observacoes}</p>
                   </div>
                 </div>
               )}
@@ -272,7 +272,7 @@ export default function AbastecimentoDetalhesPage() {
 
           {/* Metadados */}
           <div className="pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-900">
               <div>
                 <span className="font-medium">Criado em:</span>{' '}
                 {formatarDataHora(item.created_at)}

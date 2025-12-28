@@ -14,12 +14,14 @@ export async function POST(request: NextRequest) {
 
     if (accessToken) {
       // Faz requisição ao backend Django com JWT no Authorization header
+      // ✅ Auth endpoints precisam de trailing slash pois não passam pelo proxy
       const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
+        redirect: 'follow', // Segue redirects HTTP→HTTPS do Render
       });
 
       if (!response.ok) {

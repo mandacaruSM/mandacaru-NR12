@@ -163,7 +163,7 @@ export default function RelatoriosPage() {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-900 mt-1">
           Análises e relatórios do sistema
         </p>
       </div>
@@ -206,7 +206,7 @@ export default function RelatoriosPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
-                    <p className="text-sm text-gray-600">{report.description}</p>
+                    <p className="text-sm text-gray-900">{report.description}</p>
                   </Link>
                 ))}
               </div>

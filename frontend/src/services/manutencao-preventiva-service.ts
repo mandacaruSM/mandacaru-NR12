@@ -51,13 +51,13 @@ export const getModelosManutencaoPreventiva = async (
 export const getModeloManutencaoPreventivaDetail = async (
   id: number
 ): Promise<ModeloManutencaoPreventivaDetail> => {
-  return api<ModeloManutencaoPreventivaDetail>(`/nr12/modelos-manutencao-preventiva/${id}/`)
+  return api<ModeloManutencaoPreventivaDetail>(`/nr12/modelos-manutencao-preventiva/${id}`)
 }
 
 export const createModeloManutencaoPreventiva = async (
   data: ModeloManutencaoPreventivaFormData
 ): Promise<ModeloManutencaoPreventiva> => {
-  return api<ModeloManutencaoPreventiva>('/nr12/modelos-manutencao-preventiva/', {
+  return api<ModeloManutencaoPreventiva>('/nr12/modelos-manutencao-preventiva', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -68,7 +68,7 @@ export const updateModeloManutencaoPreventiva = async (
   id: number,
   data: Partial<ModeloManutencaoPreventivaFormData>
 ): Promise<ModeloManutencaoPreventiva> => {
-  return api<ModeloManutencaoPreventiva>(`/nr12/modelos-manutencao-preventiva/${id}/`, {
+  return api<ModeloManutencaoPreventiva>(`/nr12/modelos-manutencao-preventiva/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -76,14 +76,14 @@ export const updateModeloManutencaoPreventiva = async (
 }
 
 export const deleteModeloManutencaoPreventiva = async (id: number): Promise<void> => {
-  return api<void>(`/nr12/modelos-manutencao-preventiva/${id}/`, { method: 'DELETE' })
+  return api<void>(`/nr12/modelos-manutencao-preventiva/${id}`, { method: 'DELETE' })
 }
 
 export const duplicarModeloManutencaoPreventiva = async (
   id: number,
   data: { nome: string }
 ): Promise<ModeloManutencaoPreventiva> => {
-  return api<ModeloManutencaoPreventiva>(`/nr12/modelos-manutencao-preventiva/${id}/duplicar/`, {
+  return api<ModeloManutencaoPreventiva>(`/nr12/modelos-manutencao-preventiva/${id}/duplicar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -110,13 +110,13 @@ export const getItensManutencaoPreventiva = async (
 export const getItemManutencaoPreventivaDetail = async (
   id: number
 ): Promise<ItemManutencaoPreventiva> => {
-  return api<ItemManutencaoPreventiva>(`/nr12/itens-manutencao-preventiva/${id}/`)
+  return api<ItemManutencaoPreventiva>(`/nr12/itens-manutencao-preventiva/${id}`)
 }
 
 export const createItemManutencaoPreventiva = async (
   data: ItemManutencaoPreventivaFormData
 ): Promise<ItemManutencaoPreventiva> => {
-  return api<ItemManutencaoPreventiva>('/nr12/itens-manutencao-preventiva/', {
+  return api<ItemManutencaoPreventiva>('/nr12/itens-manutencao-preventiva', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -127,7 +127,7 @@ export const updateItemManutencaoPreventiva = async (
   id: number,
   data: Partial<ItemManutencaoPreventivaFormData>
 ): Promise<ItemManutencaoPreventiva> => {
-  return api<ItemManutencaoPreventiva>(`/nr12/itens-manutencao-preventiva/${id}/`, {
+  return api<ItemManutencaoPreventiva>(`/nr12/itens-manutencao-preventiva/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -135,13 +135,13 @@ export const updateItemManutencaoPreventiva = async (
 }
 
 export const deleteItemManutencaoPreventiva = async (id: number): Promise<void> => {
-  return api<void>(`/nr12/itens-manutencao-preventiva/${id}/`, { method: 'DELETE' })
+  return api<void>(`/nr12/itens-manutencao-preventiva/${id}`, { method: 'DELETE' })
 }
 
 export const reordenarItensManutencaoPreventiva = async (
   data: { ordem: Array<{ id: number; ordem: number }> }
 ): Promise<{ success: boolean; message: string }> => {
-  return api<{ success: boolean; message: string }>('/nr12/itens-manutencao-preventiva/reordenar/', {
+  return api<{ success: boolean; message: string }>('/nr12/itens-manutencao-preventiva/reordenar', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -170,13 +170,13 @@ export const getProgramacoesManutencao = async (
 export const getProgramacaoManutencaoDetail = async (
   id: number
 ): Promise<ProgramacaoManutencao> => {
-  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}/`)
+  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}`)
 }
 
 export const createProgramacaoManutencao = async (
   data: ProgramacaoManutencaoFormData
 ): Promise<ProgramacaoManutencao> => {
-  return api<ProgramacaoManutencao>('/nr12/programacoes-manutencao/', {
+  return api<ProgramacaoManutencao>('/nr12/programacoes-manutencao', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -187,7 +187,7 @@ export const updateProgramacaoManutencao = async (
   id: number,
   data: Partial<ProgramacaoManutencaoFormData>
 ): Promise<ProgramacaoManutencao> => {
-  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}/`, {
+  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -195,14 +195,14 @@ export const updateProgramacaoManutencao = async (
 }
 
 export const deleteProgramacaoManutencao = async (id: number): Promise<void> => {
-  return api<void>(`/nr12/programacoes-manutencao/${id}/`, { method: 'DELETE' })
+  return api<void>(`/nr12/programacoes-manutencao/${id}`, { method: 'DELETE' })
 }
 
 export const atualizarStatusProgramacao = async (
   id: number,
   data: { leitura_atual: number }
 ): Promise<ProgramacaoManutencao> => {
-  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}/atualizar_status/`, {
+  return api<ProgramacaoManutencao>(`/nr12/programacoes-manutencao/${id}/atualizar_status`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -214,7 +214,7 @@ export const atualizarTodasProgramacoes = async (): Promise<{
   message: string
   atualizadas: number
 }> => {
-  const result = await api<{ detail: string }>('/nr12/programacoes-manutencao/atualizar_todas/', {
+  const result = await api<{ detail: string }>('/nr12/programacoes-manutencao/atualizar_todas', {
     method: 'POST',
   })
 
@@ -237,7 +237,7 @@ export const getProgramacoesPendentes = async (
 }
 
 export const getDashboardProgramacoes = async (): Promise<DashboardProgramacoes> => {
-  return api<DashboardProgramacoes>('/nr12/programacoes-manutencao/dashboard/')
+  return api<DashboardProgramacoes>('/nr12/programacoes-manutencao/dashboard')
 }
 
 // ============================================
@@ -266,13 +266,13 @@ export const getManutencoesPreventivasRealizadas = async (
 export const getManutencaoPreventivaRealizadaDetail = async (
   id: number
 ): Promise<ManutencaoPreventivaRealizadaDetail> => {
-  return api<ManutencaoPreventivaRealizadaDetail>(`/nr12/manutencoes-preventivas/${id}/`)
+  return api<ManutencaoPreventivaRealizadaDetail>(`/nr12/manutencoes-preventivas/${id}`)
 }
 
 export const createManutencaoPreventiva = async (
   data: ManutencaoPreventivaRealizadaFormData
 ): Promise<ManutencaoPreventivaRealizada> => {
-  return api<ManutencaoPreventivaRealizada>('/nr12/manutencoes-preventivas/', {
+  return api<ManutencaoPreventivaRealizada>('/nr12/manutencoes-preventivas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -283,7 +283,7 @@ export const updateManutencaoPreventiva = async (
   id: number,
   data: Partial<ManutencaoPreventivaRealizadaFormData>
 ): Promise<ManutencaoPreventivaRealizada> => {
-  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}/`, {
+  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -291,14 +291,14 @@ export const updateManutencaoPreventiva = async (
 }
 
 export const deleteManutencaoPreventiva = async (id: number): Promise<void> => {
-  return api<void>(`/nr12/manutencoes-preventivas/${id}/`, { method: 'DELETE' })
+  return api<void>(`/nr12/manutencoes-preventivas/${id}`, { method: 'DELETE' })
 }
 
 export const finalizarManutencaoPreventiva = async (
   id: number,
   data?: { observacoes_gerais?: string }
 ): Promise<ManutencaoPreventivaRealizada> => {
-  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}/finalizar/`, {
+  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}/finalizar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data || {}),
@@ -309,7 +309,7 @@ export const cancelarManutencaoPreventiva = async (
   id: number,
   data: { motivo: string }
 ): Promise<ManutencaoPreventivaRealizada> => {
-  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}/cancelar/`, {
+  return api<ManutencaoPreventivaRealizada>(`/nr12/manutencoes-preventivas/${id}/cancelar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -348,13 +348,13 @@ export const getRespostasItemManutencao = async (
 export const getRespostaItemManutencaoDetail = async (
   id: number
 ): Promise<RespostaItemManutencao> => {
-  return api<RespostaItemManutencao>(`/nr12/respostas-manutencao/${id}/`)
+  return api<RespostaItemManutencao>(`/nr12/respostas-manutencao/${id}`)
 }
 
 export const createRespostaItemManutencao = async (
   data: RespostaItemManutencaoFormData & { manutencao: number }
 ): Promise<RespostaItemManutencao> => {
-  return api<RespostaItemManutencao>('/nr12/respostas-manutencao/', {
+  return api<RespostaItemManutencao>('/nr12/respostas-manutencao', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -365,7 +365,7 @@ export const updateRespostaItemManutencao = async (
   id: number,
   data: Partial<RespostaItemManutencaoFormData>
 ): Promise<RespostaItemManutencao> => {
-  return api<RespostaItemManutencao>(`/nr12/respostas-manutencao/${id}/`, {
+  return api<RespostaItemManutencao>(`/nr12/respostas-manutencao/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -373,7 +373,7 @@ export const updateRespostaItemManutencao = async (
 }
 
 export const deleteRespostaItemManutencao = async (id: number): Promise<void> => {
-  return api<void>(`/nr12/respostas-manutencao/${id}/`, { method: 'DELETE' })
+  return api<void>(`/nr12/respostas-manutencao/${id}`, { method: 'DELETE' })
 }
 
 // ============================================

@@ -32,7 +32,7 @@ export default function NR12DashboardPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -80,7 +80,7 @@ export default function NR12DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">NR12 - Checklists</h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-900 mt-1">
               Sistema de gestão de checklists de segurança
             </p>
           </div>
@@ -111,7 +111,7 @@ export default function NR12DashboardPage() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                <p className="text-sm text-gray-900 mb-1">{stat.title}</p>
                 <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                 <p className="text-sm text-gray-500 mt-2">{stat.change}</p>
               </div>
@@ -127,7 +127,7 @@ export default function NR12DashboardPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Top Equipamentos</h2>
-            <p className="text-sm text-gray-600">Equipamentos mais inspecionados</p>
+            <p className="text-sm text-gray-900">Equipamentos mais inspecionados</p>
           </div>
           <div className="p-6">
             {stats?.por_equipamento && stats.por_equipamento.length > 0 ? (
@@ -159,7 +159,7 @@ export default function NR12DashboardPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Top Modelos</h2>
-            <p className="text-sm text-gray-600">Modelos mais utilizados</p>
+            <p className="text-sm text-gray-900">Modelos mais utilizados</p>
           </div>
           <div className="p-6">
             {stats?.por_modelo && stats.por_modelo.length > 0 ? (
@@ -238,15 +238,15 @@ export default function NR12DashboardPage() {
               facilitando o registro em campo e aumentando a adesão ao processo.
             </p>
             <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-900">
                 <span>✓</span>
                 <span>Checklist interativo</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-900">
                 <span>✓</span>
                 <span>Envio de fotos</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-900">
                 <span>✓</span>
                 <span>Notificações automáticas</span>
               </div>

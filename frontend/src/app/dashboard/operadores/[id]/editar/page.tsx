@@ -93,7 +93,7 @@ export default function EditarOperadorPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Editar Operador #{id}</h1>
-          <p className="text-gray-600">Atualize os dados do operador</p>
+          <p className="text-gray-900">Atualize os dados do operador</p>
         </div>
         <Link href={`/dashboard/operadores/${id}`} className="text-blue-600 hover:underline">Cancelar</Link>
       </div>

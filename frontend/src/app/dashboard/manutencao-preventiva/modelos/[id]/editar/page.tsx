@@ -129,7 +129,7 @@ export default function EditarModeloManutencaoPreventiva() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Editar Modelo de Manutenção</h1>
-          <p className="text-gray-600 mt-1">Modelo #{id}</p>
+          <p className="text-gray-900 mt-1">Modelo #{id}</p>
         </div>
         <Link
           href={`/dashboard/manutencao-preventiva/modelos/${id}`}
@@ -150,7 +150,7 @@ export default function EditarModeloManutencaoPreventiva() {
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
         {/* Nome */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Nome do Modelo <span className="text-red-500">*</span>
           </label>
           <input
@@ -166,7 +166,7 @@ export default function EditarModeloManutencaoPreventiva() {
 
         {/* Descrição */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Descrição</label>
           <textarea
             name="descricao"
             value={formData.descricao}
@@ -179,7 +179,7 @@ export default function EditarModeloManutencaoPreventiva() {
 
         {/* Tipo de Equipamento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Tipo de Equipamento <span className="text-red-500">*</span>
           </label>
           <select
@@ -200,7 +200,7 @@ export default function EditarModeloManutencaoPreventiva() {
 
         {/* Tipo de Medição */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
             Tipo de Medição <span className="text-red-500">*</span>
           </label>
           <select
@@ -218,7 +218,7 @@ export default function EditarModeloManutencaoPreventiva() {
         {/* Intervalo e Tolerância */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Intervalo <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -232,14 +232,14 @@ export default function EditarModeloManutencaoPreventiva() {
                 step="0.01"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
+              <span className="absolute right-3 top-2 text-gray-900 text-sm">
                 {formData.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Tolerância <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -253,7 +253,7 @@ export default function EditarModeloManutencaoPreventiva() {
                 step="0.01"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
+              <span className="absolute right-3 top-2 text-gray-900 text-sm">
                 {formData.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
               </span>
             </div>
@@ -269,7 +269,7 @@ export default function EditarModeloManutencaoPreventiva() {
             onChange={handleChange}
             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <label className="ml-2 text-sm font-medium text-gray-700">Modelo ativo</label>
+          <label className="ml-2 text-sm font-medium text-gray-900">Modelo ativo</label>
         </div>
 
         {/* Warning Box */}
@@ -302,7 +302,7 @@ export default function EditarModeloManutencaoPreventiva() {
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Link
             href={`/dashboard/manutencao-preventiva/modelos/${id}`}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancelar
           </Link>

@@ -108,7 +108,8 @@ export default function TecnicoForm({ initial, id, mode }: Props) {
         });
       }
 
-      router.push('/dashboard/tecnicos');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/tecnicos';
     } catch (e: any) {
       console.error('Erro ao salvar:', e);
       setErro(e.message || 'Erro ao salvar técnico');

@@ -93,7 +93,7 @@ export default function ModelosManutencaoPreventivaPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Modelos de Manutenção Preventiva</h1>
-          <p className="text-gray-600 mt-1">Templates de manutenção por tipo de equipamento</p>
+          <p className="text-gray-900 mt-1">Templates de manutenção por tipo de equipamento</p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -115,7 +115,7 @@ export default function ModelosManutencaoPreventivaPage() {
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Buscar Modelo
             </label>
             <input
@@ -128,7 +128,7 @@ export default function ModelosManutencaoPreventivaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Status</label>
             <select
               value={filtroAtivo}
               onChange={(e) => setFiltroAtivo(e.target.value)}
@@ -151,7 +151,7 @@ export default function ModelosManutencaoPreventivaPage() {
 
       {/* Modelos Grid */}
       {modelos.length === 0 ? (
-        <div className="bg-white rounded-lg shadow px-6 py-12 text-center text-gray-500">
+        <div className="bg-white rounded-lg shadow px-6 py-12 text-center text-gray-900">
           <p className="text-lg">Nenhum modelo encontrado</p>
           <Link
             href="/dashboard/manutencao-preventiva/modelos/novo"
@@ -181,8 +181,8 @@ export default function ModelosManutencaoPreventivaPage() {
                     {modelo.ativo ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">{modelo.descricao}</p>
-                <div className="flex items-center text-sm text-gray-500">
+                <p className="text-sm text-gray-900 mb-3">{modelo.descricao}</p>
+                <div className="flex items-center text-sm text-gray-900">
                   <span className="font-medium">{modelo.tipo_equipamento_nome}</span>
                 </div>
               </div>
@@ -191,26 +191,26 @@ export default function ModelosManutencaoPreventivaPage() {
               <div className="p-6 bg-gray-50">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tipo de Medição:</span>
+                    <span className="text-gray-900">Tipo de Medição:</span>
                     <span className="font-medium text-gray-900">
                       {modelo.tipo_medicao_display}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Intervalo:</span>
+                    <span className="text-gray-900">Intervalo:</span>
                     <span className="font-medium text-gray-900">
                       {formatarLeitura(modelo.intervalo, modelo.tipo_medicao)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tolerância:</span>
+                    <span className="text-gray-900">Tolerância:</span>
                     <span className="font-medium text-gray-900">
                       {formatarLeitura(modelo.tolerancia, modelo.tipo_medicao)}
                     </span>
                   </div>
                   {modelo.total_itens !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Total de Itens:</span>
+                      <span className="text-gray-900">Total de Itens:</span>
                       <span className="font-medium text-gray-900">{modelo.total_itens}</span>
                     </div>
                   )}
@@ -235,7 +235,7 @@ export default function ModelosManutencaoPreventivaPage() {
                   </button>
                   <Link
                     href={`/dashboard/manutencao-preventiva/modelos/${modelo.id}/editar`}
-                    className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                    className="text-gray-900 hover:text-gray-800 text-sm font-medium"
                   >
                     Editar
                   </Link>

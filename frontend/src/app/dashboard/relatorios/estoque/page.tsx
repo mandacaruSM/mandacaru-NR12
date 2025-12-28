@@ -92,7 +92,7 @@ export default function RelatorioEstoquePage() {
           </div>
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-900">Relatório de Estoque</h1>
-            <p className="text-sm text-gray-600 mt-1">Posição atual de estoque</p>
+            <p className="text-sm text-gray-900 mt-1">Posição atual de estoque</p>
           </div>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function RelatorioEstoquePage() {
       <div className="flex justify-between items-center mb-6 no-print">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Relatório de Estoque</h1>
-          <p className="text-sm text-gray-600 mt-1">Posição atual de estoque</p>
+          <p className="text-sm text-gray-900 mt-1">Posição atual de estoque</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -174,19 +174,19 @@ export default function RelatorioEstoquePage() {
       {/* Resumo */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total de Produtos</p>
+          <p className="text-sm text-gray-900">Total de Produtos</p>
           <p className="text-2xl font-bold text-gray-900">{resumo.total_produtos}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Total de Itens</p>
+          <p className="text-sm text-gray-900">Total de Itens</p>
           <p className="text-2xl font-bold text-blue-900">{resumo.total_itens.toFixed(2)}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Valor Total (Custo)</p>
+          <p className="text-sm text-gray-900">Valor Total (Custo)</p>
           <p className="text-xl font-bold text-green-900">R$ {Number(resumo.valor_total).toFixed(2)}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <p className="text-sm text-gray-600">Produtos em Falta</p>
+          <p className="text-sm text-gray-900">Produtos em Falta</p>
           <p className="text-2xl font-bold text-red-900">{resumo.produtos_falta}</p>
         </div>
       </div>

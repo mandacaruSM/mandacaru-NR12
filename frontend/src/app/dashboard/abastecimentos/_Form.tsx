@@ -243,7 +243,8 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
         await abastecimentosApi.update(id!, payload);
       }
 
-      router.push('/dashboard/abastecimentos');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/abastecimentos';
     } catch (e: any) {
       console.error('Erro ao salvar abastecimento:', e);
       setErro(e.message || 'Erro ao salvar');

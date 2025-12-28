@@ -188,7 +188,7 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
       .text-blue-600 {
         color: #2563eb !important;
       }
-      .text-gray-600 {
+      .text-gray-900 {
         color: #4b5563;
       }
       .text-gray-900 {
@@ -252,7 +252,7 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
           <h1 className="text-2xl font-bold text-gray-900">
             Orçamento {orcamento.numero}
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Criado em {new Date(orcamento.created_at!).toLocaleString('pt-BR')}
           </p>
         </div>
@@ -349,22 +349,22 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Dados do Orçamento</h2>
           <div className="space-y-2">
             <div>
-              <p className="text-xs text-gray-600">Tipo</p>
+              <p className="text-xs text-gray-900">Tipo</p>
               <p className="text-sm text-gray-900 font-medium">{orcamento.tipo_display}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-600">Cliente</p>
+              <p className="text-xs text-gray-900">Cliente</p>
               <p className="text-sm text-gray-900 font-medium">{orcamento.cliente_nome}</p>
             </div>
             {orcamento.empreendimento_nome && (
               <div>
-                <p className="text-xs text-gray-600">Empreendimento</p>
+                <p className="text-xs text-gray-900">Empreendimento</p>
                 <p className="text-sm text-gray-900 font-medium">{orcamento.empreendimento_nome}</p>
               </div>
             )}
             {orcamento.equipamento_codigo && (
               <div>
-                <p className="text-xs text-gray-600">Equipamento</p>
+                <p className="text-xs text-gray-900">Equipamento</p>
                 <p className="text-sm text-gray-900 font-medium">
                   {orcamento.equipamento_codigo} - {orcamento.equipamento_descricao}
                 </p>
@@ -377,27 +377,27 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Datas e Prazos</h2>
           <div className="space-y-2">
             <div>
-              <p className="text-xs text-gray-600">Data de Emissão</p>
+              <p className="text-xs text-gray-900">Data de Emissão</p>
               <p className="text-sm text-gray-900 font-medium">
                 {new Date(orcamento.data_emissao!).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-600">Validade</p>
+              <p className="text-xs text-gray-900">Validade</p>
               <p className="text-sm text-gray-900 font-medium">
                 {new Date(orcamento.data_validade).toLocaleDateString('pt-BR')}
               </p>
             </div>
             {orcamento.data_aprovacao && (
               <div>
-                <p className="text-xs text-gray-600">Data de Aprovação</p>
+                <p className="text-xs text-gray-900">Data de Aprovação</p>
                 <p className="text-sm text-gray-900 font-medium">
                   {new Date(orcamento.data_aprovacao).toLocaleDateString('pt-BR')}
                 </p>
               </div>
             )}
             <div>
-              <p className="text-xs text-gray-600">Prazo de Execução</p>
+              <p className="text-xs text-gray-900">Prazo de Execução</p>
               <p className="text-sm text-gray-900 font-medium">{orcamento.prazo_execucao_dias} dias</p>
             </div>
           </div>
@@ -445,7 +445,7 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
                   <td className="px-2 py-2 text-xs text-gray-900">
                     {item.descricao}
                     {item.produto_codigo && (
-                      <span className="text-gray-600 ml-1">({item.produto_codigo})</span>
+                      <span className="text-gray-900 ml-1">({item.produto_codigo})</span>
                     )}
                   </td>
                   <td className="px-2 py-2 text-xs text-gray-900 text-right">
@@ -480,11 +480,11 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
           </div>
           {(Number((orcamento as any).km_deslocado || 0) > 0 || Number(orcamento.valor_deslocamento || 0) > 0) && (
             <>
-              <div className="flex justify-between text-xs text-gray-600">
+              <div className="flex justify-between text-xs text-gray-900">
                 <span>KM Deslocado:</span>
                 <span>{Number((orcamento as any).km_deslocado || 0).toFixed(2)} km</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-600">
+              <div className="flex justify-between text-xs text-gray-900">
                 <span>Valor do KM:</span>
                 <span>R$ {Number((orcamento as any).valor_km || 0).toFixed(2)}</span>
               </div>
@@ -520,12 +520,12 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações de Controle</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-600">Criado por</p>
+            <p className="text-sm text-gray-900">Criado por</p>
             <p className="text-gray-900">{orcamento.criado_por_nome || '-'}</p>
           </div>
           {orcamento.aprovado_por_nome && (
             <div>
-              <p className="text-sm text-gray-600">Aprovado por</p>
+              <p className="text-sm text-gray-900">Aprovado por</p>
               <p className="text-gray-900">{orcamento.aprovado_por_nome}</p>
             </div>
           )}
@@ -534,7 +534,7 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
 
       {/* Rodapé */}
       <div className="mt-6 pt-4 border-t border-gray-300 text-center">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-gray-900">
           Criado por <span className="font-semibold text-gray-900">Mandacaru Soluções em Mineração</span>
         </p>
         <p className="text-xs text-gray-500 mt-1">

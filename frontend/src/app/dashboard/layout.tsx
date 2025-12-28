@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-900">Carregando...</p>
         </div>
       </div>
     );
@@ -171,7 +171,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors mr-2"
+                className="lg:hidden p-2 text-gray-900 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors mr-2"
                 aria-label="Abrir menu"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </h2>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="hidden sm:block text-sm text-gray-600">
+              <div className="hidden sm:block text-sm text-gray-900">
                 {new Date().toLocaleDateString('pt-BR', {
                   weekday: 'long',
                   year: 'numeric',

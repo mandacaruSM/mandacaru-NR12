@@ -90,11 +90,11 @@ export default function MovimentosPage() {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   <div className="font-medium">{item.produto_codigo}</div>
-                  <div className="text-gray-600">{item.produto_nome}</div>
+                  <div className="text-gray-900">{item.produto_nome}</div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">{item.local_nome}</td>
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{parseFloat(item.quantidade).toFixed(2)}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{item.documento || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{item.documento || '-'}</td>
               </tr>
             ))}
           </tbody>
