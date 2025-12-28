@@ -10,15 +10,29 @@ export async function POST(request: NextRequest) {
     const { username, password } = body;
 
     console.log('🔐 [API Route] Fazendo login no backend...');
+    console.log('🎯 [API Route] URL do backend:', `${API_BASE_URL}/auth/login/`);
 
     // Faz requisição ao backend Django
+    // ✅ Auth endpoints precisam de trailing slash pois não passam pelo proxy
     const response = await fetch(`${API_BASE_URL}/auth/login/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ username, password }),
+      redirect: 'follow', // Segue redirects HTTP→HTTPS do Render
     });
+
+    console.log('📥 [API Route] Status da resposta:', response.status, response.statusText);
+    console.log('📥 [API Route] Content-Type:', response.headers.get('content-type'));
+
+    // Verifica se a resposta é JSON antes de tentar parsear
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ [API Route] Backend retornou HTML em vez de JSON:', text.substring(0, 500));
+      throw new Error(`Backend retornou HTML (status ${response.status}). Verifique NEXT_PUBLIC_API_URL e se o backend está rodando.`);
+    }
 
     const data = await response.json();
 
