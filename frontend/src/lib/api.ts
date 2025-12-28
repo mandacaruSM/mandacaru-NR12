@@ -408,7 +408,7 @@ export type ListParams = {
 export const operadoresApi = {
   async list(params: ListParams = {}) {
     return apiFetch<{ results: Operador[]; count: number }>(
-      `/operadores/${toQuery({
+      `/operadores${toQuery({
         search: params.q,
         ordering: params.ordering,
         page: params.page,
@@ -457,7 +457,7 @@ export const operadoresApi = {
 export const supervisoresApi = {
   async list(params: ListParams = {}) {
     return apiFetch<{ results: Supervisor[]; count: number }>(
-      `/supervisores/${toQuery({
+      `/supervisores${toQuery({
         search: params.q,
         ordering: params.ordering,
         page: params.page,

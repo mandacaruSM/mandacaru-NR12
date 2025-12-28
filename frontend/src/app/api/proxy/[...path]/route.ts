@@ -47,17 +47,16 @@ export async function DELETE(
 
 async function proxyRequest(request: NextRequest, path: string[], method: string) {
   try {
-    // ✅ Extrai path sem /api/proxy
+    // ✅ Extrai path sem /api/proxy - MANTÉM a barra como veio
     const afterProxy = request.nextUrl.pathname.replace(/^\/api\/proxy/, '');
     const queryString = request.nextUrl.search || '';
 
     // Normaliza base URL sem barra no final
     const base = API_BASE_URL.replace(/\/+$/, '');
 
-    // ✅ SEMPRE adiciona trailing slash para o Django (DRF exige)
-    // Frontend chama SEM slash, proxy adiciona ANTES de enviar ao backend
-    const normalized = afterProxy.endsWith('/') ? afterProxy : `${afterProxy}/`;
-    const targetUrl = `${base}${normalized}${queryString}`;
+    // ✅ NÃO modifica a barra - repassa como o frontend enviou
+    // Frontend DEVE enviar com barra para evitar redirect 308
+    const targetUrl = `${base}${afterProxy}${queryString}`;
 
     // Lê cookies de autenticação
     const cookieStore = await cookies();
