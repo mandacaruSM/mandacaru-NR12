@@ -13,6 +13,7 @@ import {
   type LocalEstoque,
 } from '@/lib/api';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 type Props = {
   initial?: Partial<Abastecimento>;
@@ -43,6 +44,7 @@ interface Equipamento {
 
 export default function AbastecimentoForm({ initial, id, mode }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
@@ -239,15 +241,19 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
 
       if (mode === 'create') {
         await abastecimentosApi.create(payload);
+        toast.success('Abastecimento criado com sucesso');
       } else {
         await abastecimentosApi.update(id!, payload);
+        toast.success('Abastecimento atualizado com sucesso');
       }
 
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/abastecimentos';
     } catch (e: any) {
       console.error('Erro ao salvar abastecimento:', e);
-      setErro(e.message || 'Erro ao salvar');
+      const errorMsg = e.message || 'Erro ao salvar';
+      setErro(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }

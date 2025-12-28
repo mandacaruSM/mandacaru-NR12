@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Manutencao, Equipamento, Operador } from '@/types/manutencao';
+import { useToast } from '@/contexts/ToastContext';
 
 type Props = {
   initial?: Partial<Manutencao>;
@@ -25,6 +26,7 @@ interface Empreendimento {
 
 export default function ManutencaoForm({ initial, id, mode }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
@@ -190,11 +192,14 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
         throw new Error(text || res.statusText);
       }
 
+      toast.success(mode === 'create' ? 'Manutenção criada com sucesso' : 'Manutenção atualizada com sucesso');
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/manutencoes';
     } catch (e: any) {
       console.error('Erro ao salvar manutenção:', e);
-      setErro(e.message || 'Erro ao salvar');
+      const errorMsg = e.message || 'Erro ao salvar';
+      setErro(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }

@@ -4,6 +4,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientesApi, Cliente } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
 
 const UF_OPTIONS = [
@@ -14,6 +15,7 @@ const UF_OPTIONS = [
 
 export default function NovoClientePage() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,11 +55,14 @@ export default function NovoClientePage() {
       console.log('🚀 Enviando requisição para criar cliente...');
       const result = await clientesApi.create(formData);
       console.log('✅ Cliente criado com sucesso:', result);
+      toast.success('Cliente criado com sucesso');
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/clientes';
     } catch (err: any) {
       console.error('❌ Erro ao criar cliente:', err);
-      setError(err.message || 'Erro ao cadastrar cliente');
+      const errorMsg = err.message || 'Erro ao cadastrar cliente';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

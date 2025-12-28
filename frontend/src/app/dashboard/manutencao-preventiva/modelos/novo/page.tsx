@@ -7,9 +7,11 @@ import Link from 'next/link'
 import { createModeloManutencaoPreventiva } from '@/services/manutencao-preventiva-service'
 import type { ModeloManutencaoPreventivaFormData } from '@/types/manutencao-preventiva'
 import { tiposEquipamentoApi, type TipoEquipamento } from '@/lib/api'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function NovoModeloManutencaoPreventiva() {
   const router = useRouter()
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tiposEquipamento, setTiposEquipamento] = useState<TipoEquipamento[]>([])
@@ -70,12 +72,14 @@ export default function NovoModeloManutencaoPreventiva() {
       }
 
       const modelo = await createModeloManutencaoPreventiva(formData)
-      alert('Modelo criado com sucesso!')
+      toast.success('Modelo criado com sucesso')
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = `/dashboard/manutencao-preventiva/modelos/${modelo.id}`
     } catch (err: any) {
       console.error('Erro ao criar modelo:', err)
-      setError(err.message || 'Erro ao criar modelo')
+      const errorMsg = err.message || 'Erro ao criar modelo'
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }

@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { orcamentosApi, cadastroApi, empreendimentosApi, equipamentosApi, almoxarifadoApi } from '@/lib/api';
 import type { Cliente, Empreendimento, Equipamento, ItemOrcamento, Produto } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function NovoOrcamentoPage() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
@@ -152,12 +154,14 @@ export default function NovoOrcamentoPage() {
       };
       console.log('Payload enviado:', JSON.stringify(payload, null, 2));
       await orcamentosApi.create(payload as any);
+      toast.success('Orçamento criado com sucesso');
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/orcamentos';
     } catch (error: any) {
       console.error('Erro ao criar orçamento:', error);
       console.error('Mensagem de erro:', error.message);
-      alert(`Erro ao criar orçamento: ${error.message || 'Erro desconhecido'}`);
+      const errorMsg = error.message || 'Erro desconhecido';
+      toast.error(`Erro ao criar orçamento: ${errorMsg}`);
     } finally {
       setLoading(false);
     }

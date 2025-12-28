@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Tecnico {
   id?: number;
@@ -42,6 +43,7 @@ type Props = {
 
 export default function TecnicoForm({ initial, id, mode }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -108,11 +110,14 @@ export default function TecnicoForm({ initial, id, mode }: Props) {
         });
       }
 
+      toast.success(mode === 'create' ? 'Técnico criado com sucesso' : 'Técnico atualizado com sucesso');
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/tecnicos';
     } catch (e: any) {
       console.error('Erro ao salvar:', e);
-      setErro(e.message || 'Erro ao salvar técnico');
+      const errorMsg = e.message || 'Erro ao salvar técnico';
+      setErro(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
