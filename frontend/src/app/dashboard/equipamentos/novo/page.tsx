@@ -154,8 +154,8 @@ export default function NovoEquipamentoPage() {
       }
 
       toast.success('Equipamento cadastrado com sucesso!');
-      router.refresh(); // Força recarregamento dos dados
-      router.push('/dashboard/equipamentos');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/equipamentos';
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || 'Erro ao cadastrar equipamento';
       setError(errorMsg);

@@ -84,8 +84,8 @@ export default function NovoSupervisorPage() {
         ativo,
       } as any);
       toast.success('Supervisor criado com sucesso');
-      router.refresh(); // Força recarregamento dos dados
-      router.push('/dashboard/supervisores');
+      // Força reload completo da página para garantir que a listagem seja atualizada
+      window.location.href = '/dashboard/supervisores';
     } catch (e: any) {
       toast.error(e.message || 'Erro ao criar supervisor');
     } finally {
