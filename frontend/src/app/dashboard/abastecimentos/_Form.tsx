@@ -371,7 +371,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               type="date"
               value={form.data ?? ''}
               onChange={e => onChange('data', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required
             />
           </label>
@@ -384,11 +384,11 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               min="0"
               value={form.horimetro_km ?? ''}
               onChange={e => onChange('horimetro_km', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Ex: 1250.50"
               required
             />
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-900">
               Informe a leitura do horímetro/odômetro no momento do abastecimento
             </span>
           </label>
@@ -422,12 +422,12 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               ))}
             </select>
             {empreendimentoSelecionado && (
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-gray-900">
                 Mostrando operadores vinculados ao empreendimento selecionado
               </span>
             )}
             {clienteSelecionado && !empreendimentoSelecionado && (
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-gray-900">
                 Mostrando operadores vinculados ao cliente selecionado
               </span>
             )}
@@ -447,7 +447,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               min="0"
               value={form.quantidade_litros ?? ''}
               onChange={e => onChange('quantidade_litros', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="0.00"
               required
             />
@@ -461,7 +461,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               min="0"
               value={form.valor_total ?? ''}
               onChange={e => onChange('valor_total', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="0.00"
               required
             />
@@ -475,7 +475,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               disabled
               className="border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-gray-900 cursor-not-allowed"
             />
-            <span className="text-xs text-gray-600">Calculado automaticamente</span>
+            <span className="text-xs text-gray-900">Calculado automaticamente</span>
           </label>
         </div>
       </div>
@@ -500,7 +500,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
                     </option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-gray-900">
                   Vincule a um produto do estoque para controle automático
                 </span>
               </label>
@@ -521,7 +521,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
                     </option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-gray-900">
                   Local de onde saiu o combustível (Tanque/Posto)
                 </span>
               </label>
@@ -541,7 +541,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
                 type="text"
                 value={form.local ?? ''}
                 onChange={e => onChange('local', e.target.value)}
-                className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Ex: Posto Shell - BR 101"
               />
             </label>
@@ -552,7 +552,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
                 type="text"
                 value={form.numero_nota ?? ''}
                 onChange={e => onChange('numero_nota', e.target.value)}
-                className="border border-gray-300 rounded-lg p-2.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Ex: 12345"
               />
             </label>
@@ -563,7 +563,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
             <textarea
               value={form.observacoes ?? ''}
               onChange={e => onChange('observacoes', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 text-gray-900 min-h-[100px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 min-h-[100px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Observações adicionais..."
             />
           </label>

@@ -109,8 +109,16 @@ export default function NovaProgramacaoManutencao() {
 
     // Filtrar modelos compatíveis com o tipo do equipamento
     if (equipamento) {
+      const tipoEquipamentoId = (equipamento as any).tipo_equipamento_id || (equipamento as any).tipo_equipamento || (equipamento as any).tipo
+      console.log('🔍 Debug filtro modelos:', {
+        equipamento,
+        tipoEquipamentoId,
+        modelos,
+        modelosFiltrados: modelos.filter((m) => m.tipo_equipamento === tipoEquipamentoId)
+      })
+
       const modelosCompativeis = modelos.filter(
-        (m) => m.tipo_equipamento === (equipamento as any).tipo_equipamento_id
+        (m) => m.tipo_equipamento === tipoEquipamentoId
       )
       if (modelosCompativeis.length > 0 && !modelosCompativeis.find((m) => m.id === formData.modelo)) {
         setFormData((prev) => ({ ...prev, modelo: 0 }))
@@ -162,8 +170,25 @@ export default function NovaProgramacaoManutencao() {
   }
 
   const modelosFiltrados = selectedEquipamento
-    ? modelos.filter((m) => m.tipo_equipamento === (selectedEquipamento as any).tipo_equipamento_id)
+    ? modelos.filter((m) => {
+        const tipoEquipamentoId = (selectedEquipamento as any).tipo_equipamento_id || (selectedEquipamento as any).tipo_equipamento || (selectedEquipamento as any).tipo
+        console.log('🔍 Comparando modelo:', {
+          modeloNome: m.nome,
+          modeloTipoEquipamento: m.tipo_equipamento,
+          equipamentoTipoId: tipoEquipamentoId,
+          match: m.tipo_equipamento === tipoEquipamentoId
+        })
+        return m.tipo_equipamento === tipoEquipamentoId
+      })
     : modelos
+
+  // Log adicional para debug
+  console.log('📊 Estado atual:', {
+    selectedEquipamento,
+    totalModelos: modelos.length,
+    modelosFiltrados: modelosFiltrados.length,
+    modelos: modelos.map(m => ({ id: m.id, nome: m.nome, tipo_equipamento: m.tipo_equipamento }))
+  })
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -171,7 +196,7 @@ export default function NovaProgramacaoManutencao() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Nova Programação de Manutenção</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-900 mt-1">
             Agende manutenções preventivas para um equipamento
           </p>
         </div>
@@ -207,11 +232,11 @@ export default function NovaProgramacaoManutencao() {
               setSelectedEquipamento(null)
             }}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent !text-gray-900"
           >
-            <option value="" className="text-gray-900">Selecione um cliente</option>
+            <option value="" className="!text-gray-900 bg-white">Selecione um cliente</option>
             {clientes.map((cliente) => (
-              <option key={cliente.id} value={cliente.id} className="text-gray-900">
+              <option key={cliente.id} value={cliente.id} className="!text-gray-900 bg-white">
                 {(cliente as any).nome}
               </option>
             ))}
@@ -233,13 +258,13 @@ export default function NovaProgramacaoManutencao() {
             }}
             required
             disabled={!selectedCliente}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed !text-gray-900"
           >
-            <option value="" className="text-gray-900">
+            <option value="" className="!text-gray-900 bg-white">
               {selectedCliente ? 'Selecione um empreendimento' : 'Selecione primeiro um cliente'}
             </option>
             {empreendimentos.map((empreendimento) => (
-              <option key={empreendimento.id} value={empreendimento.id} className="text-gray-900">
+              <option key={empreendimento.id} value={empreendimento.id} className="!text-gray-900 bg-white">
                 {empreendimento.nome}
               </option>
             ))}
@@ -256,13 +281,13 @@ export default function NovaProgramacaoManutencao() {
             onChange={(e) => handleEquipamentoChange(parseInt(e.target.value))}
             required
             disabled={!selectedEmpreendimento}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed !text-gray-900"
           >
-            <option value="" className="text-gray-900">
+            <option value="" className="!text-gray-900 bg-white">
               {selectedEmpreendimento ? 'Selecione um equipamento' : 'Selecione primeiro um empreendimento'}
             </option>
             {equipamentos.map((equipamento) => (
-              <option key={equipamento.id} value={equipamento.id} className="text-gray-900">
+              <option key={equipamento.id} value={equipamento.id} className="!text-gray-900 bg-white">
                 {equipamento.codigo} - {equipamento.descricao}
               </option>
             ))}
@@ -304,15 +329,15 @@ export default function NovaProgramacaoManutencao() {
             onChange={(e) => handleModeloChange(parseInt(e.target.value))}
             required
             disabled={!selectedEquipamento}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed !text-gray-900"
           >
-            <option value="" className="text-gray-900">
+            <option value="" className="!text-gray-900 bg-white">
               {selectedEquipamento
                 ? 'Selecione um modelo'
                 : 'Selecione primeiro um equipamento'}
             </option>
             {modelosFiltrados.map((modelo) => (
-              <option key={modelo.id} value={modelo.id} className="text-gray-900">
+              <option key={modelo.id} value={modelo.id} className="!text-gray-900 bg-white">
                 {modelo.nome}
               </option>
             ))}
@@ -373,15 +398,15 @@ export default function NovaProgramacaoManutencao() {
               required
               min="0"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent !text-gray-900"
             />
             {selectedModelo && (
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
+              <span className="absolute right-3 top-2 text-gray-900 text-sm">
                 {selectedModelo.tipo_medicao === 'HORIMETRO' ? 'horas' : 'km'}
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Leitura atual do {selectedModelo?.tipo_medicao === 'HORIMETRO' ? 'horímetro' : 'odômetro'} do equipamento
           </p>
         </div>
@@ -423,8 +448,8 @@ export default function NovaProgramacaoManutencao() {
             onChange={(e) => setFormData((prev) => ({ ...prev, ativo: e.target.checked }))}
             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <label className="ml-2 text-sm font-medium text-gray-700">Programação ativa</label>
-          <p className="ml-2 text-sm text-gray-500">
+          <label className="ml-2 text-sm font-medium text-gray-900">Programação ativa</label>
+          <p className="ml-2 text-sm text-gray-900">
             (Somente programações ativas geram alertas e permitem execução)
           </p>
         </div>
@@ -456,7 +481,7 @@ export default function NovaProgramacaoManutencao() {
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Link
             href="/dashboard/manutencao-preventiva/programacoes"
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancelar
           </Link>

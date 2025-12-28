@@ -31,6 +31,7 @@ async function apiFetchBase<T>(
   const config: RequestInit = {
     ...fetchOptions,
     credentials: 'include', // Envia cookies automaticamente
+    redirect: 'manual', // ✅ CRÍTICO: Bloqueia redirects silenciosos
     headers: {
       'Content-Type': 'application/json',
       ...fetchOptions.headers,
