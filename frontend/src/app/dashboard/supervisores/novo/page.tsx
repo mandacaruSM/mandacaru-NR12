@@ -84,6 +84,7 @@ export default function NovoSupervisorPage() {
         ativo,
       } as any);
       toast.success('Supervisor criado com sucesso');
+      router.refresh(); // Força recarregamento dos dados
       router.push('/dashboard/supervisores');
     } catch (e: any) {
       toast.error(e.message || 'Erro ao criar supervisor');
@@ -97,7 +98,7 @@ export default function NovoSupervisorPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Novo Supervisor</h1>
-          <p className="text-gray-600">Cadastro básico de supervisor</p>
+          <p className="text-gray-900">Cadastro básico de supervisor</p>
         </div>
         <Link href="/dashboard/supervisores" className="text-blue-600 hover:underline">
           Voltar
