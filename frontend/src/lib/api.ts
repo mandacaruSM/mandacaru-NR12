@@ -422,7 +422,7 @@ export const operadoresApi = {
     return apiFetch<Operador>(`/operadores/${id}`);
   },
   async create(data: Partial<Operador>) {
-    return apiFetch<Operador>(`/operadores/`, {
+    return apiFetch<Operador>(`/operadores`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -469,7 +469,7 @@ export const supervisoresApi = {
     return apiFetch<Supervisor>(`/supervisores/${id}`);
   },
   async create(data: Partial<Supervisor>) {
-    return apiFetch<Supervisor>(`/supervisores/`, {
+    return apiFetch<Supervisor>(`/supervisores`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
