@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ordensServicoApi, tecnicosApi, type OrdemServico } from '@/lib/api';
+import { ordensServicoApi, tecnicosApi, itensOrdemServicoApi, produtosApi, type OrdemServico, type ItemOrdemServico, type Produto } from '@/lib/api';
 
 export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -13,10 +13,21 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
   const [tecnicoSelecionado, setTecnicoSelecionado] = useState<number | undefined>();
   const [valorAdicional, setValorAdicional] = useState(0);
   const [observacoes, setObservacoes] = useState('');
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<ItemOrdemServico | null>(null);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [itemForm, setItemForm] = useState<Partial<ItemOrdemServico>>({
+    tipo: 'SERVICO',
+    descricao: '',
+    quantidade: 1,
+    valor_unitario: 0,
+    executado: false,
+  });
 
   useEffect(() => {
     loadOrdemServico();
     loadTecnicos();
+    loadProdutos();
   }, [id]);
 
   async function loadOrdemServico() {
@@ -40,6 +51,89 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
       setTecnicos(Array.isArray(data) ? data : (data as any).results || []);
     } catch (error) {
       console.error('Erro ao carregar técnicos:', error);
+    }
+  }
+
+  async function loadProdutos() {
+    try {
+      const data = await produtosApi.list();
+      setProdutos(Array.isArray(data) ? data : (data as any).results || []);
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+    }
+  }
+
+  function handleNovoItem() {
+    setEditingItem(null);
+    setItemForm({
+      tipo: 'SERVICO',
+      descricao: '',
+      quantidade: 1,
+      valor_unitario: 0,
+      executado: false,
+    });
+    setShowItemModal(true);
+  }
+
+  function handleEditarItem(item: ItemOrdemServico) {
+    setEditingItem(item);
+    setItemForm({
+      tipo: item.tipo,
+      descricao: item.descricao,
+      quantidade: item.quantidade,
+      valor_unitario: item.valor_unitario,
+      produto: item.produto,
+      observacao: item.observacao,
+      executado: item.executado,
+    });
+    setShowItemModal(true);
+  }
+
+  async function handleSalvarItem() {
+    try {
+      const data = {
+        ...itemForm,
+        ordem_servico: Number(id),
+      };
+
+      if (editingItem) {
+        await itensOrdemServicoApi.update(editingItem.id!, data);
+        alert('Item atualizado com sucesso!');
+      } else {
+        await itensOrdemServicoApi.create(data);
+        alert('Item adicionado com sucesso!');
+      }
+
+      setShowItemModal(false);
+      loadOrdemServico();
+    } catch (error) {
+      console.error('Erro ao salvar item:', error);
+      alert('Erro ao salvar item');
+    }
+  }
+
+  async function handleDeletarItem(item: ItemOrdemServico) {
+    if (!confirm(`Deseja realmente excluir o item "${item.descricao}"?`)) return;
+
+    try {
+      await itensOrdemServicoApi.delete(item.id!);
+      alert('Item excluído com sucesso!');
+      loadOrdemServico();
+    } catch (error) {
+      console.error('Erro ao deletar item:', error);
+      alert('Erro ao deletar item');
+    }
+  }
+
+  async function handleToggleExecutado(item: ItemOrdemServico) {
+    try {
+      await itensOrdemServicoApi.update(item.id!, {
+        executado: !item.executado,
+      });
+      loadOrdemServico();
+    } catch (error) {
+      console.error('Erro ao atualizar item:', error);
+      alert('Erro ao atualizar item');
     }
   }
 
@@ -493,7 +587,20 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
 
       {/* Itens */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Itens</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Itens</h2>
+          {(os.status === 'ABERTA' || os.status === 'EM_EXECUCAO') && (
+            <button
+              onClick={handleNovoItem}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 no-print"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Adicionar Item
+            </button>
+          )}
+        </div>
         {os.itens && os.itens.length > 0 ? (
           <table className="min-w-full">
             <thead className="bg-gray-50">
@@ -516,6 +623,11 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-900 uppercase">
                   Executado
                 </th>
+                {(os.status === 'ABERTA' || os.status === 'EM_EXECUCAO') && (
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-900 uppercase no-print">
+                    Ações
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -526,6 +638,9 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {item.descricao}
+                    {item.observacao && (
+                      <div className="text-xs text-gray-500 mt-1">{item.observacao}</div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-right">
                     {item.quantidade}
@@ -537,14 +652,48 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
                     R$ {Number(item.valor_total || 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900 text-center">
-                    {item.executado ? '✓' : '—'}
+                    <button
+                      onClick={() => handleToggleExecutado(item)}
+                      className={`px-3 py-1 rounded text-xs ${
+                        item.executado
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                      disabled={os.status === 'CONCLUIDA' || os.status === 'CANCELADA'}
+                    >
+                      {item.executado ? '✓ Executado' : '○ Pendente'}
+                    </button>
                   </td>
+                  {(os.status === 'ABERTA' || os.status === 'EM_EXECUCAO') && (
+                    <td className="px-4 py-3 text-sm text-center no-print">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => handleEditarItem(item)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Editar"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeletarItem(item)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Excluir"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="text-gray-900">Nenhum item</p>
+          <p className="text-gray-900">Nenhum item adicionado</p>
         )}
       </div>
 
@@ -616,6 +765,168 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
         </p>
       </div>
       </div>
+
+      {/* Modal de Adicionar/Editar Item */}
+      {showItemModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                {editingItem ? 'Editar Item' : 'Adicionar Item'}
+              </h2>
+
+              <div className="space-y-4">
+                {/* Tipo */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Tipo *
+                  </label>
+                  <select
+                    value={itemForm.tipo}
+                    onChange={(e) => setItemForm({ ...itemForm, tipo: e.target.value as 'SERVICO' | 'PRODUTO' })}
+                    className="w-full px-3 py-2 border rounded text-gray-900"
+                  >
+                    <option value="SERVICO">Serviço</option>
+                    <option value="PRODUTO">Produto</option>
+                  </select>
+                </div>
+
+                {/* Produto (se tipo = PRODUTO) */}
+                {itemForm.tipo === 'PRODUTO' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Produto
+                    </label>
+                    <select
+                      value={itemForm.produto || ''}
+                      onChange={(e) => {
+                        const produtoId = Number(e.target.value);
+                        const produto = produtos.find((p) => p.id === produtoId);
+                        setItemForm({
+                          ...itemForm,
+                          produto: produtoId || undefined,
+                          descricao: produto?.nome || itemForm.descricao,
+                          valor_unitario: produto?.preco_venda || itemForm.valor_unitario,
+                        });
+                      }}
+                      className="w-full px-3 py-2 border rounded text-gray-900"
+                    >
+                      <option value="">Selecione um produto (opcional)</option>
+                      {produtos.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.codigo} - {p.nome} (R$ {Number(p.preco_venda || 0).toFixed(2)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Descrição */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Descrição *
+                  </label>
+                  <input
+                    type="text"
+                    value={itemForm.descricao}
+                    onChange={(e) => setItemForm({ ...itemForm, descricao: e.target.value })}
+                    className="w-full px-3 py-2 border rounded text-gray-900"
+                    required
+                  />
+                </div>
+
+                {/* Quantidade e Valor Unitário */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Quantidade *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={itemForm.quantidade}
+                      onChange={(e) => setItemForm({ ...itemForm, quantidade: Number(e.target.value) })}
+                      className="w-full px-3 py-2 border rounded text-gray-900"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Valor Unitário *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={itemForm.valor_unitario}
+                      onChange={(e) => setItemForm({ ...itemForm, valor_unitario: Number(e.target.value) })}
+                      className="w-full px-3 py-2 border rounded text-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Valor Total (calculado) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Valor Total
+                  </label>
+                  <input
+                    type="text"
+                    value={`R$ ${((itemForm.quantidade || 0) * (itemForm.valor_unitario || 0)).toFixed(2)}`}
+                    disabled
+                    className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-900"
+                  />
+                </div>
+
+                {/* Observação */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Observação
+                  </label>
+                  <textarea
+                    value={itemForm.observacao || ''}
+                    onChange={(e) => setItemForm({ ...itemForm, observacao: e.target.value })}
+                    className="w-full px-3 py-2 border rounded text-gray-900"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Executado */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={itemForm.executado}
+                    onChange={(e) => setItemForm({ ...itemForm, executado: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label className="text-sm text-gray-900">
+                    Marcar como executado
+                  </label>
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  onClick={() => setShowItemModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-900 rounded hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSalvarItem}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={!itemForm.descricao || !itemForm.quantidade || itemForm.valor_unitario === undefined}
+                >
+                  {editingItem ? 'Atualizar' : 'Adicionar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @media print {

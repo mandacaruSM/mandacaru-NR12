@@ -120,77 +120,65 @@ export default function OrdensServicoPage() {
       </div>
 
       {/* Tabela */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
         {loading ? (
           <div className="p-8 text-center text-gray-900">Carregando...</div>
         ) : ordens.length === 0 ? (
           <div className="p-8 text-center text-gray-900">Nenhuma ordem de serviço encontrada</div>
         ) : (
-          <table className="min-w-full">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Número
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
-                  Orçamento
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Cliente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Equipamento
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
-                  Técnico
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Valor
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
-                  Data Prevista
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                  Data
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-900 uppercase">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200">
               {ordens.map((os) => (
                 <tr key={os.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                     {os.numero}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {os.orcamento_numero}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 py-3 text-sm text-gray-900 max-w-xs truncate" title={os.cliente_nome}>
                     {os.cliente_nome}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                     {os.equipamento_codigo || '-'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {os.tecnico_nome || 'Não atribuído'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                     R$ {Number(os.valor_final || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded text-xs ${getStatusBadge(os.status)}`}>
                       {os.status_display}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                     {new Date(os.data_prevista).toLocaleDateString('pt-BR')}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-3 py-3 whitespace-nowrap text-sm">
                     <Link
                       href={`/dashboard/ordens-servico/${os.id}`}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors"
                     >
                       Ver Detalhes
                     </Link>

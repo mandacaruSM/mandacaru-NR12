@@ -138,7 +138,7 @@ export interface User {
 
 export const authApi = {
   login: async (credentials: LoginCredentials) => {
-    return apiFetch<{ detail: string }>('/auth/login', {
+    return apiFetch<{ detail: string }>('/auth/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
       requireAuth: false,
@@ -146,7 +146,7 @@ export const authApi = {
   },
 
   logout: async () => {
-    return apiFetch<{ detail: string }>('/auth/logout', {
+    return apiFetch<{ detail: string }>('/auth/logout/', {
       method: 'POST',
     });
   },
@@ -220,7 +220,7 @@ export const clientesApi = {
   },
 
   create: async (data: Partial<Cliente>) => {
-    return apiFetch<Cliente>('/cadastro/clientes', {
+    return apiFetch<Cliente>('/cadastro/clientes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -287,7 +287,7 @@ export const empreendimentosApi = {
   },
 
   create: async (data: Partial<Empreendimento>) => {
-    return apiFetch<Empreendimento>('/cadastro/empreendimentos', {
+    return apiFetch<Empreendimento>('/cadastro/empreendimentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -330,7 +330,7 @@ export const tiposEquipamentoApi = {
   },
 
   create: async (data: Partial<TipoEquipamento>) => {
-    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento', {
+    return apiFetch<TipoEquipamento>('/equipamentos/tipos-equipamento/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -428,7 +428,7 @@ export const operadoresApi = {
     return apiFetch<Operador>(`/operadores/${id}`);
   },
   async create(data: Partial<Operador>) {
-    return apiFetch<Operador>(`/operadores`, {
+    return apiFetch<Operador>(`/operadores/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -475,7 +475,7 @@ export const supervisoresApi = {
     return apiFetch<Supervisor>(`/supervisores/${id}`);
   },
   async create(data: Partial<Supervisor>) {
-    return apiFetch<Supervisor>(`/supervisores`, {
+    return apiFetch<Supervisor>(`/supervisores/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -539,7 +539,7 @@ export const equipamentosApi = {
   },
 
   create: async (data: Partial<Equipamento>) => {
-    return apiFetch<Equipamento>('/equipamentos/equipamentos', {
+    return apiFetch<Equipamento>('/equipamentos/equipamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -646,7 +646,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ModeloChecklist>) => {
-      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist', {
+      return apiFetch<ModeloChecklist>('/nr12/modelos-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -687,7 +687,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ItemChecklist>) => {
-      return apiFetch<ItemChecklist>('/nr12/itens-checklist', {
+      return apiFetch<ItemChecklist>('/nr12/itens-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -707,7 +707,7 @@ export const nr12Api = {
     },
 
     reordenar: async (itens: { id: number; ordem: number }[]) => {
-      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar', {
+      return apiFetch<{ detail: string }>('/nr12/itens-checklist/reordenar/', {
         method: 'POST',
         body: JSON.stringify({ itens }),
       });
@@ -740,7 +740,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<ChecklistRealizado>) => {
-      return apiFetch<ChecklistRealizado>('/nr12/checklists', {
+      return apiFetch<ChecklistRealizado>('/nr12/checklists/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -778,7 +778,7 @@ export const nr12Api = {
     },
 
     create: async (data: Partial<RespostaItemChecklist>) => {
-      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist', {
+      return apiFetch<RespostaItemChecklist>('/nr12/respostas-checklist/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -799,7 +799,7 @@ export const manutencoesApi = {
     return apiFetch<any>(`/manutencoes/${id}`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/manutencoes', {
+    return apiFetch<any>('/manutencoes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -829,7 +829,7 @@ export const tecnicosApi = {
     return apiFetch<any>(`/tecnicos/${id}`);
   },
   create: async (data: any) => {
-    return apiFetch<any>('/tecnicos', {
+    return apiFetch<any>('/tecnicos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -902,7 +902,7 @@ export const abastecimentosApi = {
 
   create: async (data: FormData | any) => {
     const isFormData = data instanceof FormData;
-    return apiFetch<Abastecimento>('/abastecimentos', {
+    return apiFetch<Abastecimento>('/abastecimentos/', {
       method: 'POST',
       body: isFormData ? data : JSON.stringify(data),
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
@@ -1057,7 +1057,7 @@ export const almoxarifadoApi = {
     },
 
     create: async (data: any) => {
-      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos', {
+      return apiFetch<MovimentoEstoque>('/almoxarifado/movimentos/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1146,7 +1146,7 @@ export const orcamentosApi = {
   },
 
   create: async (data: Partial<Orcamento>) => {
-    return apiFetch<Orcamento>('/orcamentos', {
+    return apiFetch<Orcamento>('/orcamentos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -1272,30 +1272,30 @@ export const ordensServicoApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}`);
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}/`);
   },
 
   update: async (id: number, data: Partial<OrdemServico>) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   iniciar: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}iniciar/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}/iniciar/`, {
       method: 'POST',
     });
   },
 
   concluir: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}concluir/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}/concluir/`, {
       method: 'POST',
     });
   },
 
   cancelar: async (id: number) => {
-    return apiFetch<OrdemServico>(`/ordens-servico/${id}cancelar/`, {
+    return apiFetch<OrdemServico>(`/ordens-servico/${id}/cancelar/`, {
       method: 'POST',
     });
   },
@@ -1308,6 +1308,37 @@ export const ordensServicoApi = {
       concluidas: number;
       canceladas: number;
     }>('/ordens-servico/resumo/');
+  },
+};
+
+export const itensOrdemServicoApi = {
+  list: async (ordemServicoId?: number) => {
+    const query = ordemServicoId ? `?ordem_servico=${ordemServicoId}` : '';
+    return apiFetch<ItemOrdemServico[]>(`/itens/${query}`);
+  },
+
+  get: async (id: number) => {
+    return apiFetch<ItemOrdemServico>(`/itens/${id}/`);
+  },
+
+  create: async (data: Partial<ItemOrdemServico>) => {
+    return apiFetch<ItemOrdemServico>('/itens/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: number, data: Partial<ItemOrdemServico>) => {
+    return apiFetch<ItemOrdemServico>(`/itens/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: number) => {
+    return apiFetch<void>(`/itens/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
@@ -1379,6 +1410,48 @@ export interface ContaPagar {
   updated_at?: string;
 }
 
+export interface Pagamento {
+  id?: number;
+  numero?: string;
+  conta_receber: number;
+  conta_receber_numero?: string;
+  cliente_nome?: string;
+  cliente_documento?: string;
+  tipo_pagamento: 'TOTAL' | 'ADIANTAMENTO' | 'PARCIAL';
+  tipo_pagamento_display?: string;
+  forma_pagamento: 'DINHEIRO' | 'PIX' | 'CHEQUE' | 'BOLETO' | 'DEPOSITO' | 'TRANSFERENCIA' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO';
+  forma_pagamento_display?: string;
+  status: 'PENDENTE' | 'CONFIRMADO' | 'CANCELADO';
+  status_display?: string;
+  valor: number;
+  valor_desconto: number;
+  valor_final?: number;
+  data_pagamento: string;
+  numero_parcela?: number;
+  total_parcelas?: number;
+  numero_cheque?: string;
+  banco_cheque?: string;
+  data_compensacao?: string;
+  numero_documento?: string;
+  comprovante?: string;
+  observacoes?: string;
+  registrado_por?: number;
+  registrado_por_nome?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PagamentoParceladoData {
+  conta_receber: number;
+  valor_total: number;
+  valor_desconto?: number;
+  forma_pagamento: string;
+  numero_parcelas: number;
+  data_primeiro_pagamento: string;
+  dias_entre_parcelas?: number;
+  observacoes?: string;
+}
+
 export const financeiroApi = {
   contasReceber: {
     list: async (filters?: {
@@ -1402,7 +1475,7 @@ export const financeiroApi = {
     },
 
     create: async (data: Partial<ContaReceber>) => {
-      return apiFetch<ContaReceber>('/financeiro/contas-receber', {
+      return apiFetch<ContaReceber>('/financeiro/contas-receber/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1432,8 +1505,9 @@ export const financeiroApi = {
         abertas: number;
         pagas: number;
         vencidas: number;
-        valor_aberto: number;
-        valor_recebido: number;
+        total_aberto: number;
+        total_vencido: number;
+        total_recebido: number;
       }>('/financeiro/contas-receber/resumo/');
     },
   },
@@ -1460,7 +1534,7 @@ export const financeiroApi = {
     },
 
     create: async (data: Partial<ContaPagar>) => {
-      return apiFetch<ContaPagar>('/financeiro/contas-pagar', {
+      return apiFetch<ContaPagar>('/financeiro/contas-pagar/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1490,9 +1564,84 @@ export const financeiroApi = {
         abertas: number;
         pagas: number;
         vencidas: number;
-        valor_aberto: number;
-        valor_pago: number;
+        total_aberto: number;
+        total_vencido: number;
+        total_pago: number;
       }>('/financeiro/contas-pagar/resumo/');
+    },
+  },
+
+  pagamentos: {
+    list: async (filters?: {
+      conta_receber?: number;
+      tipo_pagamento?: string;
+      forma_pagamento?: string;
+      status?: string;
+      search?: string;
+    }) => {
+      const params = new URLSearchParams();
+      if (filters?.conta_receber) params.append('conta_receber', filters.conta_receber.toString());
+      if (filters?.tipo_pagamento) params.append('tipo_pagamento', filters.tipo_pagamento);
+      if (filters?.forma_pagamento) params.append('forma_pagamento', filters.forma_pagamento);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.search) params.append('search', filters.search);
+
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: Pagamento[]; count: number }>(`/financeiro/pagamentos/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<Pagamento>(`/financeiro/pagamentos/${id}/`);
+    },
+
+    create: async (data: Partial<Pagamento>) => {
+      return apiFetch<Pagamento>('/financeiro/pagamentos/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<Pagamento>) => {
+      return apiFetch<Pagamento>(`/financeiro/pagamentos/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: number) => {
+      return apiFetch<void>(`/financeiro/pagamentos/${id}/`, {
+        method: 'DELETE',
+      });
+    },
+
+    confirmar: async (id: number) => {
+      return apiFetch<Pagamento>(`/financeiro/pagamentos/${id}/confirmar/`, {
+        method: 'POST',
+      });
+    },
+
+    cancelar: async (id: number) => {
+      return apiFetch<Pagamento>(`/financeiro/pagamentos/${id}/cancelar/`, {
+        method: 'POST',
+      });
+    },
+
+    parcelar: async (data: PagamentoParceladoData) => {
+      return apiFetch<Pagamento[]>('/financeiro/pagamentos/parcelar/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    porConta: async (conta_receber_id: number) => {
+      return apiFetch<{
+        pagamentos: Pagamento[];
+        resumo: {
+          total_pagamentos: number;
+          total_pago: number;
+          total_pendente: number;
+        };
+      }>(`/financeiro/pagamentos/por_conta/?conta_receber_id=${conta_receber_id}`);
     },
   },
 };

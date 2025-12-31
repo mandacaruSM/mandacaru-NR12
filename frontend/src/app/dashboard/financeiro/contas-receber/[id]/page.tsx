@@ -2,19 +2,16 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { financeiroApi, type ContaReceber } from '@/lib/api';
+import { financeiroApi, type ContaReceber, type Pagamento } from '@/lib/api';
+import PagamentoModal from '@/components/PagamentoModal';
 
 export default function ContaReceberDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
   const [conta, setConta] = useState<ContaReceber | null>(null);
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPagamentoForm, setShowPagamentoForm] = useState(false);
-  const [pagamento, setPagamento] = useState({
-    valor_pago: 0,
-    forma_pagamento: '',
-    comprovante: '',
-  });
+  const [showPagamentoModal, setShowPagamentoModal] = useState(false);
 
   useEffect(() => {
     loadConta();
@@ -23,13 +20,12 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
   async function loadConta() {
     try {
       setLoading(true);
-      const data = await financeiroApi.contasReceber.get(Number(id));
-      setConta(data);
-      setPagamento({
-        valor_pago: data.valor_final || 0,
-        forma_pagamento: data.forma_pagamento || '',
-        comprovante: data.comprovante || '',
-      });
+      const [contaData, pagamentosData] = await Promise.all([
+        financeiroApi.contasReceber.get(Number(id)),
+        financeiroApi.pagamentos.porConta(Number(id))
+      ]);
+      setConta(contaData);
+      setPagamentos(pagamentosData.pagamentos || []);
     } catch (error) {
       console.error('Erro ao carregar conta:', error);
     } finally {
@@ -37,22 +33,45 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
     }
   }
 
-  async function handleReceber() {
-    if (!pagamento.forma_pagamento) {
-      alert('Informe a forma de pagamento');
+  function handlePagamentoSuccess() {
+    loadConta();
+  }
+
+  async function handleConfirmarParcela(pagamento: Pagamento) {
+    const parcelaInfo = pagamento.numero_parcela
+      ? `parcela ${pagamento.numero_parcela}/${pagamento.total_parcelas}`
+      : 'pagamento';
+
+    if (!confirm(`Deseja confirmar o ${parcelaInfo} no valor de R$ ${Number(pagamento.valor_final || 0).toFixed(2)}?`)) {
       return;
     }
 
-    if (!confirm('Confirmar recebimento desta conta?')) return;
+    try {
+      await financeiroApi.pagamentos.confirmar(pagamento.id!);
+      alert('Pagamento confirmado com sucesso!');
+      loadConta();
+    } catch (error) {
+      console.error('Erro ao confirmar pagamento:', error);
+      alert('Erro ao confirmar pagamento');
+    }
+  }
+
+  async function handleCancelarParcela(pagamento: Pagamento) {
+    const parcelaInfo = pagamento.numero_parcela
+      ? `parcela ${pagamento.numero_parcela}/${pagamento.total_parcelas}`
+      : 'pagamento';
+
+    if (!confirm(`Deseja cancelar o ${parcelaInfo}?`)) {
+      return;
+    }
 
     try {
-      await financeiroApi.contasReceber.receber(Number(id), pagamento);
+      await financeiroApi.pagamentos.cancelar(pagamento.id!);
+      alert('Pagamento cancelado com sucesso!');
       loadConta();
-      setShowPagamentoForm(false);
-      alert('Recebimento registrado com sucesso!');
     } catch (error) {
-      console.error('Erro ao registrar recebimento:', error);
-      alert('Erro ao registrar recebimento');
+      console.error('Erro ao cancelar pagamento:', error);
+      alert('Erro ao cancelar pagamento');
     }
   }
 
@@ -88,10 +107,10 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
         <div className="flex gap-2">
           {(conta.status === 'ABERTA' || conta.status === 'VENCIDA') && (
             <button
-              onClick={() => setShowPagamentoForm(!showPagamentoForm)}
+              onClick={() => setShowPagamentoModal(true)}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              Registrar Recebimento
+              Registrar Pagamento
             </button>
           )}
           <button
@@ -103,6 +122,14 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
         </div>
       </div>
 
+      {/* Modal de Pagamento */}
+      <PagamentoModal
+        conta={conta}
+        isOpen={showPagamentoModal}
+        onClose={() => setShowPagamentoModal(false)}
+        onSuccess={handlePagamentoSuccess}
+      />
+
       {/* Status */}
       <div className="mb-6">
         <span className={`px-3 py-1 rounded text-sm font-medium ${getStatusBadge(conta.status)}`}>
@@ -110,71 +137,87 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
         </span>
       </div>
 
-      {/* Formulário de Pagamento */}
-      {showPagamentoForm && (
-        <div className="bg-yellow-50 border-2 border-yellow-400 p-6 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Registrar Recebimento</h2>
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Valor Recebido *
-              </label>
-              <input
-                type="number"
-                value={pagamento.valor_pago}
-                onChange={(e) => setPagamento({ ...pagamento, valor_pago: Number(e.target.value) })}
-                className="w-full px-3 py-2 border rounded text-gray-900 bg-white"
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Forma de Pagamento *
-              </label>
-              <select
-                value={pagamento.forma_pagamento}
-                onChange={(e) => setPagamento({ ...pagamento, forma_pagamento: e.target.value })}
-                className="w-full px-3 py-2 border rounded text-black bg-white"
-              >
-                <option value="" className="text-black bg-white">Selecione...</option>
-                <option value="DINHEIRO" className="text-black bg-white">Dinheiro</option>
-                <option value="PIX" className="text-black bg-white">PIX</option>
-                <option value="CARTAO_CREDITO" className="text-black bg-white">Cartão de Crédito</option>
-                <option value="CARTAO_DEBITO" className="text-black bg-white">Cartão de Débito</option>
-                <option value="BOLETO" className="text-black bg-white">Boleto</option>
-                <option value="TRANSFERENCIA" className="text-black bg-white">Transferência</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Comprovante
-              </label>
-              <input
-                type="text"
-                value={pagamento.comprovante}
-                onChange={(e) => setPagamento({ ...pagamento, comprovante: e.target.value })}
-                placeholder="Número do comprovante"
-                className="w-full px-3 py-2 border rounded text-gray-900 bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleReceber}
-              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-            >
-              Confirmar Recebimento
-            </button>
-            <button
-              onClick={() => setShowPagamentoForm(false)}
-              className="bg-gray-300 text-gray-900 px-6 py-2 rounded hover:bg-gray-400"
-            >
-              Cancelar
-            </button>
+      {/* Lista de Pagamentos */}
+      {pagamentos.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Histórico de Pagamentos</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Número</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Forma</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Desconto</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {pagamentos.map((pag) => (
+                  <tr key={pag.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-900">{pag.numero}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {new Date(pag.data_pagamento).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {pag.tipo_pagamento_display}
+                      {pag.numero_parcela && ` (${pag.numero_parcela}/${pag.total_parcelas})`}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">{pag.forma_pagamento_display}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                      R$ {pag.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                      {pag.valor_desconto > 0 ? `R$ ${pag.valor_desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
+                      R$ {(pag.valor_final || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        pag.status === 'CONFIRMADO' ? 'bg-green-100 text-green-800' :
+                        pag.status === 'PENDENTE' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {pag.status_display}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center">
+                      <div className="flex justify-center gap-2">
+                        {pag.status === 'PENDENTE' && (
+                          <button
+                            onClick={() => handleConfirmarParcela(pag)}
+                            className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
+                            title="Confirmar pagamento"
+                          >
+                            ✓ Baixar
+                          </button>
+                        )}
+                        {pag.status === 'PENDENTE' && (
+                          <button
+                            onClick={() => handleCancelarParcela(pag)}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
+                            title="Cancelar pagamento"
+                          >
+                            ✕ Cancelar
+                          </button>
+                        )}
+                        {pag.status === 'CONFIRMADO' && (
+                          <span className="text-xs text-gray-500">Confirmado</span>
+                        )}
+                        {pag.status === 'CANCELADO' && (
+                          <span className="text-xs text-gray-500">Cancelado</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
