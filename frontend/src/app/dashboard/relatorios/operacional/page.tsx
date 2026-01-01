@@ -81,10 +81,8 @@ export default function RelatorioOperacionalPage() {
 
   async function loadSelects() {
     try {
-      const [clientesRes, empreendimentosRes, equipamentosRes, tecnicosRes] = await Promise.all([
+      const [clientesRes, tecnicosRes] = await Promise.all([
         fetch('/api/proxy/cadastro/clientes/', { credentials: 'include' }),
-        fetch('/api/proxy/cadastro/empreendimentos/', { credentials: 'include' }),
-        fetch('/api/proxy/equipamentos/equipamentos/', { credentials: 'include' }),
         fetch('/api/proxy/tecnicos/', { credentials: 'include' }),
       ]);
 
@@ -92,20 +90,72 @@ export default function RelatorioOperacionalPage() {
         const data = await clientesRes.json();
         setClientes(data.results || []);
       }
-      if (empreendimentosRes.ok) {
-        const data = await empreendimentosRes.json();
-        setEmpreendimentos(data.results || []);
-      }
-      if (equipamentosRes.ok) {
-        const data = await equipamentosRes.json();
-        setEquipamentos(data.results || []);
-      }
       if (tecnicosRes.ok) {
         const data = await tecnicosRes.json();
         setTecnicos(data.results || []);
       }
     } catch (error) {
       console.error('Erro ao carregar selects:', error);
+    }
+  }
+
+  // Carregar empreendimentos quando cliente mudar
+  useEffect(() => {
+    if (filtros.cliente) {
+      loadEmpreendimentos(filtros.cliente);
+    } else {
+      setEmpreendimentos([]);
+      setFiltros(prev => ({ ...prev, empreendimento: '', equipamento: '' }));
+    }
+  }, [filtros.cliente]);
+
+  // Carregar equipamentos quando empreendimento mudar
+  useEffect(() => {
+    if (filtros.empreendimento) {
+      loadEquipamentos(filtros.empreendimento);
+    } else if (filtros.cliente) {
+      loadEquipamentos('', filtros.cliente);
+    } else {
+      setEquipamentos([]);
+      setFiltros(prev => ({ ...prev, equipamento: '' }));
+    }
+  }, [filtros.empreendimento, filtros.cliente]);
+
+  async function loadEmpreendimentos(clienteId: string) {
+    try {
+      const response = await fetch(`/api/proxy/cadastro/empreendimentos/?cliente=${clienteId}`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEmpreendimentos(data.results || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar empreendimentos:', error);
+    }
+  }
+
+  async function loadEquipamentos(empreendimentoId?: string, clienteId?: string) {
+    try {
+      let url = '/api/proxy/equipamentos/equipamentos/';
+      const params = new URLSearchParams();
+
+      if (empreendimentoId) {
+        params.append('empreendimento', empreendimentoId);
+      } else if (clienteId) {
+        params.append('cliente', clienteId);
+      }
+
+      const query = params.toString();
+      if (query) url += `?${query}`;
+
+      const response = await fetch(url, { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setEquipamentos(data.results || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar equipamentos:', error);
     }
   }
 

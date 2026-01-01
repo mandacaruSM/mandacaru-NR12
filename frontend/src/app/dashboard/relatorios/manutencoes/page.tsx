@@ -44,21 +44,29 @@ export default function RelatorioManutencoesPage() {
 
   async function loadSelects() {
     try {
-      const [equipamentosRes, tecnicosRes] = await Promise.all([
-        fetch('/api/proxy/equipamentos/equipamentos/', { credentials: 'include' }),
-        fetch('/api/proxy/tecnicos/', { credentials: 'include' }),
-      ]);
+      const tecnicosRes = await fetch('/api/proxy/tecnicos/', { credentials: 'include' });
 
-      if (equipamentosRes.ok) {
-        const data = await equipamentosRes.json();
-        setEquipamentos(data.results || []);
-      }
       if (tecnicosRes.ok) {
         const data = await tecnicosRes.json();
         setTecnicos(data.results || []);
       }
+
+      // Carregar todos os equipamentos inicialmente
+      await loadAllEquipamentos();
     } catch (error) {
       console.error('Erro ao carregar selects:', error);
+    }
+  }
+
+  async function loadAllEquipamentos() {
+    try {
+      const response = await fetch('/api/proxy/equipamentos/equipamentos/', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setEquipamentos(data.results || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar equipamentos:', error);
     }
   }
 

@@ -38,6 +38,14 @@ export default function RelatorioAbastecimentosPage() {
 
   async function loadSelects() {
     try {
+      await loadAllEquipamentos();
+    } catch (error) {
+      console.error('Erro ao carregar selects:', error);
+    }
+  }
+
+  async function loadAllEquipamentos() {
+    try {
       const response = await fetch('/api/proxy/equipamentos/equipamentos/', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
