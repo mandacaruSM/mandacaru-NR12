@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/utils';
 
 interface RelatorioData {
   periodo: {
@@ -80,7 +79,15 @@ export default function RelatorioOperacionalPage() {
       if (filtros.data_fim) params.append('data_fim', filtros.data_fim);
 
       const query = params.toString() ? `?${params.toString()}` : '';
-      const data = await apiFetch<RelatorioData>(`/relatorios/operacional/${query}`);
+      const response = await fetch(`/api/proxy/relatorios/operacional/${query}`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar relatório');
+      }
+
+      const data = await response.json();
       setDados(data);
     } catch (error) {
       console.error('Erro ao carregar relatório:', error);
