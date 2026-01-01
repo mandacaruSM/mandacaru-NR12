@@ -64,11 +64,50 @@ export default function RelatorioOperacionalPage() {
   const [filtros, setFiltros] = useState({
     data_inicio: '',
     data_fim: '',
+    cliente: '',
+    empreendimento: '',
+    equipamento: '',
+    tecnico: '',
   });
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [empreendimentos, setEmpreendimentos] = useState<any[]>([]);
+  const [equipamentos, setEquipamentos] = useState<any[]>([]);
+  const [tecnicos, setTecnicos] = useState<any[]>([]);
 
   useEffect(() => {
+    loadSelects();
     loadRelatorio();
   }, []);
+
+  async function loadSelects() {
+    try {
+      const [clientesRes, empreendimentosRes, equipamentosRes, tecnicosRes] = await Promise.all([
+        fetch('/api/proxy/cadastro/clientes/', { credentials: 'include' }),
+        fetch('/api/proxy/cadastro/empreendimentos/', { credentials: 'include' }),
+        fetch('/api/proxy/equipamentos/equipamentos/', { credentials: 'include' }),
+        fetch('/api/proxy/tecnicos/', { credentials: 'include' }),
+      ]);
+
+      if (clientesRes.ok) {
+        const data = await clientesRes.json();
+        setClientes(data.results || []);
+      }
+      if (empreendimentosRes.ok) {
+        const data = await empreendimentosRes.json();
+        setEmpreendimentos(data.results || []);
+      }
+      if (equipamentosRes.ok) {
+        const data = await equipamentosRes.json();
+        setEquipamentos(data.results || []);
+      }
+      if (tecnicosRes.ok) {
+        const data = await tecnicosRes.json();
+        setTecnicos(data.results || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar selects:', error);
+    }
+  }
 
   async function loadRelatorio() {
     try {
@@ -77,6 +116,10 @@ export default function RelatorioOperacionalPage() {
 
       if (filtros.data_inicio) params.append('data_inicio', filtros.data_inicio);
       if (filtros.data_fim) params.append('data_fim', filtros.data_fim);
+      if (filtros.cliente) params.append('cliente', filtros.cliente);
+      if (filtros.empreendimento) params.append('empreendimento', filtros.empreendimento);
+      if (filtros.equipamento) params.append('equipamento', filtros.equipamento);
+      if (filtros.tecnico) params.append('tecnico', filtros.tecnico);
 
       const query = params.toString() ? `?${params.toString()}` : '';
       const response = await fetch(`/api/proxy/relatorios/operacional/${query}`, {
@@ -129,6 +172,7 @@ export default function RelatorioOperacionalPage() {
 
       {/* Filtros */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -152,14 +196,89 @@ export default function RelatorioOperacionalPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             />
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={handleFiltrar}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Cliente
+            </label>
+            <select
+              value={filtros.cliente}
+              onChange={(e) => setFiltros({ ...filtros, cliente: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             >
-              Filtrar
-            </button>
+              <option value="">Todos</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>{c.nome_razao}</option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Empreendimento
+            </label>
+            <select
+              value={filtros.empreendimento}
+              onChange={(e) => setFiltros({ ...filtros, empreendimento: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            >
+              <option value="">Todos</option>
+              {empreendimentos.map((e) => (
+                <option key={e.id} value={e.id}>{e.nome}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Equipamento
+            </label>
+            <select
+              value={filtros.equipamento}
+              onChange={(e) => setFiltros({ ...filtros, equipamento: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            >
+              <option value="">Todos</option>
+              {equipamentos.map((eq) => (
+                <option key={eq.id} value={eq.id}>{eq.codigo} - {eq.descricao}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Técnico
+            </label>
+            <select
+              value={filtros.tecnico}
+              onChange={(e) => setFiltros({ ...filtros, tecnico: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            >
+              <option value="">Todos</option>
+              {tecnicos.map((t) => (
+                <option key={t.id} value={t.id}>{t.nome}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleFiltrar}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Aplicar Filtros
+          </button>
+          <button
+            onClick={() => {
+              setFiltros({
+                data_inicio: '',
+                data_fim: '',
+                cliente: '',
+                empreendimento: '',
+                equipamento: '',
+                tecnico: '',
+              });
+            }}
+            className="px-4 py-2 bg-gray-200 text-gray-900 rounded-md hover:bg-gray-300"
+          >
+            Limpar Filtros
+          </button>
         </div>
       </div>
 
