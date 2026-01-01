@@ -53,6 +53,22 @@ class OrdemServico(models.Model):
         related_name='ordens_servico_responsavel'
     )
 
+    # Horímetro/KM (para atualização do equipamento)
+    horimetro_inicial = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Horímetro/KM no início do serviço'
+    )
+    horimetro_final = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Horímetro/KM ao finalizar o serviço'
+    )
+
     # Controle
     aberto_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='ordens_servico_abertas')
     concluido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='ordens_servico_concluidas')

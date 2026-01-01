@@ -17,6 +17,16 @@ class Manutencao(models.Model):
         on_delete=models.CASCADE,
         related_name='manutencoes'
     )
+
+    # Origem (se vier de ordem de serviço)
+    ordem_servico = models.ForeignKey(
+        'ordens_servico.OrdemServico',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manutencoes'
+    )
+
     tipo = models.CharField(max_length=20, choices=ManutencaoTipo.choices)
     data = models.DateField(default=timezone.now)
     horimetro = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
