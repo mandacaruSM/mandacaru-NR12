@@ -11,6 +11,11 @@ export default function RelatoriosPage() {
       color: 'from-blue-500 to-blue-600',
       reports: [
         {
+          name: 'Relatório Operacional',
+          href: '/dashboard/relatorios/operacional',
+          description: 'Visão consolidada de orçamentos, OS e manutenções',
+        },
+        {
           name: 'Manutenções Realizadas',
           href: '/dashboard/relatorios/manutencoes',
           description: 'Histórico e análise de manutenções',

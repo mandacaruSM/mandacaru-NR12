@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'orcamentos.apps.OrcamentosConfig',
     'ordens_servico.apps.OrdensServicoConfig',
     'financeiro',
+    'relatorios',
     'bot_telegram.apps.BotTelegramConfig',
 ]
 
