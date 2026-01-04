@@ -1,0 +1,50 @@
+databases:
+  - name: nr12-db
+    databaseName: nr12_db
+    user: nr12_user
+    plan: free
+
+services:
+  # Backend Django
+  - type: web
+    name: nr12-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python manage.py create_default_user"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: False
+      - key: DJANGO_ALLOWED_HOSTS
+        value: nr12-backend.onrender.com
+      - key: DJANGO_CORS_ORIGINS
+        value: https://nr12-frontend.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nr12-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ERP_PUBLIC_BASE_URL
+        value: https://nr12-backend.onrender.com
+      - key: TELEGRAM_WEBHOOK_URL
+        sync: false
+
+  # Frontend Next.js
+  - type: web
+    name: nr12-frontend
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://nr12-backend.onrender.com/api/v1
+      - key: NODE_VERSION
+        value: 20.11.0

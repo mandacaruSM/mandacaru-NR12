@@ -1,0 +1,68 @@
+# Python / Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage / tests
+.pytest_cache/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# Project specific
+nr12.zip
+nul
+*.bat
+*.ps1
+
+# Sensitive files
+cookies.txt
+*cookies*.txt
+*.session
+
+# Documentation files (se não quiser enviar)
+COMO_*.md
+CORRECAO_*.md
+CORRECOES_*.md
+GUIA_*.md
+IMPLEMENTACAO_*.md
+MANUTENCAO_*.md
+MUDANCAS_*.md
+PASSO_*.md
+README_TELEGRAM_BOT.md
+TELEGRAM_BOT_SETUP.md
+VINCULACAO_*.md
+COMPARACAO_*.md
+
+# Test files
+backend/test_*.py
+backend/testar_*.py
+backend/gerar_codigo_bot.py
+backend/imghdr.py
+backend/tests/fixtures/*.png
+backend/tests/start_bot.py
+
+# Force rebuild marker
+frontend/.force-rebuild.txt

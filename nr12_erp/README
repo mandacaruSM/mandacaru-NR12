@@ -1,0 +1,13 @@
+@'
+# NR12 ERP
+
+Monorepo: **backend (Django + DRF)** e **frontend (Next.js + TS)**.
+Módulos: clientes, empreendimentos, equipamentos, operadores, supervisores, NR12 (checklists), manutenção, abastecimentos, etc.
+
+## Backend
+- Dev: `python -m venv .venv` + `pip install -r backend/requirements.txt`
+- Run: `.\.venv\Scripts\python.exe .\backend\manage.py runserver 0.0.0.0:8000`
+
+## Frontend
+- Dev: `npm ci` (ou `npm install`) e `npm run dev`
+'@ | Out-File -Encoding UTF8 README.md
