@@ -16,6 +16,8 @@ export default function ContasPagarPage() {
     abertas: 0,
     pagas: 0,
     vencidas: 0,
+    valor_aberto: 0,
+    valor_pago: 0,
     total_aberto: 0,
     total_vencido: 0,
     total_pago: 0,
