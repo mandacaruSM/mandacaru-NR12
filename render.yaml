@@ -10,7 +10,7 @@ services:
     name: nr12-backend
     runtime: python
     plan: free
-    rootDir: backend
+    rootDir: nr12_erp/backend
     buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python manage.py create_default_user"
     startCommand: "gunicorn config.wsgi:application"
     envVars:
@@ -40,7 +40,7 @@ services:
     name: nr12-frontend
     runtime: node
     plan: free
-    rootDir: frontend
+    rootDir: nr12_erp/frontend
     buildCommand: "npm install && npm run build"
     startCommand: "npm start"
     envVars:
