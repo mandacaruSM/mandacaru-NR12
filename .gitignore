@@ -1,62 +1,68 @@
-# Python
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual Environment
-venv/
-ENV/
-env/
-.venv
-
-# Django
-*.log
-local_settings.py
+# Python / Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
 db.sqlite3
-db.sqlite3-journal
 media/
 staticfiles/
+.env
+.env.*
+.venv/
+venv/
+env/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Node / Next.js
+node_modules/
+.next/
+dist/
+*.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Environment variables
-.env
-.env.local
+# Coverage / tests
+.pytest_cache/
+coverage/
 
-# Node (se houver frontend)
-node_modules/
-npm-debug.log
-yarn-error.log
+# IDE
+.vscode/
+.idea/
 
-# Database
-*.db
+# Project specific
+nr12.zip
+nul
+*.bat
+*.ps1
 
-# Migrations (opcional - descomente se não quiser versionar)
-# */migrations/*.py
-# !*/migrations/__init__.py
+# Sensitive files
+cookies.txt
+*cookies*.txt
+*.session
+
+# Documentation files (se não quiser enviar)
+COMO_*.md
+CORRECAO_*.md
+CORRECOES_*.md
+GUIA_*.md
+IMPLEMENTACAO_*.md
+MANUTENCAO_*.md
+MUDANCAS_*.md
+PASSO_*.md
+README_TELEGRAM_BOT.md
+TELEGRAM_BOT_SETUP.md
+VINCULACAO_*.md
+COMPARACAO_*.md
+
+# Test files
+backend/test_*.py
+backend/testar_*.py
+backend/gerar_codigo_bot.py
+backend/imghdr.py
+backend/tests/fixtures/*.png
+backend/tests/start_bot.py
+
+# Force rebuild marker
+frontend/.force-rebuild.txt

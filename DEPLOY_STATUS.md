@@ -1,0 +1,297 @@
+# 🚀 Status do Deploy - NR12 ERP
+
+**Data:** 2024-12-24
+**Hora Última Atualização:** 23:15 UTC
+**Status:** 🔄 AGUARDANDO REDEPLOY - FIX CRÍTICO de Autenticação Cross-Domain
+
+---
+
+## ✅ Verificações de Deploy
+
+### Backend (Django + Gunicorn)
+- **URL:** https://nr12-backend.onrender.com
+- **Status:** ✅ ONLINE
+- **API Endpoint:** https://nr12-backend.onrender.com/api/v1/auth/login/
+- **Response:** 405 Method Not Allowed (esperado para GET)
+- **Server:** Gunicorn + Django
+- **HTTPS:** ✅ Ativo (Cloudflare)
+
+### Frontend (Next.js)
+- **URL:** https://nr12-frontend.onrender.com
+- **Status:** ✅ ONLINE
+- **Response:** 200 OK
+- **Server:** Next.js (Server-Side Rendering)
+- **HTTPS:** ✅ Ativo (Cloudflare)
+- **Cache:** HIT (funcionando)
+
+---
+
+## 🎯 Próximos Passos - TESTE MANUAL
+
+### Passo 1: Acessar a Aplicação
+```
+URL: https://nr12-frontend.onrender.com
+```
+
+### Passo 2: Fazer Login
+```
+Usuário: admin
+Senha: admin123
+```
+
+### Passo 3: Verificar Cookies (DevTools)
+1. Abra o DevTools (F12)
+2. Vá em **Application** → **Cookies**
+3. Verifique que os cookies foram criados:
+   - `access` (HttpOnly ✓, Secure ✓, SameSite: None)
+   - `refresh` (HttpOnly ✓, Secure ✓, SameSite: None)
+
+### Passo 4: Verificar Logs do Console
+Logs esperados após login:
+```
+🔐 Tentando fazer login...
+✅ Login bem-sucedido, cookies definidos
+🔍 Verificando autenticação...
+✅ Usuário autenticado: admin
+```
+
+### Passo 5: Testar Navegação
+1. Navegue entre páginas do dashboard
+2. Verifique que **NÃO há loops de redirecionamento**
+3. Acesse: /dashboard/manutencoes, /dashboard/equipamentos, etc.
+4. Console deve manter `Token: ✅`
+
+### Passo 6: Verificar Middleware (Render Logs)
+Acesse os logs no Render e procure por:
+```
+🛣️  Middleware: /login | Token: ❌
+🛣️  Middleware: /login | Token: ✅  ← Após login
+🔀 Redirecionando /login → /dashboard (já autenticado)
+🛣️  Middleware: /dashboard | Token: ✅  ← Mantém!
+```
+
+**NÃO deve haver:** Alternância entre `Token: ✅` e `Token: ❌`
+
+---
+
+## 🔍 Checklist de Validação
+
+- [ ] Login funciona sem erros
+- [ ] Cookies `access` e `refresh` aparecem no DevTools
+- [ ] Cookies têm atributos corretos (HttpOnly, Secure, SameSite)
+- [ ] Redirecionamento /login → /dashboard após login
+- [ ] Navegação entre páginas sem loops
+- [ ] Console não mostra erros de autenticação
+- [ ] Middleware logs mostram `Token: ✅` consistentemente
+- [ ] Logout funciona e redireciona para /login
+- [ ] Cookies são removidos após logout
+
+---
+
+## ⚠️ Troubleshooting
+
+### Problema: Login retorna 401 Unauthorized
+**Causa:** Backend não recebeu credenciais corretas
+**Solução:**
+1. Verifique se o usuário `admin` existe no banco
+2. Execute no backend: `python manage.py create_default_user`
+3. Tente novamente com admin/admin123
+
+### Problema: Cookies não aparecem no DevTools
+**Causa:** SameSite ou HTTPS mal configurado
+**Solução:**
+1. Verifique que está em HTTPS (não HTTP)
+2. Limpe cookies antigos (DevTools → Clear storage)
+3. Tente login novamente
+4. Verifique logs do /api/auth/login no console
+
+### Problema: Ainda há loops de redirecionamento
+**Causa:** Cookies antigos do localStorage ainda presentes
+**Solução:**
+1. Abra DevTools → Application
+2. Clique em "Clear storage"
+3. Marque "Cookies" e "Local storage"
+4. Clique "Clear site data"
+5. Recarregue a página (Ctrl+F5)
+6. Faça login novamente
+
+### Problema: 404 em requisições API
+**Causa:** NEXT_PUBLIC_API_URL incorreto
+**Solução:**
+1. Verifique no Render: NEXT_PUBLIC_API_URL = `https://nr12-backend.onrender.com/api/v1`
+2. Se estiver errado, atualize e faça redeploy
+3. Aguarde ~3 minutos para rebuild
+
+### Problema: CORS Error
+**Causa:** Backend não aceita origem do frontend
+**Solução:**
+1. Verifique no backend/config/settings.py:
+   ```python
+   CORS_ALLOWED_ORIGINS = [
+       'https://nr12-frontend.onrender.com',
+   ]
+   ```
+2. Se não estiver, adicione e faça redeploy do backend
+
+---
+
+## 📊 Commits Aplicados
+
+| Commit | Descrição | Status |
+|--------|-----------|--------|
+| 1721d3b | 🔥 Fix CRITICAL: Autenticação cross-domain via proxy | ✅ Pushed 🔄 Deploy |
+| 7432b33 | Docs: Status com fix de usuário admin | ✅ Pushed |
+| d769aaa | Fix: Criação automática de usuário admin | ✅ Pushed |
+| f3525d6 | Docs: Status com melhorias de prefetch | ✅ Deployed |
+| eb914f8 | Fix: Previne interferência de prefetch | ✅ Deployed |
+
+### 🔥 FIX MAIS CRÍTICO (1721d3b) - EM DEPLOY
+
+**Problema resolvido:** Requisições API retornando 401 após login bem-sucedido
+
+**Sintomas:**
+- ✅ Login funcionava
+- ❌ Todas as requisições subsequentes retornavam 401
+- ❌ Erro: "Não autenticado"
+- ❌ Dashboard vazio sem dados
+
+**Causa raiz - COOKIES CROSS-DOMAIN:**
+```
+Frontend: nr12-frontend.onrender.com (cookies definidos aqui)
+Backend:  nr12-backend.onrender.com (requisições iam direto)
+         ↑
+         Domínios diferentes = Navegador NÃO envia cookies!
+```
+
+**Solução - PROXY NEXT.JS:**
+
+1. **Proxy genérico criado**: `/api/proxy/[...path]/route.ts`
+   - Intercepta TODAS as requisições API
+   - Lê cookies HTTP-only (access, refresh)
+   - Adiciona `Authorization: Bearer <token>` no header
+   - Encaminha para backend Django
+   - Retorna resposta ao browser
+
+2. **API client atualizado**: `lib/api.ts`
+   ```typescript
+   // ANTES: const API_BASE = 'https://nr12-backend.onrender.com/api/v1'
+   // DEPOIS: const API_BASE = '/api/proxy'
+   ```
+
+3. **Django settings**: `SameSite=None` para cookies cross-domain
+
+**Arquitetura final:**
+```
+Browser → /api/proxy/* (Next.js)
+            ↓ (lê cookies)
+            Authorization: Bearer <token>
+            ↓
+         Django Backend
+            ✅ JWT validado
+```
+
+**Benefícios:**
+- ✅ Cookies HTTP-only protegidos (XSS-proof)
+- ✅ Sem CORS issues (requisições same-origin)
+- ✅ Transparente para código React (zero mudanças)
+- ✅ Escalável (um proxy para toda API)
+
+**Documentação:** [SOLUCAO_CROSS_DOMAIN_COOKIES.md](SOLUCAO_CROSS_DOMAIN_COOKIES.md)
+
+---
+
+### Fix Anterior (d769aaa) - EM DEPLOY
+
+**Problema resolvido:** Banco de dados vazio, sem usuário admin para login
+
+**Causa raiz:**
+- Comando `create_default_user` não estava no `build.sh`
+- Deploy não criava usuário automaticamente
+- Usuário ficava bloqueado sem conseguir logar
+
+**Solução implementada:**
+```bash
+# Adicionado ao backend/build.sh
+python manage.py create_default_user
+```
+
+**Credenciais que serão criadas:**
+- Username: `admin`
+- Password: `admin123`
+- Email: `admin@nr12.com`
+- Role: ADMIN (todos os módulos)
+
+**Ações após deploy:**
+1. ✅ Aguardar rebuild do backend (~3-5 min)
+2. ✅ Verificar logs: "✅ Usuário criado com sucesso!"
+3. ✅ Testar login: admin / admin123
+4. ⚠️ **ALTERAR SENHA** após primeiro login!
+
+**Documentação:** [CRIAR_USUARIO_ADMIN.md](CRIAR_USUARIO_ADMIN.md)
+
+---
+
+### Melhoria Anterior (eb914f8) - DEPLOYED
+
+**Problema resolvido:** Prefetch do Next.js causando requisições desnecessárias
+
+**Mudanças:**
+1. Middleware ignora headers de prefetch
+2. Links do menu com `prefetch={false}`
+3. Logs mais limpos
+
+**Documentação:** [MELHORIAS_PREFETCH.md](MELHORIAS_PREFETCH.md)
+
+---
+
+## 🎉 Arquitetura Final Implementada
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  FLUXO DE AUTENTICAÇÃO                       │
+└─────────────────────────────────────────────────────────────┘
+
+1. Login:
+   Browser → /api/auth/login (Next.js Route Handler)
+          → Django Backend (/api/v1/auth/login/)
+          ← Django retorna cookies: access + refresh
+   Route Handler extrai tokens dos cookies do Django
+          → Define cookies HTTP-only no Next.js:
+             - httpOnly: true
+             - secure: true (produção)
+             - sameSite: 'none' (cross-domain)
+             - path: '/' (acessível ao middleware)
+          ← Frontend recebe apenas JSON (sem tokens no body)
+
+2. Verificação de Auth:
+   AuthContext.checkAuth()
+          → /api/auth/me (credentials: 'include')
+          → Cookies enviados automaticamente
+   /api/auth/me lê cookie 'access' do request
+          → Django valida JWT
+          ← Retorna dados do usuário
+
+3. Requisições API:
+   lib/api.ts usa credentials: 'include'
+          → Cookies enviados automaticamente
+          → Django recebe e valida JWT
+
+4. Middleware (Edge Runtime):
+   Lê cookie 'access' do request
+          → Se não tem: redireciona /dashboard → /login
+          → Se tem: permite acesso
+```
+
+---
+
+## 📞 Suporte
+
+Se encontrar problemas:
+1. Capture screenshots dos erros
+2. Copie logs do console (DevTools)
+3. Copie logs do Render (Backend e Frontend)
+4. Verifique [SOLUCAO_FINAL_COOKIES.md](SOLUCAO_FINAL_COOKIES.md) para detalhes técnicos
+
+---
+
+**✅ Sistema pronto para testes! Boa sorte! 🚀**
