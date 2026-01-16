@@ -276,3 +276,110 @@ def refresh_token(request):
             {"detail": f"Erro ao renovar token: {str(e)}"},
             status=500
         )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def reset_password(request):
+    """
+    Redefine a senha de um usuário baseado no CPF/documento
+
+    Espera JSON:
+    {
+        "documento": "12345678900",  // CPF ou CNPJ sem pontuação
+        "new_password": "novaSenha123"
+    }
+
+    Retorna:
+    - 200: Senha redefinida com sucesso
+    - 404: Usuário não encontrado
+    - 400: Dados inválidos
+    """
+    data = request.data or {}
+    documento = data.get("documento", "").strip()
+    new_password = data.get("new_password", "")
+
+    if not documento:
+        return JsonResponse(
+            {"detail": "Documento (CPF/CNPJ) é obrigatório"},
+            status=400
+        )
+
+    if not new_password or len(new_password) < 6:
+        return JsonResponse(
+            {"detail": "Nova senha deve ter pelo menos 6 caracteres"},
+            status=400
+        )
+
+    # Remove pontuação do documento
+    documento_limpo = ''.join(filter(str.isdigit, documento))
+
+    try:
+        # Busca usuário pelo username (que é o CPF/CNPJ)
+        user = User.objects.get(username=documento_limpo)
+        user.set_password(new_password)
+        user.save()
+
+        return JsonResponse({
+            "detail": "Senha redefinida com sucesso",
+            "username": user.username
+        })
+
+    except User.DoesNotExist:
+        return JsonResponse(
+            {"detail": "Usuário não encontrado com este documento"},
+            status=404
+        )
+    except Exception as e:
+        return JsonResponse(
+            {"detail": f"Erro ao redefinir senha: {str(e)}"},
+            status=500
+        )
+
+
+@api_view(["GET"])
+def me(request):
+    """
+    Retorna informações do usuário autenticado
+
+    Retorna:
+    - 200: Dados do usuário com role e módulos habilitados
+    - 401: Não autenticado
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"detail": "Não autenticado"},
+            status=401
+        )
+
+    user = request.user
+    profile_data = {}
+
+    if hasattr(user, 'profile'):
+        profile = user.profile
+        profile_data = {
+            "role": profile.role,
+            "modules_enabled": profile.modules_enabled or []
+        }
+
+    # Busca dados adicionais se for supervisor
+    supervisor_data = None
+    if hasattr(user, 'supervisor_profile'):
+        supervisor = user.supervisor_profile
+        supervisor_data = {
+            "id": supervisor.id,
+            "nome_completo": supervisor.nome_completo,
+            "cpf": supervisor.cpf,
+            "email": supervisor.email,
+            "telefone": supervisor.telefone
+        }
+
+    return JsonResponse({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        **profile_data,
+        "supervisor": supervisor_data
+    })

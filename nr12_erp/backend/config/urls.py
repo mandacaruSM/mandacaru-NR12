@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .auth_views import register, login as cookie_login, logout as cookie_logout, refresh_token
+from .auth_views import register, login as cookie_login, logout as cookie_logout, refresh_token, reset_password, me
 
 urlpatterns = [
     # Redirect root to health check
@@ -42,6 +42,8 @@ urlpatterns = [
     path("api/v1/auth/login/", cookie_login, name="auth_cookie_login"),
     path("api/v1/auth/logout/", cookie_logout, name="auth_cookie_logout"),
     path("api/v1/auth/refresh/", refresh_token, name="auth_cookie_refresh"),
+    path("api/v1/auth/reset-password/", reset_password, name="auth_reset_password"),
+    path("api/v1/me/", me, name="auth_me"),
 
     # Outros módulos
     path('api/v1/', include('tecnicos.urls')),

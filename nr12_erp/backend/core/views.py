@@ -48,8 +48,11 @@ class MeView(APIView):
 class OperadorViewSet(viewsets.ModelViewSet):
     """
     Gerencia operadores via API web.
+    Permissões: ADMIN (full), SUPERVISOR (read)
     """
-    permission_classes = [IsAuthenticated]
+    from .permissions import CanManageOperadores, HasModuleAccess
+    permission_classes = [IsAuthenticated, HasModuleAccess, CanManageOperadores]
+    required_module = 'operadores'
     serializer_class = OperadorSerializer
     queryset = Operador.objects.all().prefetch_related('clientes', 'equipamentos_autorizados')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -163,9 +166,15 @@ class OperadorViewSet(viewsets.ModelViewSet):
 
 
 class SupervisorViewSet(viewsets.ModelViewSet):
+    """
+    Gerencia supervisores via API web.
+    Permissões: Apenas ADMIN pode gerenciar supervisores
+    """
+    from .permissions import IsAdminUser, HasModuleAccess
     queryset = Supervisor.objects.all()
     serializer_class = SupervisorSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasModuleAccess, IsAdminUser]
+    required_module = 'supervisores'
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["nome_completo", "cpf", "telefone"]
     ordering_fields = ["nome_completo", "cpf", "id"]
