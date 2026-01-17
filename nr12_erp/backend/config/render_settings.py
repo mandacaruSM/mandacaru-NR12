@@ -7,6 +7,7 @@ import os
 
 # Importa todas as configurações base
 from .settings import *
+import dj_database_url
 
 # ===========================
 # SEGURANÇA EM PRODUÇÃO
@@ -14,16 +15,27 @@ from .settings import *
 
 DEBUG = False
 
+# ALLOWED_HOSTS mais flexível
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS",
+    "nr12-backend.onrender.com"
+).split(",")
+
+# Adiciona também o domínio interno do Render
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 # HTTPS/SSL
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False  # Render já faz isso
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# HSTS (HTTP Strict Transport Security)
-SECURE_HSTS_SECONDS = 31536000  # 1 ano
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# HSTS (HTTP Strict Transport Security) - Desabilitado inicialmente
+# SECURE_HSTS_SECONDS = 31536000  # 1 ano
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
 # Content Security
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -35,22 +47,25 @@ X_FRAME_OPTIONS = 'DENY'
 # ===========================
 
 # Render fornece DATABASE_URL automaticamente
-# Formato: postgresql://user:password@host:port/database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('PGDATABASE'),
-        'USER': os.environ.get('PGUSER'),
-        'PASSWORD': os.environ.get('PGPASSWORD'),
-        'HOST': os.environ.get('PGHOST'),
-        'PORT': os.environ.get('PGPORT', '5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c statement_timeout=30000',  # 30 segundos
-        },
-        'CONN_MAX_AGE': 600,  # Mantém conexões por 10 minutos
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,
+        )
     }
-}
+else:
+    # Fallback para desenvolvimento local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # ===========================
 # ARQUIVOS ESTÁTICOS
