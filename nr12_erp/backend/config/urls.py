@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .auth_views import register, login as cookie_login, logout as cookie_logout, refresh_token, reset_password, change_password, me
+from .auth_views import login as cookie_login, logout as cookie_logout, refresh_token, reset_password, change_password, me
 
 urlpatterns = [
     # Redirect root to health check
