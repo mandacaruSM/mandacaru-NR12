@@ -13,6 +13,7 @@ from .serializers import (
     PlanoSerializer, AssinaturaClienteSerializer
 )
 from core.permissions import ClienteFilterMixin, HasModuleAccess, IsAdminUser
+from core.plan_validators import PlanLimitValidator
 
 # --- Base DRF ---
 class BaseAuthViewSet(viewsets.ModelViewSet):
@@ -106,6 +107,18 @@ class EmpreendimentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
         if cliente_id:
             qs = qs.filter(cliente_id=cliente_id)
         return qs
+
+    def perform_create(self, serializer):
+        """Valida limite de empreendimentos antes de criar"""
+        # Obtém cliente do empreendimento sendo criado
+        cliente = serializer.validated_data.get('cliente')
+
+        if cliente:
+            # Valida limite do plano
+            PlanLimitValidator.check_empreendimento_limit(cliente)
+
+        # Se passou na validação, cria o empreendimento
+        serializer.save()
 
 
 # --- QR Code do Cliente (função de módulo, fora de classes) ---

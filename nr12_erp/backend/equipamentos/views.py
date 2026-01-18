@@ -7,6 +7,7 @@ from django.http import Http404
 from .models import Equipamento
 from core.qr_utils import qr_png_response
 from core.permissions import ClienteFilterMixin, HasModuleAccess
+from core.plan_validators import PlanLimitValidator
 from .serializers import (
     TipoEquipamentoSerializer, EquipamentoSerializer,
     PlanoManutencaoItemSerializer, MedicaoEquipamentoSerializer
@@ -48,6 +49,18 @@ class EquipamentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
         if emp_id:
             qs = qs.filter(empreendimento_id=emp_id)
         return qs
+
+    def perform_create(self, serializer):
+        """Valida limite de equipamentos antes de criar"""
+        # Obtém cliente do equipamento sendo criado
+        cliente = serializer.validated_data.get('cliente')
+
+        if cliente:
+            # Valida limite do plano
+            PlanLimitValidator.check_equipment_limit(cliente)
+
+        # Se passou na validação, cria o equipamento
+        serializer.save()
 
 class PlanoManutencaoItemViewSet(BaseAuthViewSet):
     queryset = PlanoManutencaoItem.objects.select_related("equipamento").all().order_by("titulo")
