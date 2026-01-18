@@ -37,12 +37,20 @@ class ClienteFilterMixin:
                 if queryset.model.__name__ == 'Cliente':
                     return queryset.filter(id=cliente.id)
 
+                # Se tem campo 'equipamento' (ex: Abastecimento, Manutencao)
+                if hasattr(queryset.model, 'equipamento'):
+                    return queryset.filter(equipamento__cliente=cliente)
+
             return queryset.none()
 
         # SUPERVISOR vê empreendimentos que supervisiona
         if hasattr(user, 'profile') and user.profile.role == 'SUPERVISOR':
             if hasattr(user, 'supervisor_profile'):
                 supervisor = user.supervisor_profile
+
+                # Se tem campo equipamento (ex: Abastecimento, Manutencao)
+                if hasattr(queryset.model, 'equipamento'):
+                    return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
 
                 # Se tem campo empreendimento, filtra pelos empreendimentos do supervisor
                 if hasattr(queryset.model, 'empreendimento'):
