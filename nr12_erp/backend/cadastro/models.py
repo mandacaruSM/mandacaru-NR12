@@ -4,6 +4,9 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+# Importa modelos de planos
+from .planos import Plano, AssinaturaCliente
+
 UF_CHOICES = [
     ("AC","AC"),("AL","AL"),("AP","AP"),("AM","AM"),("BA","BA"),("CE","CE"),("DF","DF"),
     ("ES","ES"),("GO","GO"),("MA","MA"),("MT","MT"),("MS","MS"),("MG","MG"),("PA","PA"),

@@ -65,9 +65,12 @@ def create_cliente_user(sender, instance, created, **kwargs):
     Cria automaticamente um usuário Django quando um Cliente é cadastrado.
     Username: documento do cliente (CNPJ ou CPF sem pontuação)
     Password: gerada aleatoriamente e enviada por email
-    Role: CLIENTE com acesso limitado a visualização
+    Role: CLIENTE com acesso limitado baseado no plano
     """
     if created and not hasattr(instance, 'user'):
+        from cadastro.planos import Plano, AssinaturaCliente
+        from datetime import date, timedelta
+
         # Username baseado no documento (remove pontuação)
         username = ''.join(filter(str.isdigit, instance.documento))
 
@@ -83,20 +86,44 @@ def create_cliente_user(sender, instance, created, **kwargs):
             last_name=' '.join(instance.nome_razao.split()[1:]) if instance.nome_razao and len(instance.nome_razao.split()) > 1 else ''
         )
 
-        # Atualiza o Profile com role CLIENTE e módulos específicos
+        # Busca plano padrão (Essencial) ou primeiro plano disponível
+        plano_padrao = Plano.objects.filter(tipo='ESSENCIAL').first()
+        if not plano_padrao:
+            plano_padrao = Plano.objects.filter(ativo=True).first()
+
+        # Se não houver planos cadastrados, usa módulos padrão
+        if plano_padrao:
+            modulos_habilitados = plano_padrao.modulos_habilitados
+        else:
+            modulos_habilitados = [
+                "dashboard",
+                "empreendimentos",
+                "equipamentos",
+                "relatorios"
+            ]
+
+        # Atualiza o Profile com role CLIENTE e módulos do plano
         profile = user.profile
         profile.role = "CLIENTE"
-        profile.modules_enabled = [
-            "dashboard",
-            "empreendimentos",
-            "equipamentos",
-            "relatorios"
-        ]
+        profile.modules_enabled = modulos_habilitados
         profile.save()
 
         # Vincula o usuário ao cliente
         instance.user = user
         instance.save(update_fields=['user'])
 
+        # Cria assinatura com período trial de 30 dias
+        if plano_padrao:
+            AssinaturaCliente.objects.create(
+                cliente=instance,
+                plano=plano_padrao,
+                status='TRIAL',
+                data_fim_trial=date.today() + timedelta(days=30),
+                data_proximo_pagamento=date.today() + timedelta(days=30)
+            )
+            print(f"[CLIENTE CRIADO] Username: {username} | Senha: {password} | Plano: {plano_padrao.nome} (Trial 30 dias)")
+        else:
+            print(f"[CLIENTE CRIADO] Username: {username} | Senha: {password} | ⚠️  SEM PLANO - execute python manage.py seed_planos")
+
         # TODO: Enviar email com credenciais
-        print(f"[CLIENTE CRIADO] Username: {username} | Senha: {password} | Email: {instance.email_financeiro}")
+        print(f"              Email: {instance.email_financeiro} | Módulos: {len(modulos_habilitados)}")

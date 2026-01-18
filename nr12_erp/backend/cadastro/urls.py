@@ -1,7 +1,10 @@
 # backend/cadastro/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ClienteViewSet, EmpreendimentoViewSet, cliente_qr_view
+from .views import (
+    ClienteViewSet, EmpreendimentoViewSet, cliente_qr_view,
+    PlanoViewSet, AssinaturaClienteViewSet
+)
 
 # ============================================
 # Router para ViewSets REST
@@ -9,6 +12,8 @@ from .views import ClienteViewSet, EmpreendimentoViewSet, cliente_qr_view
 router = DefaultRouter()
 router.register(r'clientes', ClienteViewSet, basename='clientes')
 router.register(r'empreendimentos', EmpreendimentoViewSet, basename='empreendimentos')
+router.register(r'planos', PlanoViewSet, basename='planos')
+router.register(r'assinaturas', AssinaturaClienteViewSet, basename='assinaturas')
 
 # ============================================
 # URL Patterns
