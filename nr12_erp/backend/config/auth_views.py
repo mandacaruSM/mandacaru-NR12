@@ -279,6 +279,70 @@ def refresh_token(request):
 
 
 @api_view(["POST"])
+def change_password(request):
+    """
+    Altera a senha do usuário autenticado (requer senha atual)
+
+    Espera JSON:
+    {
+        "current_password": "senhaAtual123",
+        "new_password": "novaSenha456"
+    }
+
+    Retorna:
+    - 200: Senha alterada com sucesso
+    - 400: Senha atual incorreta ou nova senha inválida
+    - 401: Não autenticado
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"detail": "Não autenticado"},
+            status=401
+        )
+
+    data = request.data or {}
+    current_password = data.get("current_password", "")
+    new_password = data.get("new_password", "")
+
+    # Validações
+    if not current_password:
+        return JsonResponse(
+            {"detail": "Senha atual é obrigatória"},
+            status=400
+        )
+
+    if not new_password or len(new_password) < 6:
+        return JsonResponse(
+            {"detail": "Nova senha deve ter pelo menos 6 caracteres"},
+            status=400
+        )
+
+    # Verifica se a senha atual está correta
+    user = request.user
+    if not user.check_password(current_password):
+        return JsonResponse(
+            {"detail": "Senha atual incorreta"},
+            status=400
+        )
+
+    # Verifica se a nova senha é diferente da atual
+    if user.check_password(new_password):
+        return JsonResponse(
+            {"detail": "Nova senha deve ser diferente da senha atual"},
+            status=400
+        )
+
+    # Altera a senha
+    user.set_password(new_password)
+    user.save()
+
+    return JsonResponse({
+        "detail": "Senha alterada com sucesso",
+        "username": user.username
+    })
+
+
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def reset_password(request):
     """
