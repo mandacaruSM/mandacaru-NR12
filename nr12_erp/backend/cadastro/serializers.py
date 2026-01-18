@@ -11,12 +11,18 @@ class ClienteSerializer(serializers.ModelSerializer):
     )
 
     # Campo read-only para mostrar o username do cliente
-    username = serializers.CharField(source='user.username', read_only=True)
+    username = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Cliente
         fields = "__all__"
-        read_only_fields = ['uuid', 'qr_code', 'username']
+        read_only_fields = ['uuid', 'qr_code', 'username', 'user']
+
+    def get_username(self, obj):
+        """Retorna username do usuário vinculado ou None"""
+        if obj.user:
+            return obj.user.username
+        return None
 
     def update(self, instance, validated_data):
         # Extrai nova_senha dos dados validados
