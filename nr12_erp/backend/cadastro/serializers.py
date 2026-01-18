@@ -2,10 +2,40 @@ from rest_framework import serializers
 from .models import Cliente, Empreendimento
 
 class ClienteSerializer(serializers.ModelSerializer):
+    # Campo write-only para permitir que admin defina nova senha
+    nova_senha = serializers.CharField(
+        write_only=True,
+        required=False,
+        min_length=6,
+        help_text="Nova senha para o usuário do cliente (mínimo 6 caracteres). Apenas administradores podem definir."
+    )
+
+    # Campo read-only para mostrar o username do cliente
+    username = serializers.CharField(source='user.username', read_only=True)
+
     class Meta:
         model = Cliente
         fields = "__all__"
-        read_only_fields = ['uuid', 'qr_code']
+        read_only_fields = ['uuid', 'qr_code', 'username']
+
+    def update(self, instance, validated_data):
+        # Extrai nova_senha dos dados validados
+        nova_senha = validated_data.pop('nova_senha', None)
+
+        # Atualiza campos do Cliente
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
+        if nova_senha and hasattr(instance, 'user') and instance.user:
+            instance.user.set_password(nova_senha)
+            instance.user.save()
+
+            # Log da alteração de senha
+            print(f"[SENHA ALTERADA] Cliente: {instance.nome_razao} | Username: {instance.user.username} | Nova senha definida pelo admin")
+
+        return instance
 
 class EmpreendimentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.CharField(source="cliente.nome_razao", read_only=True)
