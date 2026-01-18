@@ -83,21 +83,20 @@ def create_cliente_user(sender, instance, created, **kwargs):
             last_name=' '.join(instance.nome_razao.split()[1:]) if instance.nome_razao and len(instance.nome_razao.split()) > 1 else ''
         )
 
-        # Cria Profile com role CLIENTE
-        # Por padrão, clientes têm acesso muito limitado
-        Profile.objects.filter(user=user).update(
-            role="CLIENTE",
-            modules_enabled=[
-                "dashboard",
-                "empreendimentos",
-                "equipamentos",
-                "relatorios"
-            ]
-        )
+        # Atualiza o Profile com role CLIENTE e módulos específicos
+        profile = user.profile
+        profile.role = "CLIENTE"
+        profile.modules_enabled = [
+            "dashboard",
+            "empreendimentos",
+            "equipamentos",
+            "relatorios"
+        ]
+        profile.save()
 
-        # TODO: Vincular usuário ao cliente (adicionar campo user no model Cliente)
-        # instance.user = user
-        # instance.save(update_fields=['user'])
+        # Vincula o usuário ao cliente
+        instance.user = user
+        instance.save(update_fields=['user'])
 
         # TODO: Enviar email com credenciais
         print(f"[CLIENTE CRIADO] Username: {username} | Senha: {password} | Email: {instance.email_financeiro}")

@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from .models import Cliente, Empreendimento
 from .serializers import ClienteSerializer, EmpreendimentoSerializer
+from core.permissions import ClienteFilterMixin, HasModuleAccess
 
 # --- Base DRF ---
 class BaseAuthViewSet(viewsets.ModelViewSet):
@@ -13,22 +14,39 @@ class BaseAuthViewSet(viewsets.ModelViewSet):
 
 
 # --- Clientes ---
-class ClienteViewSet(BaseAuthViewSet):
+class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
+    """
+    ViewSet para Clientes com filtro automático:
+    - ADMIN: Vê todos os clientes
+    - SUPERVISOR: Vê clientes dos empreendimentos que supervisiona
+    - CLIENTE: Vê apenas seu próprio cadastro
+    """
     queryset = Cliente.objects.all().order_by("nome_razao")
     serializer_class = ClienteSerializer
     search_fields = ["nome_razao", "documento", "cidade", "email_financeiro"]
     ordering = ["nome_razao"]
+    permission_classes = [IsAuthenticated, HasModuleAccess]
+    required_module = 'clientes'
 
 
 # --- Empreendimentos ---
-class EmpreendimentoViewSet(BaseAuthViewSet):
+class EmpreendimentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
+    """
+    ViewSet para Empreendimentos com filtro automático:
+    - ADMIN: Vê todos os empreendimentos
+    - SUPERVISOR: Vê empreendimentos que supervisiona
+    - CLIENTE: Vê apenas seus empreendimentos
+    """
     queryset = Empreendimento.objects.select_related("cliente").all().order_by("nome")
     serializer_class = EmpreendimentoSerializer
     search_fields = ["nome", "cliente__nome_razao"]
     ordering = ["nome"]
+    permission_classes = [IsAuthenticated, HasModuleAccess]
+    required_module = 'empreendimentos'
 
     def get_queryset(self):
         qs = super().get_queryset()
+        # Filtro manual adicional (se fornecido via query params)
         cliente_id = self.request.query_params.get("cliente")
         if cliente_id:
             qs = qs.filter(cliente_id=cliente_id)

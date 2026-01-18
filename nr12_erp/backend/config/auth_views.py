@@ -374,6 +374,19 @@ def me(request):
             "telefone": supervisor.telefone
         }
 
+    # Busca dados adicionais se for cliente
+    cliente_data = None
+    if hasattr(user, 'cliente_profile'):
+        cliente = user.cliente_profile
+        cliente_data = {
+            "id": cliente.id,
+            "nome_razao": cliente.nome_razao,
+            "tipo_pessoa": cliente.tipo_pessoa,
+            "documento": cliente.documento,
+            "email_financeiro": cliente.email_financeiro,
+            "telefone": cliente.telefone
+        }
+
     return JsonResponse({
         "id": user.id,
         "username": user.username,
@@ -381,5 +394,6 @@ def me(request):
         "first_name": user.first_name,
         "last_name": user.last_name,
         **profile_data,
-        "supervisor": supervisor_data
+        "supervisor": supervisor_data,
+        "cliente": cliente_data
     })
