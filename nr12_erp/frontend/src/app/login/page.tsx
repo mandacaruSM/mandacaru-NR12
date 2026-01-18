@@ -78,12 +78,6 @@ function LoginForm() {
           <p className="mt-2 text-center text-sm text-gray-900">
             Faça login para acessar o sistema
           </p>
-          <p className="mt-2 text-center text-sm text-gray-900">
-            Não tem uma conta?{' '}
-            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              Criar conta
-            </Link>
-          </p>
         </div>
 
         {/* Success Message */}

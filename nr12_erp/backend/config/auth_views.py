@@ -47,105 +47,26 @@ def _clear_auth_cookies(resp: JsonResponse):
     resp.delete_cookie(COOKIE_REFRESH, path="/")
 
 
-@csrf_exempt
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def register(request):
-    """
-    Registra um novo usuário
-
-    Espera JSON:
-    {
-        "username": "usuario",
-        "email": "email@example.com",
-        "password": "senha123",
-        "password_confirm": "senha123"  // opcional
-    }
-
-    Retorna:
-    - 201: Usuário criado com sucesso
-    - 400: Dados inválidos ou usuário já existe
-    """
-    data = request.data or {}
-    username = data.get("username", "").strip()
-    email = data.get("email", "").strip()
-    password = data.get("password", "")
-    password_confirm = data.get("password_confirm")
-
-    # Validações básicas
-    if not username:
-        return JsonResponse(
-            {"detail": "Username é obrigatório", "field": "username"},
-            status=400
-        )
-
-    if len(username) < 3:
-        return JsonResponse(
-            {"detail": "Username deve ter pelo menos 3 caracteres", "field": "username"},
-            status=400
-        )
-
-    if not password:
-        return JsonResponse(
-            {"detail": "Password é obrigatório", "field": "password"},
-            status=400
-        )
-
-    if len(password) < 6:
-        return JsonResponse(
-            {"detail": "Password deve ter pelo menos 6 caracteres", "field": "password"},
-            status=400
-        )
-
-    # Validação de confirmação de senha (opcional)
-    if password_confirm and password != password_confirm:
-        return JsonResponse(
-            {"detail": "As senhas não coincidem", "field": "password_confirm"},
-            status=400
-        )
-
-    # Validação de email (opcional mas recomendado)
-    if email:
-        if "@" not in email or "." not in email:
-            return JsonResponse(
-                {"detail": "Email inválido", "field": "email"},
-                status=400
-            )
-
-        # Verifica se email já existe
-        if User.objects.filter(email=email).exists():
-            return JsonResponse(
-                {"detail": "Este email já está em uso", "field": "email"},
-                status=400
-            )
-
-    try:
-        # Criar usuário
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
-
-        return JsonResponse({
-            "detail": "Usuário criado com sucesso",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-            }
-        }, status=201)
-
-    except IntegrityError:
-        return JsonResponse(
-            {"detail": "Este username já está em uso", "field": "username"},
-            status=400
-        )
-    except Exception as e:
-        return JsonResponse(
-            {"detail": f"Erro ao criar usuário: {str(e)}"},
-            status=500
-        )
+# FUNÇÃO DESABILITADA POR SEGURANÇA
+# Registro público removido - usuários devem ser criados apenas via signals
+# quando um Cliente ou Supervisor é cadastrado no sistema.
+#
+# @csrf_exempt
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def register(request):
+#     """
+#     DESABILITADO: Registra um novo usuário
+#
+#     Esta função foi desabilitada por segurança.
+#     Usuários são criados automaticamente quando:
+#     - Um Cliente é cadastrado (via signal em core/signals.py)
+#     - Um Supervisor é cadastrado (via signal em core/signals.py)
+#     """
+#     return JsonResponse(
+#         {"detail": "Registro público desabilitado. Contate um administrador."},
+#         status=403
+#     )
 
 
 @csrf_exempt

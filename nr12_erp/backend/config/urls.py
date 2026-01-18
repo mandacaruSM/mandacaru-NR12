@@ -38,7 +38,7 @@ urlpatterns = [
     path("api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
     # Cookie-based Authentication (HttpOnly)
-    path("api/v1/auth/register/", register, name="auth_register"),
+    # path("api/v1/auth/register/", register, name="auth_register"),  # DESABILITADO POR SEGURANÇA
     path("api/v1/auth/login/", cookie_login, name="auth_cookie_login"),
     path("api/v1/auth/logout/", cookie_logout, name="auth_cookie_logout"),
     path("api/v1/auth/refresh/", refresh_token, name="auth_cookie_refresh"),
