@@ -1,0 +1,90 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Definições de gradientes -->
+  <defs>
+    <!-- Gradiente laranja (cor principal Mandacaru) -->
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF8C00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF6B00;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Gradiente azul (cor industrial) -->
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E3A8A;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Sombra -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Fundo do escudo (laranja) -->
+  <path d="M 256 32
+           C 200 32, 144 48, 96 64
+           C 96 160, 96 256, 96 320
+           C 96 416, 176 464, 256 480
+           C 336 464, 416 416, 416 320
+           C 416 256, 416 160, 416 64
+           C 368 48, 312 32, 256 32 Z"
+        fill="url(#orangeGradient)"
+        filter="url(#shadow)"/>
+
+  <!-- Borda do escudo (mais escura) -->
+  <path d="M 256 32
+           C 200 32, 144 48, 96 64
+           C 96 160, 96 256, 96 320
+           C 96 416, 176 464, 256 480
+           C 336 464, 416 416, 416 320
+           C 416 256, 416 160, 416 64
+           C 368 48, 312 32, 256 32 Z"
+        fill="none"
+        stroke="#CC5500"
+        stroke-width="6"/>
+
+  <!-- Engrenagem central (azul) -->
+  <g transform="translate(256, 256)">
+    <!-- Círculo central da engrenagem -->
+    <circle cx="0" cy="0" r="70" fill="url(#blueGradient)"/>
+
+    <!-- Dentes da engrenagem (8 dentes) -->
+    <g id="gear-tooth">
+      <rect x="-15" y="-90" width="30" height="25" fill="#1E3A8A" rx="3"/>
+    </g>
+    <use href="#gear-tooth" transform="rotate(45)"/>
+    <use href="#gear-tooth" transform="rotate(90)"/>
+    <use href="#gear-tooth" transform="rotate(135)"/>
+    <use href="#gear-tooth" transform="rotate(180)"/>
+    <use href="#gear-tooth" transform="rotate(225)"/>
+    <use href="#gear-tooth" transform="rotate(270)"/>
+    <use href="#gear-tooth" transform="rotate(315)"/>
+
+    <!-- Círculo interno (branco) -->
+    <circle cx="0" cy="0" r="35" fill="white"/>
+
+    <!-- Símbolo NR12 -->
+    <text x="0" y="12"
+          font-family="Arial, sans-serif"
+          font-size="28"
+          font-weight="bold"
+          fill="#1E3A8A"
+          text-anchor="middle">NR</text>
+  </g>
+
+  <!-- Símbolo de verificação (check mark) no canto superior -->
+  <g transform="translate(380, 100)">
+    <circle cx="0" cy="0" r="32" fill="white" opacity="0.95"/>
+    <path d="M -12 0 L -4 12 L 12 -12"
+          stroke="#22C55E"
+          stroke-width="8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+  </g>
+
+  <!-- Detalhe de brilho no escudo -->
+  <ellipse cx="180" cy="120" rx="40" ry="60"
+           fill="white"
+           opacity="0.2"
+           transform="rotate(-20 180 120)"/>
+</svg>

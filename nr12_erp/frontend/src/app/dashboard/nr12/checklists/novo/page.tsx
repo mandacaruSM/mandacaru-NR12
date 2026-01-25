@@ -292,6 +292,26 @@ export default function NovoChecklistPage() {
               </p>
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Leitura do Equipamento (opcional)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min={equipamentos.find(eq => eq.id === equipamentoSelecionado)?.leitura_atual ? parseFloat(equipamentos.find(eq => eq.id === equipamentoSelecionado)!.leitura_atual) : 0}
+                value={leituraEquipamento}
+                onChange={(e) => setLeituraEquipamento(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+                placeholder="Ex: 1250.50"
+              />
+              {equipamentos.find(eq => eq.id === equipamentoSelecionado) && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Leitura atual: {parseFloat(equipamentos.find(eq => eq.id === equipamentoSelecionado)!.leitura_atual).toFixed(2)} {equipamentos.find(eq => eq.id === equipamentoSelecionado)!.tipo_medicao}
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {equipamentos.map(eq => (
                 <button

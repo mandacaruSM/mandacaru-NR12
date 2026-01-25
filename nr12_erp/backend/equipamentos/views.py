@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from .models import Equipamento
 from core.qr_utils import qr_png_response
-from core.permissions import ClienteFilterMixin, HasModuleAccess
+from core.permissions import ClienteFilterMixin, HasModuleAccess, CannotEditMasterData
 from core.plan_validators import PlanLimitValidator
 from .serializers import (
     TipoEquipamentoSerializer, EquipamentoSerializer,
@@ -22,21 +22,22 @@ class TipoEquipamentoViewSet(BaseAuthViewSet):
     serializer_class = TipoEquipamentoSerializer
     search_fields = ["nome"]
     ordering = ["nome"]
-    permission_classes = [IsAuthenticated, HasModuleAccess]
+    permission_classes = [IsAuthenticated, HasModuleAccess, CannotEditMasterData]
     required_module = 'tipos_equipamento'
 
 class EquipamentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
     """
     ViewSet para Equipamentos com filtro automático:
-    - ADMIN: Vê todos os equipamentos
-    - SUPERVISOR: Vê equipamentos dos empreendimentos que supervisiona
-    - CLIENTE: Vê apenas seus equipamentos
+    - ADMIN: Vê todos os equipamentos e pode editar
+    - SUPERVISOR: Vê equipamentos dos empreendimentos que supervisiona e pode editar
+    - CLIENTE: Vê apenas seus equipamentos (somente leitura)
+    - OPERADOR: Vê equipamentos, mas NÃO pode criar/editar/deletar
     """
     queryset = Equipamento.objects.select_related("cliente","empreendimento","tipo").all().order_by("codigo")
     serializer_class = EquipamentoSerializer
     search_fields = ["codigo","descricao","fabricante","modelo","numero_serie","cliente__nome_razao","empreendimento__nome","tipo__nome"]
     ordering = ["codigo"]
-    permission_classes = [IsAuthenticated, HasModuleAccess]
+    permission_classes = [IsAuthenticated, HasModuleAccess, CannotEditMasterData]
     required_module = 'equipamentos'
 
     def get_queryset(self):

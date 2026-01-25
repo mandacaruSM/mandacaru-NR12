@@ -189,3 +189,72 @@ class ReadOnly(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
+
+
+class OperadorCanOnlyCreate(permissions.BasePermission):
+    """
+    Operadores podem apenas criar registros (Checklists, Abastecimentos),
+    mas não podem editar/deletar dados mestres de equipamentos.
+
+    - OPERADOR: Apenas POST (criar Checklists/Abastecimentos)
+    - ADMIN/SUPERVISOR: Acesso completo
+    """
+    message = "Operadores só podem criar registros, não editar dados mestres."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        # Admin e Supervisor têm acesso total
+        if request.user.profile.role in ['ADMIN', 'SUPERVISOR']:
+            return True
+
+        # Operador pode apenas ler (GET) ou criar (POST)
+        if request.user.profile.role == 'OPERADOR':
+            return request.method in ['GET', 'HEAD', 'OPTIONS', 'POST']
+
+        # Outros perfis (CLIENTE, TECNICO, FINANCEIRO, COMPRAS)
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        # Admin e Supervisor podem tudo
+        if request.user.profile.role in ['ADMIN', 'SUPERVISOR']:
+            return True
+
+        # Operador pode apenas ler objetos individuais (não PUT/PATCH/DELETE)
+        if request.user.profile.role == 'OPERADOR':
+            return request.method in permissions.SAFE_METHODS
+
+        return True
+
+
+class CannotEditMasterData(permissions.BasePermission):
+    """
+    Operadores NÃO podem editar dados mestres como Equipamentos, Tipos de Equipamento, etc.
+    Apenas ADMIN e SUPERVISOR podem editar/deletar.
+
+    Use em ViewSets de dados mestres como EquipamentoViewSet, TipoEquipamentoViewSet.
+    """
+    message = "Operadores não têm permissão para editar dados mestres."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        # Admin e Supervisor podem tudo
+        if request.user.profile.role in ['ADMIN', 'SUPERVISOR']:
+            return True
+
+        # Operador pode apenas ler (GET)
+        if request.user.profile.role == 'OPERADOR':
+            return request.method in permissions.SAFE_METHODS
+
+        # Cliente pode ler
+        if request.user.profile.role == 'CLIENTE':
+            return request.method in permissions.SAFE_METHODS
+
+        # Outros perfis
+        return True

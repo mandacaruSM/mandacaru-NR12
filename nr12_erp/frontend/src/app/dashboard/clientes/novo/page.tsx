@@ -1,11 +1,20 @@
 // frontend/src/app/dashboard/clientes/novo/page.tsx
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientesApi, Cliente } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+
+interface Plano {
+  id: number
+  nome: string
+  tipo: string
+  valor_mensal: string
+  descricao: string
+}
 
 const UF_OPTIONS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
@@ -16,8 +25,11 @@ const UF_OPTIONS = [
 export default function NovoClientePage() {
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [planos, setPlanos] = useState<Plano[]>([]);
+  const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<Partial<Cliente>>({
     tipo_pessoa: 'PJ',
@@ -36,6 +48,42 @@ export default function NovoClientePage() {
     ativo: true,
   });
 
+  useEffect(() => {
+    console.log('👤 User:', user);
+    console.log('🔑 User role:', user?.profile?.role);
+    loadPlanos();
+  }, [user]);
+
+  const loadPlanos = async () => {
+    try {
+      console.log('🔍 Carregando planos...');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cadastro/planos/`, {
+        credentials: 'include'
+      });
+      console.log('📡 Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        // API retorna objeto paginado {results: [...]}
+        const planosList = data.results || data;
+        console.log('✅ Planos carregados:', planosList.length, 'planos');
+        console.log('📋 Planos:', planosList);
+        setPlanos(planosList);
+
+        // Seleciona o plano Essencial por padrão
+        const essencial = planosList.find((p: Plano) => p.tipo === 'ESSENCIAL');
+        if (essencial) {
+          console.log('✅ Plano Essencial selecionado:', essencial.nome);
+          setSelectedPlanoId(essencial.id);
+        }
+      } else {
+        console.error('❌ Erro ao carregar planos - Status:', response.status);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao carregar planos:', err);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -50,11 +98,49 @@ export default function NovoClientePage() {
     setError('');
 
     console.log('📝 Dados do formulário:', formData);
+    console.log('📋 Plano selecionado:', selectedPlanoId);
 
     try {
       console.log('🚀 Enviando requisição para criar cliente...');
       const result = await clientesApi.create(formData);
       console.log('✅ Cliente criado com sucesso:', result);
+
+      // Se um plano foi selecionado e é diferente do padrão, atualizar a assinatura
+      if (selectedPlanoId && user?.profile?.role === 'ADMIN') {
+        try {
+          // Buscar a assinatura criada automaticamente
+          const assinaturasRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/cadastro/assinaturas/?cliente=${result.id}`,
+            { credentials: 'include' }
+          );
+
+          if (assinaturasRes.ok) {
+            const assinaturas = await assinaturasRes.json();
+            if (assinaturas.length > 0) {
+              const assinaturaId = assinaturas[0].id;
+
+              // Alterar o plano se necessário
+              const planoEssencial = planos.find(p => p.tipo === 'ESSENCIAL');
+              if (planoEssencial && selectedPlanoId !== planoEssencial.id) {
+                await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/cadastro/assinaturas/${assinaturaId}/alterar_plano/`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ plano_id: selectedPlanoId })
+                  }
+                );
+                console.log('✅ Plano atualizado para:', selectedPlanoId);
+              }
+            }
+          }
+        } catch (planoErr) {
+          console.error('⚠️ Erro ao atualizar plano (cliente criado com sucesso):', planoErr);
+          // Não bloqueia o fluxo se falhar ao atualizar o plano
+        }
+      }
+
       toast.success('Cliente criado com sucesso');
       // Força reload completo da página para garantir que a listagem seja atualizada
       window.location.href = '/dashboard/clientes';
@@ -311,6 +397,46 @@ export default function NovoClientePage() {
               </div>
             </div>
           </div>
+
+          {/* Plano de Assinatura */}
+          {user?.profile?.role === 'ADMIN' && planos.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Plano de Assinatura</h2>
+              <div className="space-y-3">
+                {planos.map((plano) => (
+                  <label
+                    key={plano.id}
+                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedPlanoId === plano.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="plano"
+                      value={plano.id}
+                      checked={selectedPlanoId === plano.id}
+                      onChange={() => setSelectedPlanoId(plano.id)}
+                      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-900">{plano.nome}</p>
+                        <p className="text-sm font-bold text-blue-600">
+                          R$ {parseFloat(plano.valor_mensal).toFixed(2)}/mês
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">{plano.descricao}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                O cliente receberá 30 dias de trial gratuito para testar o plano selecionado.
+              </p>
+            </div>
+          )}
 
           {/* Status */}
           <div>

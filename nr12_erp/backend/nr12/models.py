@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from simple_history.models import HistoricalRecords
 
 
 class ModeloChecklist(models.Model):
@@ -173,6 +174,12 @@ class ChecklistRealizado(models.Model):
     observacoes_gerais = models.TextField(blank=True, default="")
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+
+    # Auditoria: registra quem criou/alterou e quando
+    history = HistoricalRecords(
+        history_change_reason_field=models.TextField(null=True),
+        table_name='nr12_checklistrealizado_history'
+    )
 
     class Meta:
         ordering = ['-data_hora_inicio']

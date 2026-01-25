@@ -65,7 +65,13 @@
       "Bash(printenv:*)",
       "Bash(NODE_ENV= npm run build:*)",
       "Bash(xargs:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git restore:*)",
+      "Bash(pip install:*)",
+      "Bash(.....venvScriptspip install django-simple-history)",
+      "Bash(.venv/Scripts/pip.exe install:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(npx tailwindcss:*)"
     ],
     "deny": [],
     "ask": []

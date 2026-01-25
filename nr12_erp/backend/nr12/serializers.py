@@ -158,6 +158,26 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
             'respostas'
         ]
 
+    def validate(self, data):
+        """
+        Validação customizada para garantir que horímetro/km seja coerente.
+        """
+        equipamento = data.get('equipamento')
+        leitura_equipamento = data.get('leitura_equipamento')
+
+        if equipamento and leitura_equipamento is not None:
+            # Verifica a leitura atual do equipamento
+            if leitura_equipamento < equipamento.leitura_atual:
+                raise serializers.ValidationError({
+                    'leitura_equipamento': (
+                        f"A leitura informada ({leitura_equipamento}) não pode ser menor que "
+                        f"a leitura atual do equipamento ({equipamento.leitura_atual}). "
+                        f"Tipo de medição: {equipamento.get_tipo_medicao_display()}"
+                    )
+                })
+
+        return data
+
     def create(self, validated_data):
         respostas_data = validated_data.pop('respostas', [])
         checklist = ChecklistRealizado.objects.create(**validated_data)

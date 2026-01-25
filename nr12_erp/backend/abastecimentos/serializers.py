@@ -19,6 +19,21 @@ class AbastecimentoSerializer(serializers.ModelSerializer):
         Validação customizada para garantir que horímetro/km seja coerente.
         A validação principal está no signal, mas podemos adicionar feedback aqui também.
         """
+        # Validar horímetro/km não pode ser menor que o atual
+        equipamento = data.get('equipamento')
+        horimetro_km = data.get('horimetro_km')
+
+        if equipamento and horimetro_km is not None:
+            # Verifica a leitura atual do equipamento
+            if horimetro_km < equipamento.leitura_atual:
+                raise serializers.ValidationError({
+                    'horimetro_km': (
+                        f"A leitura informada ({horimetro_km}) não pode ser menor que "
+                        f"a leitura atual do equipamento ({equipamento.leitura_atual}). "
+                        f"Tipo de medição: {equipamento.get_tipo_medicao_display()}"
+                    )
+                })
+
         # Se produto e local_estoque estiverem definidos, validar estoque disponível
         if data.get('produto') and data.get('local_estoque'):
             from almoxarifado.models import Estoque

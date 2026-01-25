@@ -388,16 +388,22 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
             <input
               type="number"
               step="0.01"
-              min="0"
+              min={equipamentoSelecionado ? parseFloat(equipamentoSelecionado.leitura_atual) : 0}
               value={form.horimetro_km ?? ''}
               onChange={e => onChange('horimetro_km', e.target.value)}
               className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Ex: 1250.50"
               required
             />
-            <span className="text-xs text-gray-900">
-              Informe a leitura do horímetro/odômetro no momento do abastecimento
-            </span>
+            {equipamentoSelecionado ? (
+              <span className="text-xs text-gray-900">
+                Valor mínimo: {parseFloat(equipamentoSelecionado.leitura_atual).toFixed(2)} {equipamentoSelecionado.tipo_medicao} (leitura atual)
+              </span>
+            ) : (
+              <span className="text-xs text-gray-900">
+                Informe a leitura do horímetro/odômetro no momento do abastecimento
+              </span>
+            )}
           </label>
 
           <label className="flex flex-col gap-2">

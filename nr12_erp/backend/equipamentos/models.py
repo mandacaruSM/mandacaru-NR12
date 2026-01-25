@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 class TipoEquipamento(models.Model):
     nome = models.CharField(max_length=100, unique=True)
@@ -39,6 +40,12 @@ class Equipamento(models.Model):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     qr_code = models.ImageField(upload_to='qrcodes/equipamentos/', blank=True, null=True, verbose_name="QR Code")
+
+    # Auditoria: registra quem criou/alterou e quando
+    history = HistoricalRecords(
+        history_change_reason_field=models.TextField(null=True),
+        table_name='equipamentos_equipamento_history'
+    )
 
     @property
     def qr_payload(self) -> str:

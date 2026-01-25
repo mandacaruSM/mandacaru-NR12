@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ClientPlanCard from '@/components/ClientPlanCard';
 import {
   clientesApi,
   equipamentosApi,
@@ -221,6 +222,11 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Plan Card for Clients */}
+      {user?.profile?.role === 'CLIENTE' && (
+        <ClientPlanCard />
+      )}
 
       {/* Recent Activity and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
