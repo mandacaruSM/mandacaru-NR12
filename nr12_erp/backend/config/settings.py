@@ -14,13 +14,11 @@ load_dotenv(dotenv_path=BASE_DIR / ".env", override=False, encoding="utf-8")
 load_dotenv(find_dotenv(), override=False, encoding="utf-8")
 
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "CHANGE_ME")
-DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+# Railway usa SECRET_KEY, mas mantém fallback para DJANGO_SECRET_KEY (compatibilidade)
+SECRET_KEY = os.environ.get("SECRET_KEY", os.environ.get("DJANGO_SECRET_KEY", "CHANGE_ME"))
+DEBUG = os.environ.get("DEBUG", os.environ.get("DJANGO_DEBUG", "False")) == "True"
 
-ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
-    "127.0.0.1,localhost,0.0.0.0"
-).split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(",")
 
 INSTALLED_APPS = [
     # Django
@@ -92,7 +90,7 @@ SIMPLE_JWT = {
 # Origens padrão em dev (se a env estiver vazia)
 _DEV_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
-_raw = os.environ.get("DJANGO_CORS_ORIGINS", "")
+_raw = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 # filtra strings vazias e exige scheme (http:// ou https://)
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in _raw.split(",")
@@ -125,12 +123,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 import dj_database_url
 
 if os.environ.get("DATABASE_URL"):
-    # Produção: usar PostgreSQL do Render
+    # Produção: usar PostgreSQL (Railway/Supabase)
     DATABASES = {
         "default": dj_database_url.config(
             default=os.environ.get("DATABASE_URL"),
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=True,  # ✅ Força SSL para Supabase
         )
     }
 else:
@@ -251,7 +250,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        # ⚠️ Railway tem filesystem efêmero - usa console em produção (DEBUG=False)
         'file': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',  # Console em produção
+            'formatter': 'verbose',
+        } if not DEBUG else {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
@@ -260,6 +264,10 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',  # Console em produção
+            'formatter': 'verbose',
+        } if not DEBUG else {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'logs' / 'security.log',
