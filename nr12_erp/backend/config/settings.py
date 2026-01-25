@@ -119,21 +119,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Banco de dados - usar PostgreSQL no Render, SQLite em dev
+# Banco de dados - PostgreSQL (Railway/Supabase) ou SQLite (dev)
 import dj_database_url
 
-if os.environ.get("DATABASE_URL"):
-    # Produção: usar PostgreSQL (Railway/Supabase)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # ✅ Produção: Supabase Pooler (Transaction Mode)
+    # - conn_max_age=0: obrigatório para pooler em Transaction Mode
+    # - conn_health_checks=False: evita queries extras que quebram com pooler
+    # - SSL já vem na URL (?sslmode=require), não duplicar
     DATABASES = {
-        "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True,  # ✅ Força SSL para Supabase
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=0,
+            conn_health_checks=False,
         )
     }
 else:
-    # Desenvolvimento: SQLite
+    # Desenvolvimento local: SQLite
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
