@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { equipamentosApi, clientesApi, empreendimentosApi, Equipamento, Cliente, Empreendimento } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+import QRCodeModal from '@/components/QRCodeModal';
 
 export default function EquipamentosPage() {
   const toast = useToast();
@@ -16,6 +17,15 @@ export default function EquipamentosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<string>('');
   const [selectedEmpreendimento, setSelectedEmpreendimento] = useState<string>('');
+
+  // QR Code Modal state
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [selectedEquipamento, setSelectedEquipamento] = useState<Equipamento | null>(null);
+
+  const handleOpenQRCode = (eq: Equipamento) => {
+    setSelectedEquipamento(eq);
+    setQrModalOpen(true);
+  };
 
   useEffect(() => {
     loadClientes();
@@ -277,9 +287,18 @@ export default function EquipamentosPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleOpenQRCode(eq)}
+                        className="text-purple-600 hover:text-purple-900 mr-3"
+                        title="Ver QR Code"
+                      >
+                        <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                      </button>
                       <Link
                         href={`/dashboard/equipamentos/${eq.id}`}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        className="text-blue-600 hover:text-blue-900 mr-3"
                       >
                         ✏️ Editar
                       </Link>
@@ -297,6 +316,18 @@ export default function EquipamentosPage() {
           </div>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      <QRCodeModal
+        isOpen={qrModalOpen}
+        onClose={() => {
+          setQrModalOpen(false);
+          setSelectedEquipamento(null);
+        }}
+        qrCodeUrl={selectedEquipamento?.qr_code || null}
+        equipamentoCodigo={selectedEquipamento?.codigo || ''}
+        equipamentoDescricao={selectedEquipamento?.descricao || selectedEquipamento?.modelo}
+      />
     </div>
   );
 }

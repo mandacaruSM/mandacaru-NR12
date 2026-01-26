@@ -176,14 +176,13 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
         Array.from(inputAnexos.files).forEach(f => fd.append('anexos_upload', f));
       }
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      // Usa proxy local para autenticação (cookies HttpOnly não funcionam cross-domain)
       const url = mode === 'create'
-        ? `${API_BASE}/manutencoes/`
-        : `${API_BASE}/manutencoes/${id}/`;
+        ? `/api/proxy/manutencoes/`
+        : `/api/proxy/manutencoes/${id}/`;
 
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PUT',
-        credentials: 'include', // CRÍTICO: Adicionar autenticação
         body: fd,
       });
 

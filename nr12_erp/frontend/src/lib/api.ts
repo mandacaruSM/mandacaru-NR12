@@ -514,6 +514,8 @@ export interface Equipamento {
   tipo_medicao: 'KM' | 'HORA';
   leitura_atual: string;
   ativo: boolean;
+  uuid: string;
+  qr_code: string | null;
   criado_em: string;
   atualizado_em: string;
 }

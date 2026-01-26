@@ -45,11 +45,14 @@ export default function ManutencoesPage() {
   async function excluir(id: number) {
     if (!confirm('Tem certeza que deseja excluir esta manutenção?')) return;
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-      await fetch(`${API_BASE}/manutencoes/${id}/`, {
+      // Usa proxy local para autenticação (cookies HttpOnly não funcionam cross-domain)
+      const res = await fetch(`/api/proxy/manutencoes/${id}/`, {
         method: 'DELETE',
-        credentials: 'include', // Envia cookies automaticamente
       });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || res.statusText);
+      }
       setItems(prev => prev.filter(i => i.id !== id));
     } catch (e: any) {
       console.error('Erro ao excluir manutenção:', e);
