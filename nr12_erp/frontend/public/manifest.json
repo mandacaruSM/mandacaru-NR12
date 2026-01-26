@@ -10,52 +10,22 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.svg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.svg",
       "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -63,22 +33,19 @@
       "name": "Novo Checklist",
       "short_name": "Checklist",
       "description": "Criar novo checklist NR-12",
-      "url": "/dashboard/nr12/novo",
-      "icons": [{ "src": "/icons/shortcut-checklist.png", "sizes": "96x96" }]
+      "url": "/dashboard/nr12/novo"
     },
     {
       "name": "Registrar Abastecimento",
       "short_name": "Abastecimento",
       "description": "Registrar abastecimento de equipamento",
-      "url": "/dashboard/abastecimentos/novo",
-      "icons": [{ "src": "/icons/shortcut-fuel.png", "sizes": "96x96" }]
+      "url": "/dashboard/abastecimentos/novo"
     },
     {
       "name": "Atualizar Horímetro",
       "short_name": "Horímetro",
       "description": "Atualizar horímetro de equipamento",
-      "url": "/dashboard/equipamentos",
-      "icons": [{ "src": "/icons/shortcut-meter.png", "sizes": "96x96" }]
+      "url": "/dashboard/equipamentos"
     }
   ],
   "categories": ["business", "productivity", "utilities"],
