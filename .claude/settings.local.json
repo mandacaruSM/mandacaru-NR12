@@ -78,7 +78,9 @@
       "Bash(NODE_OPTIONS=\"--stack-trace-limit=50\" npm run build:*)",
       "Bash(npx next:*)",
       "Bash(npx create-next-app:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git status:*)",
+      "Bash(git check-ignore:*)"
     ],
     "deny": [],
     "ask": []

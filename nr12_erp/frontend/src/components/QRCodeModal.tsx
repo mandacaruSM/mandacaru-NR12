@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -18,13 +18,47 @@ export default function QRCodeModal({
   equipamentoDescricao
 }: QRCodeModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Reset states when modal opens/closes or URL changes
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [isOpen, qrCodeUrl]);
 
   if (!isOpen) return null;
 
-  // Constrói a URL completa do QR Code
-  const fullQrCodeUrl = qrCodeUrl
-    ? (qrCodeUrl.startsWith('http') ? qrCodeUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${qrCodeUrl}`)
-    : null;
+  // Constrói a URL completa do QR Code usando o proxy de mídia local
+  const getFullQrCodeUrl = (): string | null => {
+    if (!qrCodeUrl) return null;
+
+    // Se já é uma URL completa do backend, extrai o path e usa o proxy
+    if (qrCodeUrl.startsWith('http')) {
+      // Extrai /media/... da URL completa
+      const match = qrCodeUrl.match(/\/media\/(.+)$/);
+      if (match) {
+        return `/api/backend-media/${match[1]}`;
+      }
+      return qrCodeUrl;
+    }
+
+    // Se começa com /media/, usa o proxy local
+    if (qrCodeUrl.startsWith('/media/')) {
+      const path = qrCodeUrl.replace('/media/', '');
+      return `/api/backend-media/${path}`;
+    }
+
+    // Se é um caminho relativo como qrcodes/equipamentos/xxx.png
+    if (qrCodeUrl.includes('qrcodes/')) {
+      const path = qrCodeUrl.startsWith('/') ? qrCodeUrl.slice(1) : qrCodeUrl;
+      return `/api/backend-media/${path}`;
+    }
+
+    return qrCodeUrl;
+  };
+
+  const fullQrCodeUrl = getFullQrCodeUrl();
 
   const handleDownload = async () => {
     if (!fullQrCodeUrl) return;
@@ -155,28 +189,40 @@ export default function QRCodeModal({
 
           {/* QR Code Image */}
           <div ref={printRef} className="flex flex-col items-center py-6 bg-gray-50 rounded-lg mb-4">
-            {fullQrCodeUrl ? (
+            {fullQrCodeUrl && !imageError ? (
               <>
+                {!imageLoaded && (
+                  <div className="w-64 h-64 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
                 <img
                   src={fullQrCodeUrl}
                   alt={`QR Code do equipamento ${equipamentoCodigo}`}
-                  className="w-64 h-64 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                  className={`w-64 h-64 object-contain ${imageLoaded ? '' : 'hidden'}`}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => {
+                    setImageError(true);
+                    setImageLoaded(false);
                   }}
                 />
-                <div className="hidden text-center text-gray-500 py-8">
-                  <svg className="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <p>Erro ao carregar QR Code</p>
-                </div>
-                <p className="mt-3 text-sm font-medium text-gray-700">{equipamentoCodigo}</p>
-                {equipamentoDescricao && (
-                  <p className="text-xs text-gray-500">{equipamentoDescricao}</p>
+                {imageLoaded && (
+                  <>
+                    <p className="mt-3 text-sm font-medium text-gray-700">{equipamentoCodigo}</p>
+                    {equipamentoDescricao && (
+                      <p className="text-xs text-gray-500">{equipamentoDescricao}</p>
+                    )}
+                  </>
                 )}
               </>
+            ) : imageError ? (
+              <div className="text-center text-gray-500 py-8">
+                <svg className="w-16 h-16 mx-auto mb-2 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p className="text-red-500">Erro ao carregar QR Code</p>
+                <p className="text-xs mt-1 text-gray-400">URL: {fullQrCodeUrl}</p>
+              </div>
             ) : (
               <div className="text-center text-gray-500 py-8">
                 <svg className="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
