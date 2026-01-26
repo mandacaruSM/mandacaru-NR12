@@ -71,7 +71,14 @@
       "Bash(.....venvScriptspip install django-simple-history)",
       "Bash(.venv/Scripts/pip.exe install:*)",
       "Bash(timeout 5 python:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(.venv/Scripts/pip.exe show:*)",
+      "Bash(dir:*)",
+      "Bash(test:*)",
+      "Bash(NODE_OPTIONS=\"--stack-trace-limit=50\" npm run build:*)",
+      "Bash(npx next:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
