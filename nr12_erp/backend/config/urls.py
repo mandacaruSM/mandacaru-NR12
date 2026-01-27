@@ -60,7 +60,11 @@ urlpatterns = [
     path('bot/', include('bot_telegram.urls')),
 ]
 
-# Serve media files in development
+# Serve media files (both development and production)
+# Em produção, WhiteNoise serve static files, mas media files precisam ser servidos pelo Django
+# Para produção com alto tráfego, considere usar um CDN ou storage externo (S3, Cloudinary)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Serve static files only in development (WhiteNoise handles production)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
