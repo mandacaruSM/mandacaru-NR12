@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import jsQR from 'jsqr';
 
 interface QRCodeScannerProps {
   isOpen: boolean;
@@ -16,8 +17,10 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
   const animationRef = useRef<number | null>(null);
+  const scanningRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,11 +39,13 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
       setError(null);
       setResult(null);
       setScanning(true);
+      setCameraReady(false);
+      scanningRef.current = true;
 
       // Solicitar acesso a camera
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment', // Camera traseira no mobile
+          facingMode: { ideal: 'environment' }, // Camera traseira no mobile
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -50,11 +55,15 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
 
         // Aguardar video estar pronto
         videoRef.current.onloadedmetadata = () => {
-          scanFrame();
+          if (videoRef.current) {
+            videoRef.current.play().then(() => {
+              setCameraReady(true);
+              scanFrame();
+            }).catch(console.error);
+          }
         };
       }
     } catch (err: any) {
@@ -63,14 +72,19 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
         setError('Permissao de camera negada. Por favor, permita o acesso a camera nas configuracoes do navegador.');
       } else if (err.name === 'NotFoundError') {
         setError('Nenhuma camera encontrada no dispositivo.');
+      } else if (err.name === 'NotReadableError') {
+        setError('Camera em uso por outro aplicativo. Feche outros apps que usam a camera.');
       } else {
-        setError('Erro ao acessar a camera. Tente novamente.');
+        setError(`Erro ao acessar a camera: ${err.message || 'Tente novamente.'}`);
       }
       setScanning(false);
+      scanningRef.current = false;
     }
   };
 
   const stopScanner = () => {
+    scanningRef.current = false;
+
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
@@ -86,42 +100,44 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
     }
 
     setScanning(false);
+    setCameraReady(false);
   };
 
   const scanFrame = () => {
-    if (!videoRef.current || !canvasRef.current || !scanning) return;
+    if (!videoRef.current || !canvasRef.current || !scanningRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
       animationRef.current = requestAnimationFrame(scanFrame);
       return;
     }
 
+    // Define tamanho do canvas
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
+    // Desenha frame do video no canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Usar API BarcodeDetector se disponivel (navegadores modernos)
-    if ('BarcodeDetector' in window) {
-      const barcodeDetector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-      barcodeDetector.detect(canvas)
-        .then((barcodes: any[]) => {
-          if (barcodes.length > 0) {
-            handleScanResult(barcodes[0].rawValue);
-            return;
-          }
-          animationRef.current = requestAnimationFrame(scanFrame);
-        })
-        .catch(() => {
-          animationRef.current = requestAnimationFrame(scanFrame);
-        });
-    } else {
-      // Fallback: continuar scanning sem BarcodeDetector nativo
-      animationRef.current = requestAnimationFrame(scanFrame);
+    // Pega dados da imagem para analise
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Usa jsQR para detectar QR Code (funciona em todos os navegadores)
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert',
+    });
+
+    if (code && code.data) {
+      console.log('QR Code detectado:', code.data);
+      handleScanResult(code.data);
+      return;
     }
+
+    // Continua escaneando
+    animationRef.current = requestAnimationFrame(scanFrame);
   };
 
   const handleScanResult = (data: string) => {
@@ -202,39 +218,50 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <p className="text-white text-lg font-semibold mb-2">QR Code detectado!</p>
-                <p className="text-white/80 text-sm">{result}</p>
+                <p className="text-white/80 text-sm break-all">{result}</p>
               </div>
             ) : (
               <>
+                {/* Loading enquanto camera inicia */}
+                {!cameraReady && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                    <p className="text-white text-sm">Iniciando camera...</p>
+                  </div>
+                )}
+
                 <video
                   ref={videoRef}
                   className="absolute inset-0 w-full h-full object-cover"
                   playsInline
                   muted
+                  autoPlay
                 />
                 <canvas ref={canvasRef} className="hidden" />
 
-                {/* Scan overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-64 h-64 border-2 border-white/50 rounded-lg relative">
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg" />
+                {/* Scan overlay - so mostra quando camera esta pronta */}
+                {cameraReady && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-64 h-64 border-2 border-white/50 rounded-lg relative">
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg" />
 
-                    {/* Scanning line animation */}
-                    {scanning && (
+                      {/* Scanning line animation */}
                       <div className="absolute inset-x-0 h-0.5 bg-green-400 animate-scan" />
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Instructions */}
-                <div className="absolute bottom-4 left-0 right-0 text-center">
-                  <p className="text-white text-sm bg-black/50 mx-4 py-2 px-4 rounded-lg">
-                    Aponte a camera para o QR Code do equipamento
-                  </p>
-                </div>
+                {cameraReady && (
+                  <div className="absolute bottom-4 left-0 right-0 text-center">
+                    <p className="text-white text-sm bg-black/50 mx-4 py-2 px-4 rounded-lg">
+                      Aponte a camera para o QR Code do equipamento
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>
