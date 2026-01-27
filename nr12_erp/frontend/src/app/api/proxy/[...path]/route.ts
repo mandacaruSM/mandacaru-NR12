@@ -103,10 +103,10 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
 
     console.log(`📨 [Proxy] Response status: ${response.status}`);
 
-    const respContentType = response.headers.get('content-type');
+    const respContentType = response.headers.get('content-type') || '';
 
     // Retorna JSON se for JSON
-    if (respContentType?.includes('application/json')) {
+    if (respContentType.includes('application/json')) {
       const data = await response.json();
       console.log(`📥 [Proxy] Response data:`, data);
 
@@ -118,7 +118,19 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
       return NextResponse.json(data, { status: response.status });
     }
 
-    // Retorna texto se não for JSON
+    // Retorna binario se for imagem ou arquivo
+    if (respContentType.includes('image/') || respContentType.includes('application/octet-stream')) {
+      const arrayBuffer = await response.arrayBuffer();
+      return new NextResponse(arrayBuffer, {
+        status: response.status,
+        headers: {
+          'Content-Type': respContentType,
+          'Cache-Control': 'public, max-age=86400', // Cache por 1 dia
+        },
+      });
+    }
+
+    // Retorna texto se não for JSON nem binario
     const text = await response.text();
     return new NextResponse(text, { status: response.status });
 
