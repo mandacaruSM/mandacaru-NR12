@@ -91,13 +91,30 @@ class MedicaoEquipamentoViewSet(BaseAuthViewSet):
 
 
 def equipamento_qr_view(request, uuid_str: str):
+    """
+    Gera QR Code do equipamento dinamicamente (nao depende de arquivo salvo).
+    Isso resolve o problema de filesystem efemero em Railway/Render/Heroku.
+    """
+    from django.http import HttpResponse
+    from core.qr_utils import generate_qr_code, add_text_to_qr
+    import io
+
     try:
         equip = get_object_or_404(Equipamento, uuid=uuid_str)
     except (ValueError, Http404):
         raise Http404("Equipamento não encontrado")
 
     payload = equip.qr_payload
-    # Ex.: payload "eq:1b9e3e1f-..." → no QR você terá "eq:{uuid}".
-    # Para deep-link do Telegram, use t.me/<seu_bot>?start=eq:{uuid}
-    return qr_png_response(payload)
+    # Gera QR Code com texto personalizado
+    qr_img = generate_qr_code(payload, box_size=10, border=4)
+
+    # Adiciona texto: MANDACARU S M no topo e codigo/descricao embaixo
+    bottom_text = f"{equip.codigo} - {equip.descricao or equip.modelo}"
+    final_img = add_text_to_qr(qr_img, top_text="MANDACARU S M", bottom_text=bottom_text)
+
+    # Retorna como PNG
+    buf = io.BytesIO()
+    final_img.save(buf, format="PNG")
+    buf.seek(0)
+    return HttpResponse(buf.getvalue(), content_type="image/png")
 

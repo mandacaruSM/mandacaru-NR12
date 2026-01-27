@@ -324,7 +324,7 @@ export default function EquipamentosPage() {
           setQrModalOpen(false);
           setSelectedEquipamento(null);
         }}
-        qrCodeUrl={selectedEquipamento?.qr_code || null}
+        equipamentoUuid={selectedEquipamento?.uuid || ''}
         equipamentoCodigo={selectedEquipamento?.codigo || ''}
         equipamentoDescricao={selectedEquipamento?.descricao || selectedEquipamento?.modelo}
       />

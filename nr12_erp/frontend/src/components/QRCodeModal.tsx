@@ -5,7 +5,7 @@ import { useRef, useState, useEffect } from 'react';
 interface QRCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  qrCodeUrl: string | null;
+  equipamentoUuid: string;
   equipamentoCodigo: string;
   equipamentoDescricao?: string;
 }
@@ -13,7 +13,7 @@ interface QRCodeModalProps {
 export default function QRCodeModal({
   isOpen,
   onClose,
-  qrCodeUrl,
+  equipamentoUuid,
   equipamentoCodigo,
   equipamentoDescricao
 }: QRCodeModalProps) {
@@ -21,44 +21,19 @@ export default function QRCodeModal({
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Reset states when modal opens/closes or URL changes
+  // Reset states when modal opens/closes or UUID changes
   useEffect(() => {
     setImageError(false);
     setImageLoaded(false);
-  }, [isOpen, qrCodeUrl]);
+  }, [isOpen, equipamentoUuid]);
 
   if (!isOpen) return null;
 
-  // Constrói a URL completa do QR Code usando o proxy de mídia local
-  const getFullQrCodeUrl = (): string | null => {
-    if (!qrCodeUrl) return null;
-
-    // Se já é uma URL completa do backend, extrai o path e usa o proxy
-    if (qrCodeUrl.startsWith('http')) {
-      // Extrai /media/... da URL completa
-      const match = qrCodeUrl.match(/\/media\/(.+)$/);
-      if (match) {
-        return `/api/backend-media/${match[1]}`;
-      }
-      return qrCodeUrl;
-    }
-
-    // Se começa com /media/, usa o proxy local
-    if (qrCodeUrl.startsWith('/media/')) {
-      const path = qrCodeUrl.replace('/media/', '');
-      return `/api/backend-media/${path}`;
-    }
-
-    // Se é um caminho relativo como qrcodes/equipamentos/xxx.png
-    if (qrCodeUrl.includes('qrcodes/')) {
-      const path = qrCodeUrl.startsWith('/') ? qrCodeUrl.slice(1) : qrCodeUrl;
-      return `/api/backend-media/${path}`;
-    }
-
-    return qrCodeUrl;
-  };
-
-  const fullQrCodeUrl = getFullQrCodeUrl();
+  // URL do QR Code gerado dinamicamente via proxy
+  // Endpoint: /api/v1/equipamentos/equipamentos/<uuid>/qr.png
+  const fullQrCodeUrl = equipamentoUuid
+    ? `/api/proxy/equipamentos/equipamentos/${equipamentoUuid}/qr.png`
+    : null;
 
   const handleDownload = async () => {
     if (!fullQrCodeUrl) return;
