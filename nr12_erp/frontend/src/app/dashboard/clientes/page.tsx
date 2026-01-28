@@ -4,14 +4,20 @@
 import { useState, useEffect } from 'react';
 import { clientesApi, Cliente } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function ClientesPage() {
   const toast = useToast();
+  const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [resettingPassword, setResettingPassword] = useState<number | null>(null);
+
+  // Verifica se usuario e admin
+  const isAdmin = user?.profile?.role === 'ADMIN';
 
   useEffect(() => {
     loadClientes();
@@ -51,6 +57,55 @@ export default function ClientesPage() {
       setError(errorMsg);
       toast.error(errorMsg);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleResetPassword = async (id: number, nome: string, documento: string) => {
+    const novaSenha = prompt(
+      `Resetar senha do cliente "${nome}"?\n\nDigite a nova senha (minimo 6 caracteres) ou deixe vazio para gerar automaticamente:`
+    );
+
+    // Usuario cancelou
+    if (novaSenha === null) return;
+
+    // Validar senha se fornecida
+    if (novaSenha && novaSenha.length < 6) {
+      toast.error('A senha deve ter no minimo 6 caracteres');
+      return;
+    }
+
+    try {
+      setResettingPassword(id);
+
+      const response = await fetch(`/api/proxy/cadastro/clientes/${id}/resetar_senha/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: novaSenha ? JSON.stringify({ senha: novaSenha }) : '{}',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || 'Erro ao resetar senha');
+      }
+
+      // Mostra a nova senha para o admin copiar
+      const senhaGerada = data.nova_senha || novaSenha;
+      toast.success(`Senha resetada com sucesso!`);
+
+      // Alerta com as credenciais para o admin passar ao cliente
+      alert(
+        `Credenciais do cliente:\n\n` +
+        `Usuario: ${documento}\n` +
+        `Senha: ${senhaGerada}\n\n` +
+        `Anote estas informacoes para enviar ao cliente.`
+      );
+    } catch (err: any) {
+      const errorMsg = err.message || 'Erro ao resetar senha';
+      toast.error(errorMsg);
+    } finally {
+      setResettingPassword(null);
     }
   };
 
@@ -195,9 +250,29 @@ export default function ClientesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {/* Botao Resetar Senha - apenas para Admin */}
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleResetPassword(cliente.id, cliente.nome_razao, cliente.documento || '')}
+                          disabled={resettingPassword === cliente.id}
+                          className="text-orange-600 hover:text-orange-900 mr-3 disabled:opacity-50"
+                          title="Resetar senha do cliente"
+                        >
+                          {resettingPassword === cliente.id ? (
+                            <span className="inline-flex items-center">
+                              <svg className="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </span>
+                          ) : (
+                            '🔑'
+                          )}
+                        </button>
+                      )}
                       <Link
                         href={`/dashboard/clientes/${cliente.id}`}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        className="text-blue-600 hover:text-blue-900 mr-3"
                       >
                         ✏️ Editar
                       </Link>
