@@ -149,13 +149,14 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
     if (data.startsWith('eq:')) {
       // QR Code de equipamento - extrair UUID
       const uuid = data.replace('eq:', '');
-      // Navegar para pagina do equipamento ou executar acao
+      // Navegar para pagina de resumo do equipamento
       if (onScan) {
         onScan(data);
       } else {
-        // Buscar equipamento pelo UUID e redirecionar
-        router.push(`/dashboard/equipamentos?uuid=${uuid}`);
+        // Redirecionar para pagina de resumo do equipamento
+        // Usa window.location para garantir navegação correta
         onClose();
+        window.location.href = `/dashboard/equipamento/${uuid}`;
       }
     } else if (onScan) {
       onScan(data);

@@ -40,6 +40,7 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
     def resetar_senha(self, request, pk=None):
         """
         Reseta a senha do cliente para uma senha aleatória ou fornecida.
+        Se o cliente não tem usuário vinculado, cria um automaticamente.
         Apenas administradores podem usar esta action.
 
         POST /api/v1/cadastro/clientes/{id}/resetar_senha/
@@ -47,14 +48,11 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
 
         Se não fornecer senha, uma aleatória será gerada.
         """
-        cliente = self.get_object()
+        from django.contrib.auth import get_user_model
+        from core.models import Profile
+        User = get_user_model()
 
-        # Verifica se o cliente tem usuário vinculado
-        if not hasattr(cliente, 'user') or not cliente.user:
-            return Response(
-                {"detail": "Este cliente não possui usuário vinculado no sistema."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        cliente = self.get_object()
 
         # Obtém senha do body ou gera uma aleatória
         senha = request.data.get('senha')
@@ -70,6 +68,48 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+        # Se não tem usuário vinculado, cria um automaticamente
+        usuario_criado = False
+        if not hasattr(cliente, 'user') or not cliente.user:
+            # Usa documento (CPF/CNPJ) como username, sem pontuação
+            documento = cliente.documento or ''
+            username = ''.join(c for c in documento if c.isdigit())
+
+            if not username:
+                return Response(
+                    {"detail": "Cliente não possui documento cadastrado para usar como login."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verifica se já existe usuário com esse username
+            if User.objects.filter(username=username).exists():
+                # Tenta vincular ao usuário existente
+                user = User.objects.get(username=username)
+                cliente.user = user
+                cliente.save()
+            else:
+                # Cria novo usuário
+                user = User.objects.create_user(
+                    username=username,
+                    password=senha,
+                    email=cliente.email_financeiro or '',
+                    first_name=cliente.nome_razao[:30] if cliente.nome_razao else '',
+                )
+
+                # Cria perfil do usuário como CLIENTE
+                Profile.objects.create(
+                    user=user,
+                    role='CLIENTE',
+                    modules_enabled=['dashboard', 'equipamentos', 'manutencoes', 'abastecimentos']
+                )
+
+                # Vincula ao cliente
+                cliente.user = user
+                cliente.save()
+                usuario_criado = True
+
+                print(f"[USUARIO CRIADO] Cliente: {cliente.nome_razao} | Username: {username} | Admin: {request.user.username}")
+
         # Atualiza a senha
         cliente.user.set_password(senha)
         cliente.user.save()
@@ -78,9 +118,10 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
         print(f"[SENHA RESETADA] Cliente: {cliente.nome_razao} | Username: {cliente.user.username} | Admin: {request.user.username}")
 
         return Response({
-            "detail": "Senha resetada com sucesso.",
+            "detail": "Usuário criado e senha definida com sucesso." if usuario_criado else "Senha resetada com sucesso.",
             "username": cliente.user.username,
-            "senha": senha if senha_gerada else "***",  # Só mostra se foi gerada automaticamente
+            "nova_senha": senha if senha_gerada else None,  # Retorna apenas se foi gerada automaticamente
+            "usuario_criado": usuario_criado,
             "senha_gerada_automaticamente": senha_gerada
         }, status=status.HTTP_200_OK)
 

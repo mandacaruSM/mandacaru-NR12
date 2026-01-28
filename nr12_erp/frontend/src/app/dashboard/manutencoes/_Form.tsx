@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Manutencao, Equipamento, Operador } from '@/types/manutencao';
@@ -26,6 +26,7 @@ interface Empreendimento {
 
 export default function ManutencaoForm({ initial, id, mode }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const toast = useToast();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
@@ -34,6 +35,7 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [prefilledFromUrl, setPrefilledFromUrl] = useState(false);
 
   // Estados para seleção em cascata
   const [clienteSelecionado, setClienteSelecionado] = useState<number | undefined>(undefined);
@@ -53,6 +55,56 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
   useEffect(() => {
     loadOptions();
   }, []);
+
+  // Pre-preencher do URL quando os dados forem carregados
+  useEffect(() => {
+    if (!loading && equipamentos.length > 0 && !prefilledFromUrl) {
+      const equipamentoParam = searchParams.get('equipamento');
+      const leituraParam = searchParams.get('leitura');
+      const tipoParam = searchParams.get('tipo');
+
+      if (equipamentoParam) {
+        const equipamentoId = Number(equipamentoParam);
+        const equipamento = equipamentos.find(eq => eq.id === equipamentoId);
+
+        if (equipamento) {
+          console.log('🔄 Pre-preenchendo formulário de manutenção com equipamento:', equipamento);
+
+          // Encontrar cliente e empreendimento do equipamento
+          const empreendimentoId = typeof equipamento.empreendimento === 'string'
+            ? parseInt(equipamento.empreendimento as any)
+            : equipamento.empreendimento;
+
+          // Carregar empreendimentos para encontrar o cliente
+          api<any>(`/cadastro/empreendimentos/${empreendimentoId}/`).then(emp => {
+            const clienteId = emp.cliente;
+
+            // Setar cliente
+            setClienteSelecionado(clienteId);
+
+            // Carregar empreendimentos do cliente
+            api<any>(`/cadastro/empreendimentos/?cliente=${clienteId}`).then(empsData => {
+              const emps = Array.isArray(empsData) ? empsData : (empsData?.results || []);
+              setEmpreendimentos(emps);
+
+              // Setar empreendimento
+              setEmpreendimentoSelecionado(empreendimentoId);
+
+              // Setar equipamento, tipo e leitura
+              setForm((prev: any) => ({
+                ...prev,
+                equipamento: equipamentoId,
+                horimetro: leituraParam || (equipamento as any).leitura_atual || '',
+                tipo: tipoParam || prev.tipo,
+              }));
+
+              setPrefilledFromUrl(true);
+            }).catch(console.error);
+          }).catch(console.error);
+        }
+      }
+    }
+  }, [loading, equipamentos, searchParams, prefilledFromUrl]);
 
   async function loadOptions() {
     try {

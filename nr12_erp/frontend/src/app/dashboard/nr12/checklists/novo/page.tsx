@@ -61,15 +61,21 @@ export default function NovoChecklistPage() {
   useEffect(() => {
     if (!loadingData && equipamentos.length > 0) {
       const equipamentoParam = searchParams.get('equipamento');
+      const tipoParam = searchParams.get('tipo');
       if (equipamentoParam) {
         const equipamentoId = Number(equipamentoParam);
         const equipamento = equipamentos.find(eq => eq.id === equipamentoId);
         if (equipamento) {
           setEquipamentoSelecionado(equipamentoId);
+          // Pré-preencher leitura do equipamento
+          if (equipamento.leitura_atual) {
+            setLeituraEquipamento(parseFloat(equipamento.leitura_atual).toString());
+          }
           // Pré-selecionar modelo baseado no tipo do equipamento
-          if ((equipamento as any).tipo_equipamento) {
+          const tipoEquipamento = tipoParam || (equipamento as any).tipo_equipamento || (equipamento as any).tipo;
+          if (tipoEquipamento) {
             const modeloCompativel = modelos.find(
-              m => m.tipo_equipamento === (equipamento as any).tipo_equipamento
+              m => m.tipo_equipamento === tipoEquipamento || m.tipo_equipamento_nome?.toLowerCase().includes(tipoEquipamento.toLowerCase())
             );
             if (modeloCompativel) {
               setModeloSelecionado(modeloCompativel.id);
