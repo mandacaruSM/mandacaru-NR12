@@ -30,9 +30,9 @@ const menuItems: MenuItem[] = [
   { name: 'NR12', href: '/dashboard/nr12', module: 'nr12', icon: '📋' },
 
   // Pessoas
-  { name: 'Técnicos', href: '/dashboard/tecnicos', module: '', icon: '👨‍🔧' },
-  { name: 'Operadores', href: '/dashboard/operadores', module: '', icon: '👷' },
-  { name: 'Supervisores', href: '/dashboard/supervisores', module: '', icon: '👨‍💼' },
+  { name: 'Técnicos', href: '/dashboard/tecnicos', module: 'tecnicos', icon: '👨‍🔧' },
+  { name: 'Operadores', href: '/dashboard/operadores', module: 'operadores', icon: '👷' },
+  { name: 'Supervisores', href: '/dashboard/supervisores', module: 'supervisores', icon: '👨‍💼' },
 
   // Gestão
   { name: 'Almoxarifado', href: '/dashboard/almoxarifado', module: 'almoxarifado', icon: '📦' },
@@ -40,7 +40,7 @@ const menuItems: MenuItem[] = [
   { name: 'Orçamentos', href: '/dashboard/orcamentos', module: 'orcamentos', icon: '💰' },
   { name: 'Financeiro', href: '/dashboard/financeiro', module: 'financeiro', icon: '💵' },
   { name: 'Compras', href: '/dashboard/compras', module: 'compras', icon: '🛒' },
-  { name: 'Relatórios', href: '/dashboard/relatorios', module: '', icon: '📈' },
+  { name: 'Relatórios', href: '/dashboard/relatorios', module: 'relatorios', icon: '📈' },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

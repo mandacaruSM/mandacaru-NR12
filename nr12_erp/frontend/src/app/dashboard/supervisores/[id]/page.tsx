@@ -5,17 +5,22 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supervisoresApi, Supervisor } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import TelegramVinculacao from '@/components/TelegramVinculacao';
 
 export default function SupervisorDetalhePage() {
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const [item, setItem] = useState<Supervisor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resetando, setResetando] = useState(false);
 
   const id = Number(params?.id);
+  const isAdmin = user?.profile?.role === 'ADMIN';
 
   const carregarDados = async () => {
     if (!id) return;
@@ -36,9 +41,23 @@ export default function SupervisorDetalhePage() {
   }, [id]);
 
   const handleGerarCodigo = async () => {
-    // TODO: Implementar endpoint para gerar código
-    // Por enquanto, apenas recarrega os dados
     await carregarDados();
+  };
+
+  const handleResetarSenha = async () => {
+    if (!confirm('Resetar senha do supervisor? Uma nova senha sera gerada automaticamente.')) return;
+    try {
+      setResetando(true);
+      const res = await api<any>(`/supervisores/${id}/resetar_senha/`, { method: 'POST' });
+      const msg = res.usuario_criado
+        ? `Usuario criado! Login: ${res.username}` + (res.nova_senha ? ` | Senha: ${res.nova_senha}` : '')
+        : `Senha resetada!` + (res.nova_senha ? ` Nova senha: ${res.nova_senha}` : '');
+      toast.success(msg);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao resetar senha');
+    } finally {
+      setResetando(false);
+    }
   };
 
   if (loading) {
@@ -54,7 +73,16 @@ export default function SupervisorDetalhePage() {
           <h1 className="text-2xl font-bold text-gray-900">Supervisor #{item.id}</h1>
           <p className="text-gray-900">Detalhes do supervisor</p>
         </div>
-        <div className="space-x-3">
+        <div className="flex items-center space-x-3">
+          {isAdmin && (
+            <button
+              onClick={handleResetarSenha}
+              disabled={resetando}
+              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+            >
+              {resetando ? 'Resetando...' : 'Resetar Senha'}
+            </button>
+          )}
           <Link href={`/dashboard/supervisores/${item.id}/editar`} className="px-4 py-2 bg-gray-800 text-white rounded-lg">
             Editar
           </Link>
@@ -106,4 +134,3 @@ export default function SupervisorDetalhePage() {
     </div>
   );
 }
-

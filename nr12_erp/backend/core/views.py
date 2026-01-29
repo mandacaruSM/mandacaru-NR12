@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -13,6 +14,7 @@ from .serializers import (
     OperadorSerializer, OperadorDetailSerializer,
     SupervisorSerializer,
 )
+from .permissions import IsAdminUser
 
 # ============================================
 # VIEWS EXISTENTES (Health e Me)
@@ -34,11 +36,30 @@ class MeView(APIView):
             'id': user.id,
             'username': user.username,
             'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'profile': {
                 'role': profile.role,
                 'modules_enabled': profile.modules_enabled
             }
         }
+
+        if hasattr(user, 'supervisor_profile'):
+            sup = user.supervisor_profile
+            data['supervisor'] = {'id': sup.id, 'nome_completo': sup.nome_completo}
+
+        if hasattr(user, 'operador_profile'):
+            op = user.operador_profile
+            data['operador'] = {'id': op.id, 'nome_completo': op.nome_completo}
+
+        if hasattr(user, 'tecnico_profile'):
+            tec = user.tecnico_profile
+            data['tecnico'] = {'id': tec.id, 'nome_completo': tec.nome_completo or tec.nome}
+
+        if hasattr(user, 'cliente_profile'):
+            cli = user.cliente_profile
+            data['cliente'] = {'id': cli.id, 'nome_razao': cli.nome_razao}
+
         return Response(data)
 
 # ============================================
@@ -164,6 +185,71 @@ class OperadorViewSet(viewsets.ModelViewSet):
             'telegram_vinculado': operador.telegram_vinculado,
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
+    def resetar_senha(self, request, pk=None):
+        """
+        Reseta a senha do operador. Se não tem usuário vinculado, cria automaticamente.
+        POST /api/v1/operadores/{id}/resetar_senha/
+        Body (opcional): { "senha": "novasenha123" }
+        """
+        from django.contrib.auth import get_user_model
+        from .models import Profile
+        User = get_user_model()
+
+        operador = self.get_object()
+
+        senha = request.data.get('senha')
+        if not senha:
+            senha = get_random_string(8)
+            senha_gerada = True
+        else:
+            senha_gerada = False
+            if len(senha) < 6:
+                return Response(
+                    {"detail": "A senha deve ter pelo menos 6 caracteres."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        usuario_criado = False
+        if not operador.user:
+            cpf_limpo = ''.join(c for c in (operador.cpf or '') if c.isdigit())
+            if not cpf_limpo:
+                return Response(
+                    {"detail": "Operador não possui CPF cadastrado para usar como login."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if User.objects.filter(username=cpf_limpo).exists():
+                user = User.objects.get(username=cpf_limpo)
+                operador.user = user
+                operador.save()
+            else:
+                user = User.objects.create_user(
+                    username=cpf_limpo,
+                    password=senha,
+                    email=operador.email or '',
+                    first_name=operador.nome_completo[:30] if operador.nome_completo else '',
+                )
+                Profile.objects.create(
+                    user=user,
+                    role='OPERADOR',
+                    modules_enabled=['dashboard', 'equipamentos', 'nr12', 'abastecimentos']
+                )
+                operador.user = user
+                operador.save()
+                usuario_criado = True
+
+        operador.user.set_password(senha)
+        operador.user.save()
+
+        return Response({
+            "detail": "Usuário criado e senha definida com sucesso." if usuario_criado else "Senha resetada com sucesso.",
+            "username": operador.user.username,
+            "nova_senha": senha if senha_gerada else None,
+            "usuario_criado": usuario_criado,
+            "senha_gerada_automaticamente": senha_gerada
+        })
+
 
 class SupervisorViewSet(viewsets.ModelViewSet):
     """
@@ -182,6 +268,71 @@ class SupervisorViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(criado_por=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
+    def resetar_senha(self, request, pk=None):
+        """
+        Reseta a senha do supervisor. Se não tem usuário vinculado, cria automaticamente.
+        POST /api/v1/supervisores/{id}/resetar_senha/
+        Body (opcional): { "senha": "novasenha123" }
+        """
+        from django.contrib.auth import get_user_model
+        from .models import Profile
+        User = get_user_model()
+
+        supervisor = self.get_object()
+
+        senha = request.data.get('senha')
+        if not senha:
+            senha = get_random_string(8)
+            senha_gerada = True
+        else:
+            senha_gerada = False
+            if len(senha) < 6:
+                return Response(
+                    {"detail": "A senha deve ter pelo menos 6 caracteres."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        usuario_criado = False
+        if not supervisor.user:
+            cpf_limpo = ''.join(c for c in (supervisor.cpf or '') if c.isdigit())
+            if not cpf_limpo:
+                return Response(
+                    {"detail": "Supervisor não possui CPF cadastrado para usar como login."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if User.objects.filter(username=cpf_limpo).exists():
+                user = User.objects.get(username=cpf_limpo)
+                supervisor.user = user
+                supervisor.save()
+            else:
+                user = User.objects.create_user(
+                    username=cpf_limpo,
+                    password=senha,
+                    email=supervisor.email or '',
+                    first_name=supervisor.nome_completo[:30] if supervisor.nome_completo else '',
+                )
+                Profile.objects.create(
+                    user=user,
+                    role='SUPERVISOR',
+                    modules_enabled=['dashboard', 'clientes', 'empreendimentos', 'equipamentos', 'operadores', 'nr12', 'abastecimentos', 'manutencoes']
+                )
+                supervisor.user = user
+                supervisor.save()
+                usuario_criado = True
+
+        supervisor.user.set_password(senha)
+        supervisor.user.save()
+
+        return Response({
+            "detail": "Usuário criado e senha definida com sucesso." if usuario_criado else "Senha resetada com sucesso.",
+            "username": supervisor.user.username,
+            "nova_senha": senha if senha_gerada else None,
+            "usuario_criado": usuario_criado,
+            "senha_gerada_automaticamente": senha_gerada
+        })
 
 # ============================================
 # ENDPOINTS ESPECÍFICOS PARA BOT TELEGRAM

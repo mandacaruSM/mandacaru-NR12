@@ -1,8 +1,21 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from core.validators import validate_cpf
 
+User = get_user_model()
+
 class Tecnico(models.Model):
+    # ==================== ACESSO WEB ====================
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tecnico_profile',
+        verbose_name='Usuário do Sistema'
+    )
+
     # Campo antigo mantido para compatibilidade
     nome = models.CharField(max_length=150, default='', blank=True, verbose_name="Nome")
 

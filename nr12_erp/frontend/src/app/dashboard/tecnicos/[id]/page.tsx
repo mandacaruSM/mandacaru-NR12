@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import TelegramVinculacao from '@/components/TelegramVinculacao';
 
 interface Tecnico {
@@ -45,11 +47,15 @@ interface Tecnico {
 export default function TecnicoDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const toast = useToast();
+  const { user } = useAuth();
   const id = Number(params.id);
 
+  const isAdmin = user?.profile?.role === 'ADMIN';
   const [item, setItem] = useState<Tecnico | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [resetando, setResetando] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -88,6 +94,22 @@ export default function TecnicoDetailPage() {
     }
   };
 
+  const handleResetarSenha = async () => {
+    if (!confirm('Resetar senha do técnico? Uma nova senha sera gerada automaticamente.')) return;
+    try {
+      setResetando(true);
+      const res = await api<any>(`/tecnicos/${id}/resetar_senha/`, { method: 'POST' });
+      const msg = res.usuario_criado
+        ? `Usuario criado! Login: ${res.username}` + (res.nova_senha ? ` | Senha: ${res.nova_senha}` : '')
+        : `Senha resetada!` + (res.nova_senha ? ` Nova senha: ${res.nova_senha}` : '');
+      toast.success(msg);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao resetar senha');
+    } finally {
+      setResetando(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -121,6 +143,15 @@ export default function TecnicoDetailPage() {
           <p className="text-gray-900 mt-1">{item.nome}</p>
         </div>
         <div className="flex gap-3">
+          {isAdmin && (
+            <button
+              onClick={handleResetarSenha}
+              disabled={resetando}
+              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+            >
+              {resetando ? 'Resetando...' : 'Resetar Senha'}
+            </button>
+          )}
           <Link
             href={`/dashboard/tecnicos/${id}/editar`}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

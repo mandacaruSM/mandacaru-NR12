@@ -49,6 +49,16 @@ class Operador(models.Model):
     """
     Operador de equipamentos - pode ser vinculado via Telegram ou Web
     """
+    # ==================== ACESSO WEB ====================
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='operador_profile',
+        verbose_name='Usuário do Sistema'
+    )
+
     # ==================== DADOS PESSOAIS ====================
     nome_completo = models.CharField(max_length=200, verbose_name="Nome Completo")
     cpf = models.CharField(
@@ -247,6 +257,16 @@ class Supervisor(models.Model):
     """
     Supervisor/Encarregado - gerencia operadores e equipamentos
     """
+    # ==================== ACESSO WEB ====================
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='supervisor_profile',
+        verbose_name='Usuário do Sistema'
+    )
+
     # ==================== DADOS PESSOAIS ====================
     nome_completo = models.CharField(max_length=200, verbose_name="Nome Completo")
     cpf = models.CharField(

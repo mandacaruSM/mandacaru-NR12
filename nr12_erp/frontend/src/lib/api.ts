@@ -445,14 +445,14 @@ export const operadoresApi = {
     return apiFetch<void>(`/operadores/${id}`, { method: "DELETE" });
   },
   async vincularEquipamento(operadorId: number, equipamentoId: number, observacoes?: string) {
-    return apiFetch<{ detail: string; autorizacao_id?: number }>(`/operadores/${operadorId}vincular_equipamento/`, {
+    return apiFetch<{ detail: string; autorizacao_id?: number }>(`/operadores/${operadorId}/vincular_equipamento/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ equipamento_id: equipamentoId, observacoes }),
     });
   },
   async desvincularEquipamento(operadorId: number, equipamentoId: number) {
-    return apiFetch<{ detail: string }>(`/operadores/${operadorId}desvincular_equipamento/`, {
+    return apiFetch<{ detail: string }>(`/operadores/${operadorId}/desvincular_equipamento/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ equipamento_id: equipamentoId }),

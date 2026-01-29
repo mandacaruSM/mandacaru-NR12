@@ -125,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const hasModule = (module: string): boolean => {
+    if (!module) return true;
+    if (user?.profile?.role === 'ADMIN') return true;
     return user?.profile?.modules_enabled?.includes(module) ?? false;
   };
 
