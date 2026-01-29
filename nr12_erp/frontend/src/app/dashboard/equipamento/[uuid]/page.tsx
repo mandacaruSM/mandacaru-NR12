@@ -5,16 +5,16 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/contexts/ToastContext';
+import { api } from '@/lib/api';
 import {
   equipamentosApi,
-  manutencoesApi,
   abastecimentosApi,
   nr12Api,
   Equipamento,
-  Manutencao,
   Abastecimento,
   ChecklistRealizado
 } from '@/lib/api';
+import type { Manutencao } from '@/types/manutencao';
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
@@ -58,12 +58,14 @@ export default function EquipamentoResumePage({ params }: PageProps) {
 
       // Carregar dados relacionados em paralelo
       const [manutencoesRes, abastecimentosRes, checklistsRes] = await Promise.all([
-        manutencoesApi.list({ equipamento: equip.id }).catch(() => ({ results: [] })),
+        api<any>(`/manutencoes/?equipamento=${equip.id}`).catch(() => ({ results: [] })),
         abastecimentosApi.list({ equipamento: equip.id }).catch(() => ({ results: [] })),
         nr12Api.checklists.list({ equipamento: equip.id }).catch(() => ({ results: [] })),
       ]);
 
-      setManutencoes((manutencoesRes.results || []).slice(0, 5));
+      // Manutenções podem vir como array ou objeto com results
+      const manutencoesArray = Array.isArray(manutencoesRes) ? manutencoesRes : (manutencoesRes.results || []);
+      setManutencoes(manutencoesArray.slice(0, 5));
       setAbastecimentos((abastecimentosRes.results || []).slice(0, 5));
       setChecklists((checklistsRes.results || []).slice(0, 5));
 
