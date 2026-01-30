@@ -44,21 +44,33 @@ class MeView(APIView):
             }
         }
 
-        if hasattr(user, 'supervisor_profile'):
-            sup = user.supervisor_profile
-            data['supervisor'] = {'id': sup.id, 'nome_completo': sup.nome_completo}
+        try:
+            if hasattr(user, 'supervisor_profile'):
+                sup = user.supervisor_profile
+                data['supervisor'] = {'id': sup.id, 'nome_completo': sup.nome_completo}
+        except Exception:
+            pass
 
-        if hasattr(user, 'operador_profile'):
-            op = user.operador_profile
-            data['operador'] = {'id': op.id, 'nome_completo': op.nome_completo}
+        try:
+            if hasattr(user, 'operador_profile'):
+                op = user.operador_profile
+                data['operador'] = {'id': op.id, 'nome_completo': op.nome_completo}
+        except Exception:
+            pass
 
-        if hasattr(user, 'tecnico_profile'):
-            tec = user.tecnico_profile
-            data['tecnico'] = {'id': tec.id, 'nome_completo': tec.nome_completo or tec.nome}
+        try:
+            if hasattr(user, 'tecnico_profile'):
+                tec = user.tecnico_profile
+                data['tecnico'] = {'id': tec.id, 'nome_completo': tec.nome_completo or tec.nome}
+        except Exception:
+            pass
 
-        if hasattr(user, 'cliente_profile'):
-            cli = user.cliente_profile
-            data['cliente'] = {'id': cli.id, 'nome_razao': cli.nome_razao}
+        try:
+            if hasattr(user, 'cliente_profile'):
+                cli = user.cliente_profile
+                data['cliente'] = {'id': cli.id, 'nome_razao': cli.nome_razao}
+        except Exception:
+            pass
 
         return Response(data)
 

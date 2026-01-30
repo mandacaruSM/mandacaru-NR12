@@ -347,54 +347,63 @@ def me(request):
             "modules_enabled": profile.modules_enabled or []
         }
 
-    # Busca dados adicionais se for supervisor
+    # Busca dados adicionais dos profiles vinculados
     supervisor_data = None
-    if hasattr(user, 'supervisor_profile'):
-        supervisor = user.supervisor_profile
-        supervisor_data = {
-            "id": supervisor.id,
-            "nome_completo": supervisor.nome_completo,
-            "cpf": supervisor.cpf,
-            "email": supervisor.email,
-            "telefone": supervisor.telefone
-        }
+    try:
+        if hasattr(user, 'supervisor_profile'):
+            supervisor = user.supervisor_profile
+            supervisor_data = {
+                "id": supervisor.id,
+                "nome_completo": supervisor.nome_completo,
+                "cpf": supervisor.cpf,
+                "email": supervisor.email,
+                "telefone": supervisor.telefone
+            }
+    except Exception:
+        pass
 
-    # Busca dados adicionais se for cliente
     cliente_data = None
-    if hasattr(user, 'cliente_profile'):
-        cliente = user.cliente_profile
-        cliente_data = {
-            "id": cliente.id,
-            "nome_razao": cliente.nome_razao,
-            "tipo_pessoa": cliente.tipo_pessoa,
-            "documento": cliente.documento,
-            "email_financeiro": cliente.email_financeiro,
-            "telefone": cliente.telefone
-        }
+    try:
+        if hasattr(user, 'cliente_profile'):
+            cliente = user.cliente_profile
+            cliente_data = {
+                "id": cliente.id,
+                "nome_razao": cliente.nome_razao,
+                "tipo_pessoa": cliente.tipo_pessoa,
+                "documento": cliente.documento,
+                "email_financeiro": cliente.email_financeiro,
+                "telefone": cliente.telefone
+            }
+    except Exception:
+        pass
 
-    # Busca dados adicionais se for operador
     operador_data = None
-    if hasattr(user, 'operador_profile'):
-        operador = user.operador_profile
-        operador_data = {
-            "id": operador.id,
-            "nome_completo": operador.nome_completo,
-            "cpf": operador.cpf,
-            "email": operador.email,
-            "telefone": operador.telefone
-        }
+    try:
+        if hasattr(user, 'operador_profile'):
+            operador = user.operador_profile
+            operador_data = {
+                "id": operador.id,
+                "nome_completo": operador.nome_completo,
+                "cpf": operador.cpf,
+                "email": operador.email,
+                "telefone": operador.telefone
+            }
+    except Exception:
+        pass
 
-    # Busca dados adicionais se for tecnico
     tecnico_data = None
-    if hasattr(user, 'tecnico_profile'):
-        tecnico = user.tecnico_profile
-        tecnico_data = {
-            "id": tecnico.id,
-            "nome_completo": tecnico.nome_completo or tecnico.nome,
-            "cpf": tecnico.cpf,
-            "email": tecnico.email,
-            "telefone": tecnico.telefone
-        }
+    try:
+        if hasattr(user, 'tecnico_profile'):
+            tecnico = user.tecnico_profile
+            tecnico_data = {
+                "id": tecnico.id,
+                "nome_completo": tecnico.nome_completo or tecnico.nome,
+                "cpf": tecnico.cpf,
+                "email": tecnico.email,
+                "telefone": tecnico.telefone
+            }
+    except Exception:
+        pass
 
     return JsonResponse({
         "id": user.id,
