@@ -35,13 +35,18 @@ class EquipamentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
     """
     queryset = Equipamento.objects.select_related("cliente","empreendimento","tipo").all().order_by("codigo")
     serializer_class = EquipamentoSerializer
-    search_fields = ["codigo","descricao","fabricante","modelo","numero_serie","cliente__nome_razao","empreendimento__nome","tipo__nome"]
+    search_fields = ["codigo","descricao","fabricante","modelo","numero_serie","cliente__nome_razao","empreendimento__nome","tipo__nome","uuid"]
     ordering = ["codigo"]
     permission_classes = [IsAuthenticated, HasModuleAccess, CannotEditMasterData]
     required_module = 'equipamentos'
 
     def get_queryset(self):
         qs = super().get_queryset()
+        # Filtro direto por UUID (para busca via QR Code)
+        uuid_param = self.request.query_params.get("uuid")
+        if uuid_param:
+            qs = qs.filter(uuid=uuid_param)
+            return qs
         # Filtros manuais adicionais (se fornecidos via query params)
         cliente_id = self.request.query_params.get("cliente")
         emp_id = self.request.query_params.get("empreendimento")

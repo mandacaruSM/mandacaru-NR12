@@ -43,10 +43,10 @@ export default function EquipamentoResumePage({ params }: PageProps) {
       setLoading(true);
       setError(null);
 
-      // Buscar equipamento pelo UUID
-      const equipamentosRes = await equipamentosApi.list({ search: uuid });
+      // Buscar equipamento pelo UUID (filtro direto)
+      const equipamentosRes = await api<{ results: Equipamento[] }>(`/equipamentos/equipamentos/?uuid=${uuid}`);
       const equipamentos = equipamentosRes.results || [];
-      const equip = equipamentos.find((e: Equipamento) => e.uuid === uuid);
+      const equip = equipamentos.length > 0 ? equipamentos[0] : null;
 
       if (!equip) {
         setError('Equipamento não encontrado');
