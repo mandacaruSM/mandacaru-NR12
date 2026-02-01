@@ -13,6 +13,15 @@ class ClienteFilterMixin:
     - CLIENTE: Vê apenas seus próprios dados
     """
 
+    def _get_user_role(self, user):
+        """Retorna role do usuário de forma segura"""
+        try:
+            if hasattr(user, 'profile') and user.profile:
+                return user.profile.role
+        except Exception:
+            pass
+        return None
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
@@ -20,50 +29,52 @@ class ClienteFilterMixin:
         if not user.is_authenticated:
             return queryset.none()
 
+        # Superuser sempre vê tudo
+        if user.is_superuser:
+            return queryset
+
+        role = self._get_user_role(user)
+
         # ADMIN vê tudo
-        if hasattr(user, 'profile') and user.profile.role == 'ADMIN':
+        if role == 'ADMIN':
             return queryset
 
         # CLIENTE vê apenas seus próprios dados
-        if hasattr(user, 'profile') and user.profile.role == 'CLIENTE':
-            if hasattr(user, 'cliente_profile'):
-                cliente = user.cliente_profile
-
-                # Se o queryset tem campo 'cliente', filtra por ele
-                if hasattr(queryset.model, 'cliente'):
-                    return queryset.filter(cliente=cliente)
-
-                # Se é o próprio model Cliente, retorna apenas este cliente
-                if queryset.model.__name__ == 'Cliente':
-                    return queryset.filter(id=cliente.id)
-
-                # Se tem campo 'equipamento' (ex: Abastecimento, Manutencao)
-                if hasattr(queryset.model, 'equipamento'):
-                    return queryset.filter(equipamento__cliente=cliente)
-
+        if role == 'CLIENTE':
+            try:
+                cliente = getattr(user, 'cliente_profile', None)
+                if cliente:
+                    if hasattr(queryset.model, 'cliente'):
+                        return queryset.filter(cliente=cliente)
+                    if queryset.model.__name__ == 'Cliente':
+                        return queryset.filter(id=cliente.id)
+                    if hasattr(queryset.model, 'equipamento'):
+                        return queryset.filter(equipamento__cliente=cliente)
+            except Exception:
+                pass
             return queryset.none()
 
         # SUPERVISOR vê empreendimentos que supervisiona
-        if hasattr(user, 'profile') and user.profile.role == 'SUPERVISOR':
-            if hasattr(user, 'supervisor_profile'):
-                supervisor = user.supervisor_profile
+        if role == 'SUPERVISOR':
+            try:
+                supervisor = getattr(user, 'supervisor_profile', None)
+                if supervisor:
+                    if hasattr(queryset.model, 'equipamento'):
+                        return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
+                    if hasattr(queryset.model, 'empreendimento'):
+                        return queryset.filter(empreendimento__supervisor=supervisor)
+                    if queryset.model.__name__ == 'Empreendimento':
+                        return queryset.filter(supervisor=supervisor)
+                    if hasattr(queryset.model, 'cliente'):
+                        empreendimentos_ids = supervisor.empreendimentos.values_list('cliente_id', flat=True)
+                        return queryset.filter(cliente_id__in=empreendimentos_ids)
+            except Exception:
+                pass
 
-                # Se tem campo equipamento (ex: Abastecimento, Manutencao)
-                if hasattr(queryset.model, 'equipamento'):
-                    return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
-
-                # Se tem campo empreendimento, filtra pelos empreendimentos do supervisor
-                if hasattr(queryset.model, 'empreendimento'):
-                    return queryset.filter(empreendimento__supervisor=supervisor)
-
-                # Se é Empreendimento, filtra pelos que ele supervisiona
-                if queryset.model.__name__ == 'Empreendimento':
-                    return queryset.filter(supervisor=supervisor)
-
-                # Se tem campo cliente, filtra pelos clientes dos empreendimentos
-                if hasattr(queryset.model, 'cliente'):
-                    empreendimentos_ids = supervisor.empreendimentos.values_list('cliente_id', flat=True)
-                    return queryset.filter(cliente_id__in=empreendimentos_ids)
+        # OPERADOR, TECNICO e outros roles: retorna queryset sem filtro extra
+        # (o HasModuleAccess já limita o acesso ao módulo)
+        if role in ('OPERADOR', 'TECNICO'):
+            return queryset
 
         return queryset
 

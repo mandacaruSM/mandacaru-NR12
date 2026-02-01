@@ -142,7 +142,17 @@ class EmpreendimentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
     required_module = 'empreendimentos'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        try:
+            qs = super().get_queryset()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Erro no filtro de acesso empreendimentos: {e}")
+            # Fallback seguro: se o mixin falhar, retorna vazio para não-admin
+            user = self.request.user
+            if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+                qs = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
+            else:
+                return Empreendimento.objects.none()
         # Filtro manual adicional (se fornecido via query params)
         cliente_id = self.request.query_params.get("cliente")
         if cliente_id:
