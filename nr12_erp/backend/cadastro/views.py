@@ -127,32 +127,40 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
 
 
 # --- Empreendimentos ---
-class EmpreendimentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
+class EmpreendimentoViewSet(BaseAuthViewSet):
     """
-    ViewSet para Empreendimentos com filtro automático:
-    - ADMIN: Vê todos os empreendimentos
-    - SUPERVISOR: Vê empreendimentos que supervisiona
-    - CLIENTE: Vê apenas seus empreendimentos
+    ViewSet para Empreendimentos.
+    Filtro manual seguro por role sem depender do ClienteFilterMixin.
     """
     queryset = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
     serializer_class = EmpreendimentoSerializer
     search_fields = ["nome", "cliente__nome_razao"]
     ordering = ["nome"]
-    permission_classes = [IsAuthenticated, HasModuleAccess]
-    required_module = 'empreendimentos'
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        try:
-            qs = super().get_queryset()
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Erro no filtro de acesso empreendimentos: {e}")
-            # Fallback seguro: se o mixin falhar, retorna vazio para não-admin
-            user = self.request.user
-            if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
-                qs = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
+        user = self.request.user
+        qs = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
+
+        # Admin/superuser vê tudo
+        if user.is_superuser:
+            pass
+        elif hasattr(user, 'profile') and user.profile.role == 'ADMIN':
+            pass
+        elif hasattr(user, 'profile') and user.profile.role == 'CLIENTE':
+            cliente = getattr(user, 'cliente_profile', None)
+            if cliente:
+                qs = qs.filter(cliente=cliente)
             else:
                 return Empreendimento.objects.none()
+        elif hasattr(user, 'profile') and user.profile.role == 'SUPERVISOR':
+            supervisor = getattr(user, 'supervisor_profile', None)
+            if supervisor:
+                qs = qs.filter(supervisor=supervisor)
+            else:
+                return Empreendimento.objects.none()
+        # OPERADOR, TECNICO e outros: veem tudo (filtro por módulo já limita acesso)
+
         # Filtro manual adicional (se fornecido via query params)
         cliente_id = self.request.query_params.get("cliente")
         if cliente_id:
