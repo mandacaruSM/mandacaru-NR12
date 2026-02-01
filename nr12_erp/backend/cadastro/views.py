@@ -12,7 +12,7 @@ from .serializers import (
     ClienteSerializer, EmpreendimentoSerializer,
     PlanoSerializer, AssinaturaClienteSerializer
 )
-from core.permissions import ClienteFilterMixin, HasModuleAccess, IsAdminUser
+from core.permissions import IsAdminUser, filter_by_role
 from core.plan_validators import PlanLimitValidator
 
 # --- Base DRF ---
@@ -22,19 +22,18 @@ class BaseAuthViewSet(viewsets.ModelViewSet):
 
 
 # --- Clientes ---
-class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
+class ClienteViewSet(BaseAuthViewSet):
     """
-    ViewSet para Clientes com filtro automático:
-    - ADMIN: Vê todos os clientes
-    - SUPERVISOR: Vê clientes dos empreendimentos que supervisiona
-    - CLIENTE: Vê apenas seu próprio cadastro
+    ViewSet para Clientes com filtro seguro por role.
     """
     queryset = Cliente.objects.all().order_by("nome_razao")
     serializer_class = ClienteSerializer
     search_fields = ["nome_razao", "documento", "cidade", "email_financeiro"]
     ordering = ["nome_razao"]
-    permission_classes = [IsAuthenticated, HasModuleAccess]
-    required_module = 'clientes'
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
     def resetar_senha(self, request, pk=None):
@@ -129,8 +128,7 @@ class ClienteViewSet(ClienteFilterMixin, BaseAuthViewSet):
 # --- Empreendimentos ---
 class EmpreendimentoViewSet(BaseAuthViewSet):
     """
-    ViewSet para Empreendimentos.
-    Filtro manual seguro por role sem depender do ClienteFilterMixin.
+    ViewSet para Empreendimentos com filtro seguro por role.
     """
     queryset = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
     serializer_class = EmpreendimentoSerializer
@@ -139,28 +137,7 @@ class EmpreendimentoViewSet(BaseAuthViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        qs = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
-
-        # Admin/superuser vê tudo
-        if user.is_superuser:
-            pass
-        elif hasattr(user, 'profile') and user.profile.role == 'ADMIN':
-            pass
-        elif hasattr(user, 'profile') and user.profile.role == 'CLIENTE':
-            cliente = getattr(user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(cliente=cliente)
-            else:
-                return Empreendimento.objects.none()
-        elif hasattr(user, 'profile') and user.profile.role == 'SUPERVISOR':
-            supervisor = getattr(user, 'supervisor_profile', None)
-            if supervisor:
-                qs = qs.filter(supervisor=supervisor)
-            else:
-                return Empreendimento.objects.none()
-        # OPERADOR, TECNICO e outros: veem tudo (filtro por módulo já limita acesso)
-
+        qs = filter_by_role(super().get_queryset(), self.request.user)
         # Filtro manual adicional (se fornecido via query params)
         cliente_id = self.request.query_params.get("cliente")
         if cliente_id:

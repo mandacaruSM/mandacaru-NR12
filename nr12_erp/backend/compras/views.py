@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Fornecedor, PedidoCompra, ItemPedidoCompra, StatusPedido
 from .serializers import FornecedorSerializer, PedidoCompraSerializer, ItemPedidoCompraSerializer
-from core.permissions import HasModuleAccess
+from core.permissions import HasModuleAccess, filter_by_role
 
 
 class FornecedorViewSet(viewsets.ModelViewSet):
@@ -32,6 +32,9 @@ class PedidoCompraViewSet(viewsets.ModelViewSet):
     search_fields = ['numero', 'fornecedor__nome', 'observacoes', 'numero_nf']
     ordering_fields = ['created_at', 'data_pedido', 'valor_total', 'status']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(criado_por=self.request.user)

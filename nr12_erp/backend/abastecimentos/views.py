@@ -3,20 +3,19 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Abastecimento
 from .serializers import AbastecimentoSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-from core.permissions import ClienteFilterMixin, HasModuleAccess, OperadorCanOnlyCreate
+from core.permissions import HasModuleAccess, OperadorCanOnlyCreate, filter_by_role
 
-class AbastecimentoViewSet(ClienteFilterMixin, viewsets.ModelViewSet):
+class AbastecimentoViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para Abastecimentos com filtro automático:
-    - ADMIN: Vê todos os abastecimentos e pode editar
-    - SUPERVISOR: Vê abastecimentos dos empreendimentos que supervisiona e pode editar
-    - CLIENTE: Vê apenas abastecimentos dos seus equipamentos
-    - OPERADOR: Pode criar abastecimentos mas NÃO pode editar/deletar
+    ViewSet para Abastecimentos com filtro seguro por role.
     """
     queryset = Abastecimento.objects.select_related('equipamento__cliente', 'equipamento__empreendimento', 'operador').all()
     serializer_class = AbastecimentoSerializer
     permission_classes = [IsAuthenticated, HasModuleAccess, OperadorCanOnlyCreate]
     required_module = 'abastecimentos'
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
     http_method_names = ["get", "post", "put", "patch", "delete"]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["equipamento", "tipo_combustivel", "data"]

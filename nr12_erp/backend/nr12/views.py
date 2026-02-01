@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from core.permissions import ClienteFilterMixin, HasModuleAccess, OperadorCanOnlyCreate
+from core.permissions import HasModuleAccess, OperadorCanOnlyCreate, filter_by_role
 
 from .models import (
     ModeloChecklist, ItemChecklist,
@@ -172,13 +172,9 @@ class ItemChecklistViewSet(BaseAuthViewSet):
         return Response({'detail': 'Itens reordenados com sucesso'})
 
 
-class ChecklistRealizadoViewSet(ClienteFilterMixin, BaseAuthViewSet):
+class ChecklistRealizadoViewSet(BaseAuthViewSet):
     """
-    ViewSet para Checklists NR12 Realizados com filtro automático:
-    - ADMIN: Vê todos os checklists e pode editar
-    - SUPERVISOR: Vê checklists dos empreendimentos que supervisiona e pode editar
-    - CLIENTE: Vê apenas checklists dos seus equipamentos
-    - OPERADOR: Pode criar checklists mas NÃO pode editar/deletar
+    ViewSet para Checklists NR12 Realizados com filtro seguro por role.
     """
     queryset = ChecklistRealizado.objects.select_related(
         'modelo', 'equipamento__cliente', 'equipamento__empreendimento', 'operador', 'usuario'
@@ -197,8 +193,8 @@ class ChecklistRealizadoViewSet(ClienteFilterMixin, BaseAuthViewSet):
         return ChecklistRealizadoSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        
+        qs = filter_by_role(super().get_queryset(), self.request.user)
+
         # Filtros
         equipamento = self.request.query_params.get('equipamento')
         if equipamento:

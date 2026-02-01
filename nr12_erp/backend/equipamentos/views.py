@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from .models import Equipamento
 from core.qr_utils import qr_png_response
-from core.permissions import ClienteFilterMixin, HasModuleAccess, CannotEditMasterData
+from core.permissions import HasModuleAccess, CannotEditMasterData, filter_by_role
 from core.plan_validators import PlanLimitValidator
 from .serializers import (
     TipoEquipamentoSerializer, EquipamentoSerializer,
@@ -25,13 +25,9 @@ class TipoEquipamentoViewSet(BaseAuthViewSet):
     permission_classes = [IsAuthenticated, HasModuleAccess, CannotEditMasterData]
     required_module = 'tipos_equipamento'
 
-class EquipamentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
+class EquipamentoViewSet(BaseAuthViewSet):
     """
-    ViewSet para Equipamentos com filtro automático:
-    - ADMIN: Vê todos os equipamentos e pode editar
-    - SUPERVISOR: Vê equipamentos dos empreendimentos que supervisiona e pode editar
-    - CLIENTE: Vê apenas seus equipamentos (somente leitura)
-    - OPERADOR: Vê equipamentos, mas NÃO pode criar/editar/deletar
+    ViewSet para Equipamentos com filtro seguro por role.
     """
     queryset = Equipamento.objects.select_related("cliente","empreendimento","tipo").all().order_by("codigo")
     serializer_class = EquipamentoSerializer
@@ -41,7 +37,7 @@ class EquipamentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
     required_module = 'equipamentos'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
         # Filtro direto por UUID (para busca via QR Code)
         uuid_param = self.request.query_params.get("uuid")
         if uuid_param:

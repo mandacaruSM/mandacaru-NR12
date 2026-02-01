@@ -4,6 +4,84 @@ Permissões customizadas baseadas em roles e módulos habilitados
 from rest_framework import permissions
 
 
+def get_user_role_safe(user):
+    """Retorna role do usuário de forma segura, sem risco de 500."""
+    try:
+        if user.is_superuser:
+            return 'ADMIN'
+        if hasattr(user, 'profile') and user.profile:
+            return user.profile.role
+    except Exception:
+        pass
+    return None
+
+
+def filter_by_role(queryset, user):
+    """
+    Filtra queryset baseado no role do usuário de forma segura.
+    Uso: qs = filter_by_role(qs, request.user)
+
+    Lógica:
+    - ADMIN/superuser: vê tudo
+    - CLIENTE: vê apenas dados do seu cliente (por campo 'cliente' ou 'equipamento__cliente')
+    - SUPERVISOR: vê dados dos empreendimentos que supervisiona
+    - OPERADOR/TECNICO: veem tudo (controle feito por HasModuleAccess)
+    """
+    if not user.is_authenticated:
+        return queryset.none()
+
+    role = get_user_role_safe(user)
+
+    if role == 'ADMIN':
+        return queryset
+
+    if role == 'CLIENTE':
+        try:
+            cliente = getattr(user, 'cliente_profile', None)
+            if not cliente:
+                return queryset.none()
+            model = queryset.model
+            # Model é Cliente
+            if model.__name__ == 'Cliente':
+                return queryset.filter(id=cliente.id)
+            # Model é Empreendimento
+            if model.__name__ == 'Empreendimento':
+                return queryset.filter(cliente=cliente)
+            # Model tem campo 'cliente' direto (Orcamento, OrdemServico, ContaReceber, PedidoCompra)
+            if hasattr(model, 'cliente'):
+                return queryset.filter(cliente=cliente)
+            # Model tem campo 'equipamento' (Abastecimento, Manutencao, ChecklistRealizado)
+            if hasattr(model, 'equipamento'):
+                return queryset.filter(equipamento__cliente=cliente)
+        except Exception:
+            pass
+        return queryset.none()
+
+    if role == 'SUPERVISOR':
+        try:
+            supervisor = getattr(user, 'supervisor_profile', None)
+            if not supervisor:
+                return queryset
+            model = queryset.model
+            if model.__name__ == 'Empreendimento':
+                return queryset.filter(supervisor=supervisor)
+            if hasattr(model, 'equipamento'):
+                return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
+            if hasattr(model, 'empreendimento'):
+                return queryset.filter(empreendimento__supervisor=supervisor)
+            if hasattr(model, 'cliente'):
+                from cadastro.models import Empreendimento
+                clientes_ids = Empreendimento.objects.filter(
+                    supervisor=supervisor
+                ).values_list('cliente_id', flat=True)
+                return queryset.filter(cliente_id__in=clientes_ids)
+        except Exception:
+            pass
+
+    # OPERADOR, TECNICO, e outros: retorna tudo (HasModuleAccess controla acesso)
+    return queryset
+
+
 class ClienteFilterMixin:
     """
     Mixin para filtrar automaticamente dados por cliente.

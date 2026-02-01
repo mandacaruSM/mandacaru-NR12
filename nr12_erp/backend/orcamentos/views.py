@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import filter_by_role
 
 from .models import Orcamento, ItemOrcamento
 from .serializers import (
@@ -18,12 +20,16 @@ class OrcamentoViewSet(viewsets.ModelViewSet):
         'cliente', 'empreendimento', 'equipamento',
         'criado_por', 'aprovado_por'
     ).prefetch_related('itens')
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['tipo', 'status', 'cliente', 'empreendimento']
     search_fields = ['numero', 'descricao', 'cliente__nome_razao']
     ordering_fields = ['data_emissao', 'data_validade', 'valor_total', 'created_at']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'list':

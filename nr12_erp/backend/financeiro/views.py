@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, Q
 from datetime import date
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import filter_by_role
 
 from .models import ContaReceber, ContaPagar, Pagamento
 from .serializers import (
@@ -25,12 +27,16 @@ class ContaReceberViewSet(viewsets.ModelViewSet):
         'cliente', 'orcamento', 'ordem_servico',
         'criado_por', 'recebido_por'
     )
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['tipo', 'status', 'cliente']
     search_fields = ['numero', 'descricao', 'cliente__nome_razao']
     ordering_fields = ['data_emissao', 'data_vencimento', 'data_pagamento', 'valor_final', 'created_at']
     ordering = ['-data_vencimento']
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'list':

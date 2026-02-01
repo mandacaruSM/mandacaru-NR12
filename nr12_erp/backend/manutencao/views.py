@@ -5,14 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Manutencao, AnexoManutencao
 from .serializers import ManutencaoSerializer, AnexoManutencaoSerializer
-from core.permissions import ClienteFilterMixin, HasModuleAccess
+from core.permissions import HasModuleAccess, filter_by_role
 
-class ManutencaoViewSet(ClienteFilterMixin, viewsets.ModelViewSet):
+class ManutencaoViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para Manutenções com filtro automático:
-    - ADMIN: Vê todas as manutenções
-    - SUPERVISOR: Vê manutenções dos empreendimentos que supervisiona
-    - CLIENTE: Vê apenas manutenções dos seus equipamentos
+    ViewSet para Manutenções com filtro seguro por role.
     """
     queryset = Manutencao.objects.select_related('equipamento__cliente', 'equipamento__empreendimento', 'tecnico').all()
     serializer_class = ManutencaoSerializer
@@ -23,6 +20,9 @@ class ManutencaoViewSet(ClienteFilterMixin, viewsets.ModelViewSet):
     search_fields = ['descricao', 'observacoes', 'equipamento__codigo']
     ordering_fields = ['data', 'horimetro', 'created_at']
     ordering = ['-data', '-id']
+
+    def get_queryset(self):
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     @action(detail=True, methods=['post'])
     def anexos(self, request, pk=None):
