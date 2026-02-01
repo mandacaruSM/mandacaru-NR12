@@ -68,9 +68,12 @@ class ClienteSerializer(serializers.ModelSerializer):
         return instance
 
 class EmpreendimentoSerializer(serializers.ModelSerializer):
-    cliente_nome = serializers.CharField(source="cliente.nome_razao", read_only=True)
+    # Mudança para tornar o nome do cliente seguro contra nulos também
+    cliente_nome = serializers.SerializerMethodField(read_only=True)
     supervisor_nome = serializers.SerializerMethodField(read_only=True)
 
+    def get_cliente_nome(self, obj):
+        return obj.cliente.nome_razao if obj.cliente else "Cliente não definido"
     def get_supervisor_nome(self, obj):
         if obj.supervisor:
             return obj.supervisor.nome_completo
