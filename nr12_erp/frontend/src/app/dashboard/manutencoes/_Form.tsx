@@ -69,13 +69,22 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
 
         if (equipamento) {
           console.log('🔄 Pre-preenchendo formulário de manutenção com equipamento:', equipamento);
+          setPrefilledFromUrl(true);
 
           // Encontrar cliente e empreendimento do equipamento
           const empreendimentoId = typeof equipamento.empreendimento === 'string'
             ? parseInt(equipamento.empreendimento as any)
             : equipamento.empreendimento;
 
-          // Carregar empreendimentos para encontrar o cliente
+          // Setar equipamento, tipo e leitura imediatamente
+          setForm((prev: any) => ({
+            ...prev,
+            equipamento: equipamentoId,
+            horimetro: leituraParam || (equipamento as any).leitura_atual || '',
+            tipo: tipoParam || prev.tipo,
+          }));
+
+          // Carregar empreendimento para encontrar o cliente
           api<any>(`/cadastro/empreendimentos/${empreendimentoId}/`).then(emp => {
             const clienteId = emp.cliente;
 
@@ -83,24 +92,18 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
             setClienteSelecionado(clienteId);
 
             // Carregar empreendimentos do cliente
-            api<any>(`/cadastro/empreendimentos/?cliente=${clienteId}`).then(empsData => {
+            return api<any>(`/cadastro/empreendimentos/?cliente=${clienteId}`).then(empsData => {
               const emps = Array.isArray(empsData) ? empsData : (empsData?.results || []);
               setEmpreendimentos(emps);
 
-              // Setar empreendimento
-              setEmpreendimentoSelecionado(empreendimentoId);
-
-              // Setar equipamento, tipo e leitura
-              setForm((prev: any) => ({
-                ...prev,
-                equipamento: equipamentoId,
-                horimetro: leituraParam || (equipamento as any).leitura_atual || '',
-                tipo: tipoParam || prev.tipo,
-              }));
-
-              setPrefilledFromUrl(true);
-            }).catch(console.error);
-          }).catch(console.error);
+              // Setar empreendimento após empreendimentos carregados
+              setTimeout(() => {
+                setEmpreendimentoSelecionado(empreendimentoId);
+              }, 100);
+            });
+          }).catch(err => {
+            console.error('Erro ao pré-preencher cascata:', err);
+          });
         }
       }
     }
@@ -110,9 +113,18 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
     try {
       setLoading(true);
       const [clientsData, tecsData, equipsData] = await Promise.all([
-        api<any>('/cadastro/clientes/'),
-        api<any>('/tecnicos/'),
-        api<any>('/equipamentos/equipamentos/'), // CORRIGIDO: endpoint correto
+        api<any>('/cadastro/clientes/').catch((err: any) => {
+          console.error('Erro ao carregar clientes:', err);
+          return { results: [] };
+        }),
+        api<any>('/tecnicos/').catch((err: any) => {
+          console.warn('Técnicos não disponíveis:', err.message);
+          return { results: [] };
+        }),
+        api<any>('/equipamentos/equipamentos/').catch((err: any) => {
+          console.error('Erro ao carregar equipamentos:', err);
+          return { results: [] };
+        }),
       ]);
 
       // Extrair arrays das respostas (podem ser paginadas ou arrays diretos)
@@ -129,6 +141,10 @@ export default function ManutencaoForm({ initial, id, mode }: Props) {
       setClientes(clients);
       setTecnicos(tecs);
       setEquipamentos(equips);
+
+      if (clients.length === 0 && equips.length === 0) {
+        setErro('Erro ao carregar dados. Verifique sua conexão.');
+      }
     } catch (e: any) {
       console.error('Erro ao carregar opções:', e);
       setErro(e.message || 'Erro ao carregar opções');

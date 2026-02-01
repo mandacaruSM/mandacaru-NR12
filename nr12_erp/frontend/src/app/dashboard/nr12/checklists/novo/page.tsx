@@ -90,14 +90,27 @@ export default function NovoChecklistPage() {
     try {
       setLoadingData(true);
       const [modelosRes, equipamentosRes, operadoresRes] = await Promise.all([
-        nr12Api.modelos.list({ ativo: true }),
-        equipamentosApi.list(),
-        operadoresApi.list({ ativo: true }),
+        nr12Api.modelos.list({ ativo: true }).catch((err: any) => {
+          console.error('Erro ao carregar modelos:', err);
+          return { results: [] as ModeloChecklist[], count: 0 };
+        }),
+        equipamentosApi.list().catch((err: any) => {
+          console.error('Erro ao carregar equipamentos:', err);
+          return { results: [] as Equipamento[], count: 0 };
+        }),
+        operadoresApi.list({ ativo: true }).catch((err: any) => {
+          console.warn('Operadores não disponíveis:', err.message);
+          return { results: [] as any[], count: 0 };
+        }),
       ]);
       setModelos(modelosRes.results);
       // Filtrar equipamentos ativos manualmente
       setEquipamentos(equipamentosRes.results.filter(eq => eq.ativo));
       setOperadores(operadoresRes.results || []);
+
+      if (modelosRes.results.length === 0 && equipamentosRes.results.length === 0) {
+        toast.error('Erro ao carregar dados iniciais');
+      }
     } catch (err: any) {
       toast.error('Erro ao carregar dados iniciais');
     } finally {

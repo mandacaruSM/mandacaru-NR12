@@ -1660,6 +1660,180 @@ export const cadastroApi = {
 
 export const produtosApi = almoxarifadoApi.produtos;
 
+// ============================================
+// COMPRAS API
+// ============================================
+
+export interface Fornecedor {
+  id: number;
+  nome: string;
+  cnpj_cpf: string;
+  contato: string;
+  telefone: string;
+  whatsapp: string;
+  email: string | null;
+  especialidade: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  observacoes: string;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ItemPedidoCompra {
+  id?: number;
+  pedido?: number;
+  produto?: number | null;
+  produto_nome?: string;
+  descricao: string;
+  codigo_fornecedor?: string;
+  quantidade: number;
+  unidade: string;
+  valor_unitario: number;
+  valor_total?: number;
+  quantidade_recebida?: number;
+  entregue?: boolean;
+}
+
+export interface PedidoCompra {
+  id?: number;
+  numero?: string;
+  fornecedor: number;
+  fornecedor_nome?: string;
+  destino: 'PROPRIO' | 'CLIENTE';
+  destino_display?: string;
+  orcamento?: number | null;
+  orcamento_numero?: string;
+  cliente?: number | null;
+  cliente_nome?: string;
+  equipamento?: number | null;
+  equipamento_codigo?: string;
+  status: 'RASCUNHO' | 'ENVIADO' | 'APROVADO' | 'PARCIAL' | 'ENTREGUE' | 'CANCELADO';
+  status_display?: string;
+  data_pedido?: string;
+  data_previsao?: string | null;
+  data_entrega?: string | null;
+  local_estoque?: number | null;
+  local_estoque_nome?: string;
+  numero_nf?: string;
+  nota_fiscal?: string | null;
+  observacoes?: string;
+  valor_total?: number;
+  criado_por?: number;
+  criado_por_nome?: string;
+  itens?: ItemPedidoCompra[];
+  itens_data?: Partial<ItemPedidoCompra>[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const fornecedoresApi = {
+  list: async (filters?: { search?: string; ativo?: boolean }) => {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ results: Fornecedor[]; count: number }>(`/compras/fornecedores/${query}`);
+  },
+  get: async (id: number) => {
+    return apiFetch<Fornecedor>(`/compras/fornecedores/${id}/`);
+  },
+  create: async (data: Partial<Fornecedor>) => {
+    return apiFetch<Fornecedor>('/compras/fornecedores/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: Partial<Fornecedor>) => {
+    return apiFetch<Fornecedor>(`/compras/fornecedores/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return apiFetch<void>(`/compras/fornecedores/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+export const pedidosCompraApi = {
+  list: async (filters?: {
+    status?: string;
+    destino?: string;
+    fornecedor?: number;
+    cliente?: number;
+    search?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.destino) params.append('destino', filters.destino);
+    if (filters?.fornecedor) params.append('fornecedor', filters.fornecedor.toString());
+    if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+    if (filters?.search) params.append('search', filters.search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ results: PedidoCompra[]; count: number }>(`/compras/pedidos-compra/${query}`);
+  },
+  get: async (id: number) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/`);
+  },
+  create: async (data: Partial<PedidoCompra>) => {
+    return apiFetch<PedidoCompra>('/compras/pedidos-compra/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: Partial<PedidoCompra>) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return apiFetch<void>(`/compras/pedidos-compra/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+  enviar: async (id: number) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/enviar/`, {
+      method: 'POST',
+    });
+  },
+  aprovar: async (id: number) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/aprovar/`, {
+      method: 'POST',
+    });
+  },
+  receber: async (id: number, data?: { numero_nf?: string; local_estoque?: number }) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/receber/`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  },
+  cancelar: async (id: number) => {
+    return apiFetch<PedidoCompra>(`/compras/pedidos-compra/${id}/cancelar/`, {
+      method: 'POST',
+    });
+  },
+  resumo: async () => {
+    return apiFetch<{
+      total: number;
+      rascunhos: number;
+      enviados: number;
+      aprovados: number;
+      entregues: number;
+      cancelados: number;
+      valor_total_pendente: number;
+    }>('/compras/pedidos-compra/resumo/');
+  },
+};
+
 // EXPORT DEFAULT
 // ============================================
 
@@ -1679,6 +1853,8 @@ export default {
   orcamentos: orcamentosApi,
   ordensServico: ordensServicoApi,
   financeiro: financeiroApi,
+  fornecedores: fornecedoresApi,
+  pedidosCompra: pedidosCompraApi,
 };
 
 

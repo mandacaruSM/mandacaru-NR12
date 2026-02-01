@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'almoxarifado.apps.AlmoxarifadoConfig',
     'orcamentos.apps.OrcamentosConfig',
     'ordens_servico.apps.OrdensServicoConfig',
+    'compras.apps.ComprasConfig',
     'financeiro',
     'relatorios',
     'bot_telegram.apps.BotTelegramConfig',

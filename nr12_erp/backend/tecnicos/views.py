@@ -9,7 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from core.permissions import IsAdminUser
 
 class TecnicoViewSet(viewsets.ModelViewSet):
-    queryset = Tecnico.objects.all()
+    queryset = Tecnico.objects.prefetch_related('clientes', 'empreendimentos_vinculados').all()
     serializer_class = TecnicoSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

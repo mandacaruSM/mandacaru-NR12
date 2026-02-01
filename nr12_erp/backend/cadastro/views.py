@@ -134,7 +134,7 @@ class EmpreendimentoViewSet(ClienteFilterMixin, BaseAuthViewSet):
     - SUPERVISOR: Vê empreendimentos que supervisiona
     - CLIENTE: Vê apenas seus empreendimentos
     """
-    queryset = Empreendimento.objects.select_related("cliente").all().order_by("nome")
+    queryset = Empreendimento.objects.select_related("cliente", "supervisor").prefetch_related("tecnicos_vinculados").all().order_by("nome")
     serializer_class = EmpreendimentoSerializer
     search_fields = ["nome", "cliente__nome_razao"]
     ordering = ["nome"]

@@ -79,7 +79,7 @@ export default function EditarClientePage() {
   const loadPlanos = async () => {
     try {
       console.log('🔍 [Editar Cliente] Carregando planos...');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cadastro/planos/`, {
+      const response = await fetch(`/api/proxy/cadastro/planos/`, {
         credentials: 'include'
       });
       console.log('📡 [Editar Cliente] Planos response status:', response.status);
@@ -99,7 +99,7 @@ export default function EditarClientePage() {
     try {
       console.log('🔍 [Editar Cliente] Carregando assinatura do cliente:', clienteId);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/cadastro/assinaturas/?cliente=${clienteId}`,
+        `/api/proxy/cadastro/assinaturas/?cliente=${clienteId}`,
         { credentials: 'include' }
       );
       console.log('📡 [Editar Cliente] Assinatura response status:', response.status);
@@ -154,7 +154,7 @@ export default function EditarClientePage() {
 
     try {
       const body = novaSenha ? { senha: novaSenha } : {};
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cadastro/clientes/${clienteId}/resetar_senha/`, {
+      const response = await fetch(`/api/proxy/cadastro/clientes/${clienteId}/resetar_senha/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -167,10 +167,14 @@ export default function EditarClientePage() {
 
       if (response.ok) {
         setResetPasswordResult({
-          senha: data.senha_gerada_automaticamente ? data.senha : undefined,
+          senha: data.senha_gerada_automaticamente ? data.nova_senha : undefined,
           sucesso: true
         });
-        toast.success('Senha resetada com sucesso!');
+        // Atualizar username no formulário se um usuário foi criado
+        if (data.username) {
+          setFormData(prev => ({ ...prev, username: data.username }));
+        }
+        toast.success(data.detail || 'Senha resetada com sucesso!');
         setNovaSenha('');
       } else {
         toast.error(data.detail || 'Erro ao resetar senha');
@@ -191,7 +195,7 @@ export default function EditarClientePage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/cadastro/assinaturas/${assinatura.id}/alterar_plano/`,
+        `/api/proxy/cadastro/assinaturas/${assinatura.id}/alterar_plano/`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -450,23 +454,29 @@ export default function EditarClientePage() {
           </div>
 
           {/* Gerenciar Acesso */}
-          {user?.profile?.role === 'ADMIN' && formData.username && (
+          {user?.profile?.role === 'ADMIN' && (
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Gerenciar Acesso</h2>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">Credenciais de Acesso</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Username: <span className="font-mono bg-white px-2 py-1 rounded border">{formData.username}</span>
-                    </p>
+                    {formData.username ? (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Username: <span className="font-mono bg-white px-2 py-1 rounded border">{formData.username}</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-orange-600 mt-1">
+                        Nenhum usuário vinculado. Clique em &quot;Criar Acesso&quot; para gerar login.
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowResetPasswordModal(true)}
                     className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    Resetar Senha
+                    {formData.username ? 'Resetar Senha' : 'Criar Acesso'}
                   </button>
                 </div>
               </div>
@@ -535,7 +545,7 @@ export default function EditarClientePage() {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Resetar Senha do Cliente</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{formData.username ? 'Resetar Senha do Cliente' : 'Criar Acesso do Cliente'}</h3>
             </div>
 
             {/* Content */}

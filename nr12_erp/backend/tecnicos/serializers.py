@@ -1,19 +1,20 @@
 from rest_framework import serializers
 from .models import Tecnico
+from cadastro.models import Cliente, Empreendimento
 
 class TecnicoSerializer(serializers.ModelSerializer):
     clientes_nomes = serializers.SerializerMethodField()
     empreendimentos_nomes = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
     clientes_ids = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('cadastro.models', fromlist=['Cliente']).Cliente.objects.all(),
+        queryset=Cliente.objects.all(),
         many=True,
         write_only=True,
         required=False,
         source='clientes'
     )
     empreendimentos_ids = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('cadastro.models', fromlist=['Empreendimento']).Empreendimento.objects.all(),
+        queryset=Empreendimento.objects.all(),
         many=True,
         write_only=True,
         required=False,

@@ -69,7 +69,12 @@ class ClienteSerializer(serializers.ModelSerializer):
 
 class EmpreendimentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.CharField(source="cliente.nome_razao", read_only=True)
-    supervisor_nome = serializers.CharField(source="supervisor.nome_completo", read_only=True)
+    supervisor_nome = serializers.SerializerMethodField(read_only=True)
+
+    def get_supervisor_nome(self, obj):
+        if obj.supervisor:
+            return obj.supervisor.nome_completo
+        return None
     tecnicos_vinculados_ids = serializers.PrimaryKeyRelatedField(
         many=True,
         read_only=True,

@@ -92,13 +92,21 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
 
         if (equipamento) {
           console.log('🔄 Pre-preenchendo formulário com equipamento:', equipamento);
+          setPrefilledFromUrl(true);
 
           // Encontrar cliente e empreendimento do equipamento
           const empreendimentoId = typeof equipamento.empreendimento === 'string'
             ? parseInt(equipamento.empreendimento)
             : equipamento.empreendimento;
 
-          // Carregar empreendimentos para encontrar o cliente
+          // Setar equipamento e leitura imediatamente
+          setForm((prev: any) => ({
+            ...prev,
+            equipamento: equipamentoId,
+            horimetro_km: leituraParam || equipamento.leitura_atual || '',
+          }));
+
+          // Carregar empreendimento para encontrar o cliente
           api<any>(`/cadastro/empreendimentos/${empreendimentoId}/`).then(emp => {
             const clienteId = emp.cliente;
 
@@ -106,23 +114,18 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
             setClienteSelecionado(clienteId);
 
             // Carregar empreendimentos do cliente
-            api<any>(`/cadastro/empreendimentos/?cliente=${clienteId}`).then(empsData => {
+            return api<any>(`/cadastro/empreendimentos/?cliente=${clienteId}`).then(empsData => {
               const emps = Array.isArray(empsData) ? empsData : (empsData?.results || []);
               setEmpreendimentos(emps);
 
-              // Setar empreendimento
-              setEmpreendimentoSelecionado(empreendimentoId);
-
-              // Setar equipamento e leitura
-              setForm((prev: any) => ({
-                ...prev,
-                equipamento: equipamentoId,
-                horimetro_km: leituraParam || equipamento.leitura_atual || '',
-              }));
-
-              setPrefilledFromUrl(true);
-            }).catch(console.error);
-          }).catch(console.error);
+              // Setar empreendimento após empreendimentos carregados
+              setTimeout(() => {
+                setEmpreendimentoSelecionado(empreendimentoId);
+              }, 100);
+            });
+          }).catch(err => {
+            console.error('Erro ao pré-preencher cascata:', err);
+          });
         }
       }
     }

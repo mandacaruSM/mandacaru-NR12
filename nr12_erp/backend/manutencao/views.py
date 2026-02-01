@@ -20,7 +20,7 @@ class ManutencaoViewSet(ClienteFilterMixin, viewsets.ModelViewSet):
     required_module = 'manutencoes'
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_fields = ['equipamento', 'tipo', 'tecnico', 'data']
-    search_fields = ['descricao', 'observacoes', 'equipamento__nome']  # ajuste para campo real do Equipamento
+    search_fields = ['descricao', 'observacoes', 'equipamento__codigo']
     ordering_fields = ['data', 'horimetro', 'created_at']
     ordering = ['-data', '-id']
 
