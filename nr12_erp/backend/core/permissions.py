@@ -32,6 +32,10 @@ def filter_by_role(queryset, user):
 
     role = get_user_role_safe(user)
 
+    # Se não conseguiu determinar o role, bloqueia acesso por segurança
+    if role is None:
+        return queryset.none()
+
     if role == 'ADMIN':
         return queryset
 
@@ -78,8 +82,12 @@ def filter_by_role(queryset, user):
         except Exception:
             pass
 
-    # OPERADOR, TECNICO, e outros: retorna tudo (HasModuleAccess controla acesso)
-    return queryset
+    # OPERADOR, TECNICO, FINANCEIRO, COMPRAS: retorna tudo (HasModuleAccess controla acesso)
+    if role in ('OPERADOR', 'TECNICO', 'FINANCEIRO', 'COMPRAS'):
+        return queryset
+
+    # Role desconhecido: bloqueia por segurança
+    return queryset.none()
 
 
 class ClienteFilterMixin:

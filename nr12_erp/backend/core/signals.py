@@ -9,7 +9,7 @@ from cadastro.models import Cliente
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance, role="ADMIN", modules_enabled=[
-            "clientes","empreendimentos","equipamentos","nr12","manutencoes","abastecimentos","almoxarifado","os","orcamentos","financeiro","compras"
+            "clientes","empreendimentos","equipamentos","nr12","manutencoes","abastecimentos","almoxarifado","os","orcamentos","financeiro","compras","tecnicos","operadores","supervisores","relatorios"
         ])
 
 @receiver(post_save, sender=Supervisor)
@@ -20,7 +20,7 @@ def create_supervisor_user(sender, instance, created, **kwargs):
     Password: gerada aleatoriamente e enviada por email (TODO: implementar envio)
     Role: SUPERVISOR com módulos específicos
     """
-    if created and not hasattr(instance, 'user'):
+    if created and not instance.user_id:
         # Username baseado no CPF (remove pontuação)
         username = ''.join(filter(str.isdigit, instance.cpf))
 
@@ -67,7 +67,7 @@ def create_cliente_user(sender, instance, created, **kwargs):
     Password: gerada aleatoriamente e enviada por email
     Role: CLIENTE com acesso limitado baseado no plano
     """
-    if created and not hasattr(instance, 'user'):
+    if created and not instance.user_id:
         from cadastro.planos import Plano, AssinaturaCliente
         from datetime import date, timedelta
 
