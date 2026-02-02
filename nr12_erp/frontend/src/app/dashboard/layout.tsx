@@ -265,7 +265,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Page Content */}
         <main className="flex-1 p-4 lg:p-6">
-          {children}
+          {(() => {
+            // Protege rotas: se o usuário não tem acesso ao módulo da rota atual, mostra mensagem
+            if (pathname !== '/dashboard') {
+              const currentMenuItem = menuItems.find(
+                (item) => item.href !== '/dashboard' && pathname.startsWith(item.href)
+              );
+              if (currentMenuItem?.module && !hasModule(currentMenuItem.module)) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="text-6xl mb-4">🔒</div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Acesso Restrito</h2>
+                    <p className="text-gray-500 mb-6">Você não tem permissão para acessar este módulo.</p>
+                    <Link href="/dashboard" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      Voltar ao Dashboard
+                    </Link>
+                  </div>
+                );
+              }
+            }
+            return children;
+          })()}
         </main>
       </div>
     </div>

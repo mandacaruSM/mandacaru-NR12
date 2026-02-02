@@ -3,10 +3,17 @@ from .models import Fornecedor, PedidoCompra, ItemPedidoCompra
 
 
 class FornecedorSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+
     class Meta:
         model = Fornecedor
         fields = '__all__'
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_email(self, value):
+        if not value:
+            return None
+        return value
 
 
 class ItemPedidoCompraSerializer(serializers.ModelSerializer):

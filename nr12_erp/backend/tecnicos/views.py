@@ -18,6 +18,17 @@ class TecnicoViewSet(viewsets.ModelViewSet):
     ordering_fields = ["nome", "created_at"]
     ordering = ["nome"]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                return qs.filter(clientes=cliente).distinct()
+            return qs.none()
+        return qs
+
     @action(detail=True, methods=['post'])
     def gerar_codigo_telegram(self, request, pk=None):
         """Gera código de vinculação do Telegram para o técnico"""

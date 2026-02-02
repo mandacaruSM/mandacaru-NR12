@@ -307,17 +307,27 @@ class RespostaItemChecklistViewSet(BaseAuthViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        
+
+        # Filtro por role (CLIENTE vê apenas respostas de seus equipamentos)
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                qs = qs.filter(checklist__equipamento__cliente=cliente)
+            else:
+                return qs.none()
+
         # Filtro por checklist
         checklist_id = self.request.query_params.get('checklist')
         if checklist_id:
             qs = qs.filter(checklist_id=checklist_id)
-        
+
         # Filtro por não conformidades
         nao_conforme = self.request.query_params.get('nao_conforme')
         if nao_conforme == 'true':
             qs = qs.filter(resposta__in=['NAO_CONFORME', 'NAO'])
-        
+
         return qs
 
 
@@ -586,7 +596,7 @@ class ProgramacaoManutencaoViewSet(BaseAuthViewSet):
     ordering = ['leitura_proxima_manutencao']
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
 
         # Filtro por equipamento
         equipamento = self.request.query_params.get('equipamento')
@@ -701,7 +711,7 @@ class ManutencaoPreventivaRealizadaViewSet(BaseAuthViewSet):
         return ManutencaoPreventivaRealizadaSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
 
         # Filtros
         equipamento = self.request.query_params.get('equipamento')
@@ -824,6 +834,16 @@ class RespostaItemManutencaoViewSet(BaseAuthViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
+
+        # Filtro por role (CLIENTE vê apenas respostas de seus equipamentos)
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                qs = qs.filter(manutencao__equipamento__cliente=cliente)
+            else:
+                return qs.none()
 
         # Filtro por manutenção
         manutencao_id = self.request.query_params.get('manutencao')

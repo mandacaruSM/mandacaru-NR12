@@ -119,12 +119,22 @@ class ContaPagarViewSet(viewsets.ModelViewSet):
     queryset = ContaPagar.objects.all().select_related(
         'criado_por', 'pago_por'
     )
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['tipo', 'status', 'fornecedor']
     search_fields = ['numero', 'descricao', 'fornecedor', 'numero_documento']
     ordering_fields = ['data_emissao', 'data_vencimento', 'data_pagamento', 'valor_final', 'created_at']
     ordering = ['-data_vencimento']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        # CLIENTE não deve ter acesso a contas a pagar (são despesas internas)
+        if role == 'CLIENTE':
+            return qs.none()
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -211,12 +221,24 @@ class PagamentoViewSet(viewsets.ModelViewSet):
     queryset = Pagamento.objects.all().select_related(
         'conta_receber', 'conta_receber__cliente', 'registrado_por'
     )
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['conta_receber', 'tipo_pagamento', 'forma_pagamento', 'status']
     search_fields = ['numero', 'conta_receber__numero', 'conta_receber__cliente__nome_razao', 'numero_cheque', 'numero_documento']
     ordering_fields = ['data_pagamento', 'valor', 'created_at']
     ordering = ['-data_pagamento', '-created_at']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                return qs.filter(conta_receber__cliente=cliente)
+            return qs.none()
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'list':

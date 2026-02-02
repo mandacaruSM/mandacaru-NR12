@@ -127,3 +127,14 @@ class ItemPedidoCompraViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, HasModuleAccess]
     required_module = 'compras'
     filterset_fields = ['pedido', 'entregue']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                return qs.filter(pedido__cliente=cliente)
+            return qs.none()
+        return qs

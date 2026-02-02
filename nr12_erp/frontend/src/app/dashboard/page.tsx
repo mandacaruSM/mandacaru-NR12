@@ -41,7 +41,8 @@ interface Activity {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasModule } = useAuth();
+  const isCliente = user?.profile?.role === 'CLIENTE';
   const [statsData, setStatsData] = useState({
     clientes: 0,
     equipamentos: 0,
@@ -63,21 +64,37 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
-      const [clientesRes, equipamentosRes, operadoresRes, supervisoresRes, osRes] = await Promise.all([
+      const promises: Promise<any>[] = [
         clientesApi.list({ page_size: 1 }),
         equipamentosApi.list({ page_size: 1 }),
-        operadoresApi.list({ page_size: 1 }),
-        supervisoresApi.list({ page_size: 1 }),
-        ordensServicoApi.list({ status: 'ABERTA', page_size: 1 }),
-      ]);
+      ];
+      if (!isCliente) {
+        promises.push(
+          operadoresApi.list({ page_size: 1 }),
+          supervisoresApi.list({ page_size: 1 }),
+        );
+      }
+      promises.push(ordensServicoApi.list({ status: 'ABERTA', page_size: 1 }));
 
-      setStatsData({
-        clientes: clientesRes.count || 0,
-        equipamentos: equipamentosRes.count || 0,
-        operadores: operadoresRes.count || 0,
-        supervisores: supervisoresRes.count || 0,
-        osAbertas: osRes.count || 0,
-      });
+      const results = await Promise.all(promises);
+
+      if (isCliente) {
+        setStatsData({
+          clientes: results[0].count || 0,
+          equipamentos: results[1].count || 0,
+          operadores: 0,
+          supervisores: 0,
+          osAbertas: results[2].count || 0,
+        });
+      } else {
+        setStatsData({
+          clientes: results[0].count || 0,
+          equipamentos: results[1].count || 0,
+          operadores: results[2].count || 0,
+          supervisores: results[3].count || 0,
+          osAbertas: results[4].count || 0,
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -180,9 +197,9 @@ export default function DashboardPage() {
     }
   }
 
-  const stats: StatCard[] = [
+  const allStats: (StatCard & { adminOnly?: boolean })[] = [
     {
-      title: 'Total de Clientes',
+      title: isCliente ? 'Minha Empresa' : 'Total de Clientes',
       value: loading ? '...' : statsData.clientes.toString(),
       change: '',
       href: '/dashboard/clientes',
@@ -207,6 +224,7 @@ export default function DashboardPage() {
       icon: '👷',
       changeType: 'neutral',
       color: 'from-indigo-500 to-indigo-600',
+      adminOnly: true,
     },
     {
       title: 'Supervisores',
@@ -216,6 +234,7 @@ export default function DashboardPage() {
       icon: '👨‍💼',
       changeType: 'neutral',
       color: 'from-purple-500 to-purple-600',
+      adminOnly: true,
     },
     {
       title: 'OS Abertas',
@@ -227,6 +246,8 @@ export default function DashboardPage() {
       color: 'from-red-500 to-red-600',
     },
   ];
+
+  const stats = allStats.filter(s => !s.adminOnly || !isCliente);
 
 
   return (
@@ -354,72 +375,132 @@ export default function DashboardPage() {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4">
-              <Link
-                href="/dashboard/clientes/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">👥</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 text-center">
-                  Novo Cliente
-                </span>
-              </Link>
-              <Link
-                href="/dashboard/equipamentos/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">🚜</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 text-center">
-                  Novo Equipamento
-                </span>
-              </Link>
-              <Link
-                href="/dashboard/operadores/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">👷</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-700 text-center">
-                  Novo Operador
-                </span>
-              </Link>
-              <Link
-                href="/dashboard/supervisores/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">👨‍💼</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700 text-center">
-                  Novo Supervisor
-                </span>
-              </Link>
-              <Link
-                href="/dashboard/manutencoes/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-yellow-100 group-hover:bg-yellow-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">🔧</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-yellow-700 text-center">
-                  Nova Manutenção
-                </span>
-              </Link>
-              <Link
-                href="/dashboard/nr12/checklists/novo"
-                className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-pink-100 group-hover:bg-pink-200 rounded-full flex items-center justify-center mb-3 transition-colors">
-                  <span className="text-2xl">📋</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-pink-700 text-center">
-                  Novo Checklist NR12
-                </span>
-              </Link>
+              {!isCliente && (
+                <Link
+                  href="/dashboard/clientes/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 text-center">
+                    Novo Cliente
+                  </span>
+                </Link>
+              )}
+              {!isCliente && (
+                <Link
+                  href="/dashboard/equipamentos/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">🚜</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 text-center">
+                    Novo Equipamento
+                  </span>
+                </Link>
+              )}
+              {!isCliente && (
+                <Link
+                  href="/dashboard/operadores/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">👷</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-700 text-center">
+                    Novo Operador
+                  </span>
+                </Link>
+              )}
+              {!isCliente && (
+                <Link
+                  href="/dashboard/supervisores/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">👨‍💼</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700 text-center">
+                    Novo Supervisor
+                  </span>
+                </Link>
+              )}
+              {!isCliente && (
+                <Link
+                  href="/dashboard/manutencoes/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-yellow-100 group-hover:bg-yellow-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">🔧</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-yellow-700 text-center">
+                    Nova Manutenção
+                  </span>
+                </Link>
+              )}
+              {!isCliente && (
+                <Link
+                  href="/dashboard/nr12/checklists/novo"
+                  className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 bg-pink-100 group-hover:bg-pink-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                    <span className="text-2xl">📋</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-pink-700 text-center">
+                    Novo Checklist NR12
+                  </span>
+                </Link>
+              )}
+              {isCliente && (
+                <>
+                  <Link
+                    href="/dashboard/equipamentos"
+                    className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all duration-200"
+                  >
+                    <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                      <span className="text-2xl">🚜</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 text-center">
+                      Meus Equipamentos
+                    </span>
+                  </Link>
+                  <Link
+                    href="/dashboard/ordens-servico"
+                    className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-red-500 hover:bg-red-50 transition-all duration-200"
+                  >
+                    <div className="w-12 h-12 bg-red-100 group-hover:bg-red-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                      <span className="text-2xl">📝</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-red-700 text-center">
+                      Minhas OS
+                    </span>
+                  </Link>
+                  <Link
+                    href="/dashboard/orcamentos"
+                    className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all duration-200"
+                  >
+                    <div className="w-12 h-12 bg-yellow-100 group-hover:bg-yellow-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                      <span className="text-2xl">💰</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-yellow-700 text-center">
+                      Meus Orçamentos
+                    </span>
+                  </Link>
+                  <Link
+                    href="/dashboard/empreendimentos"
+                    className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                  >
+                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                      <span className="text-2xl">🏗️</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 text-center">
+                      Meus Empreendimentos
+                    </span>
+                  </Link>
+                </>
+              )}
               <button
                 onClick={() => setScannerOpen(true)}
                 className="group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition-all duration-200"

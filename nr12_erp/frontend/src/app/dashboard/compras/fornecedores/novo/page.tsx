@@ -43,7 +43,8 @@ export default function NovoFornecedorPage() {
     try {
       setSaving(true);
       setError('');
-      await fornecedoresApi.create(form);
+      const payload = { ...form, email: form.email || null };
+      await fornecedoresApi.create(payload);
       router.push('/dashboard/compras/fornecedores');
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar');

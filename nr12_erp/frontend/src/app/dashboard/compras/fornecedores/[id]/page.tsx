@@ -79,7 +79,8 @@ export default function EditarFornecedorPage() {
     try {
       setSaving(true);
       setError('');
-      await fornecedoresApi.update(id, form);
+      const payload = { ...form, email: form.email || null };
+      await fornecedoresApi.update(id, payload);
       router.push('/dashboard/compras/fornecedores');
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar');
