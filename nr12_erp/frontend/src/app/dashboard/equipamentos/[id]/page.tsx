@@ -1,104 +1,51 @@
 // frontend/src/app/dashboard/equipamentos/[id]/page.tsx
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { equipamentosApi, clientesApi, empreendimentosApi, tiposEquipamentoApi, operadoresApi, Equipamento, Cliente, Empreendimento, TipoEquipamento, Operador } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { equipamentosApi, Equipamento } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+import QRCodeModal from '@/components/QRCodeModal';
 
-export default function EditarEquipamentoPage() {
-  const router = useRouter();
+export default function VisualizarEquipamentoPage() {
   const params = useParams();
+  const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const equipamentoId = Number(params.id);
 
+  const [equipamento, setEquipamento] = useState<Equipamento | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
-  const [tipos, setTipos] = useState<TipoEquipamento[]>([]);
-  const [operadores, setOperadores] = useState<Operador[]>([]);
-  const [operadorSelecionado, setOperadorSelecionado] = useState<number | ''>('');
-  const [formData, setFormData] = useState<Partial<Equipamento>>({});
+  const isCliente = user?.profile?.role === 'CLIENTE';
 
   useEffect(() => {
-    loadInitialData();
+    loadEquipamento();
   }, [equipamentoId]);
 
-  useEffect(() => {
-    if (formData.cliente) {
-      loadEmpreendimentos(Number(formData.cliente));
-    }
-  }, [formData.cliente]);
-
-  const loadInitialData = async () => {
+  const loadEquipamento = async () => {
     try {
       setLoading(true);
-      const [equipamento, clientesRes, tiposRes, operadoresRes] = await Promise.all([
-        equipamentosApi.get(equipamentoId),
-        clientesApi.list(),
-        tiposEquipamentoApi.list(),
-        operadoresApi.list(),
-      ]);
-      
-      setFormData(equipamento);
-      setClientes(clientesRes.results);
-      setTipos(tiposRes.results);
-      setOperadores(operadoresRes.results);
-      
-      // Carregar empreendimentos do cliente
-      if (equipamento.cliente) {
-        const empRes = await empreendimentosApi.list({ cliente: equipamento.cliente });
-        setEmpreendimentos(empRes.results);
-      }
+      const data = await equipamentosApi.get(equipamentoId);
+      setEquipamento(data);
     } catch (err: any) {
-      setError(err.message || 'Erro ao carregar equipamento');
       toast.error('Erro ao carregar equipamento');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadEmpreendimentos = async (clienteId: number) => {
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir este equipamento?')) return;
     try {
-      const response = await empreendimentosApi.list({ cliente: clienteId });
-      setEmpreendimentos(response.results);
-    } catch (err: any) {
-      toast.error('Erro ao carregar empreendimentos');
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              ['cliente', 'empreendimento', 'tipo', 'ano_fabricacao'].includes(name) ? 
-              (value === '' ? null : Number(value)) : value
-    }));
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
-
-    try {
-      const updated = await equipamentosApi.update(equipamentoId, formData);
-      if (operadorSelecionado) {
-        await operadoresApi.vincularEquipamento(Number(operadorSelecionado), updated.id);
-      }
-      toast.success('Equipamento atualizado com sucesso!');
+      await equipamentosApi.delete(equipamentoId);
+      toast.success('Equipamento excluído com sucesso!');
       router.push('/dashboard/equipamentos');
     } catch (err: any) {
-      const errorMsg = err.message || 'Erro ao atualizar equipamento';
-      setError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setSaving(false);
+      toast.error(err.message || 'Erro ao excluir equipamento');
     }
   };
 
@@ -113,7 +60,7 @@ export default function EditarEquipamentoPage() {
     );
   }
 
-  if (!formData.id) {
+  if (!equipamento) {
     return (
       <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
         <p className="text-red-800">Equipamento não encontrado</p>
@@ -125,184 +72,173 @@ export default function EditarEquipamentoPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-900 mb-2">
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
           <Link href="/dashboard/equipamentos" className="hover:text-blue-600">
             Equipamentos
           </Link>
           <span>/</span>
-          <span>{formData.codigo}</span>
+          <span className="text-gray-900">{equipamento.codigo}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Editar Equipamento</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {equipamento.codigo}
+              {equipamento.descricao && (
+                <span className="text-gray-500 font-normal"> - {equipamento.descricao}</span>
+              )}
+            </h1>
+            <div className="flex items-center gap-3 mt-2">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                equipamento.ativo
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {equipamento.ativo ? 'Ativo' : 'Inativo'}
+              </span>
+              <span className="text-sm text-gray-500">
+                {equipamento.tipo_nome}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setQrModalOpen(true)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+              title="Ver QR Code"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+            </button>
+            {!isCliente && (
+              <>
+                <Link
+                  href={`/dashboard/equipamentos/${equipamentoId}/editar`}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Editar
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  className="px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                >
+                  Excluir
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Formulário */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow">
-        {error && (
-          <div className="p-4 bg-red-50 border-l-4 border-red-400">
-            <p className="text-red-800">{error}</p>
+      {/* Cards de informacao */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Leitura Atual - Card destacado */}
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+          <p className="text-sm text-gray-500 mb-1">Leitura Atual</p>
+          <p className="text-3xl font-bold text-gray-900">
+            {Number(equipamento.leitura_atual).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            {equipamento.tipo_medicao === 'KM' ? 'quilômetros' : 'horas'}
+          </p>
+        </div>
+
+        {/* Tipo de Medicao */}
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+          <p className="text-sm text-gray-500 mb-1">Tipo de Medição</p>
+          <p className="text-xl font-semibold text-gray-900">
+            {equipamento.tipo_medicao === 'KM' ? 'Quilômetro' : 'Horímetro'}
+          </p>
+        </div>
+
+        {/* UUID */}
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-gray-400">
+          <p className="text-sm text-gray-500 mb-1">UUID</p>
+          <p className="text-sm font-mono text-gray-700 break-all">{equipamento.uuid}</p>
+        </div>
+      </div>
+
+      {/* Secoes de detalhe */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Localização */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Localização</h2>
           </div>
-        )}
-
-        <div className="p-6 space-y-6">
-          {/* Seção: Localização */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Localização</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
-                <select
-                  name="cliente"
-                  value={formData.cliente || ''}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
-                >
-                  <option value="">Selecione um cliente...</option>
-                  {clientes.map(cliente => (
-                    <option key={cliente.id} value={cliente.id}>{cliente.nome_razao}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Empreendimento *</label>
-                <select
-                  name="empreendimento"
-                  value={formData.empreendimento || ''}
-                  onChange={handleChange}
-                  required
-                  disabled={!formData.cliente}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="">Selecione um empreendimento...</option>
-                  {empreendimentos.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.nome}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Seção: Identificação */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Identificação</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
-                <input type="text" name="codigo" value={formData.codigo} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
-                <select name="tipo" value={formData.tipo || ''} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
-                  <option value="">Selecione um tipo...</option>
-                  {tipos.map(tipo => (
-                    <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Operador (opcional) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Operador opcional 👷</label>
-                <select name="operador" value={operadorSelecionado}
-                  onChange={(e) => setOperadorSelecionado(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
-                  <option value="">Não vincular agora</option>
-                  {operadores.map(op => (
-                    <option key={op.id} value={op.id}>{op.nome_completo} ({op.cpf})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <input type="text" name="descricao" value={formData.descricao} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Seção: Dados Técnicos */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados Técnicos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fabricante</label>
-                <input type="text" name="fabricante" value={formData.fabricante} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
-                <input type="text" name="modelo" value={formData.modelo} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ano</label>
-                <input type="number" name="ano_fabricacao" value={formData.ano_fabricacao || ''} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Número de Série</label>
-                <input type="text" name="numero_serie" value={formData.numero_serie} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Seção: Medição */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Controle de Medição</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Medição *</label>
-                <select name="tipo_medicao" value={formData.tipo_medicao} onChange={handleChange} required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500">
-                  <option value="HORA">Horímetro</option>
-                  <option value="KM">Quilômetro</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Leitura Atual ({formData.tipo_medicao === 'KM' ? 'km' : 'horas'})
-                </label>
-                <input type="number" name="leitura_atual" value={formData.leitura_atual} onChange={handleChange} step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="flex items-center">
-              <input type="checkbox" name="ativo" checked={formData.ativo} onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-              <span className="ml-2 text-sm text-gray-700">Equipamento ativo</span>
-            </label>
+          <div className="p-6 space-y-4">
+            <InfoRow label="Cliente" value={equipamento.cliente_nome} />
+            <InfoRow label="Empreendimento" value={equipamento.empreendimento_nome} />
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
-          <Link href="/dashboard/equipamentos"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-            Cancelar
-          </Link>
-          <button type="submit" disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
-          </button>
+        {/* Identificação */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Identificação</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <InfoRow label="Código" value={equipamento.codigo} />
+            <InfoRow label="Tipo" value={equipamento.tipo_nome} />
+            <InfoRow label="Descrição" value={equipamento.descricao || '-'} />
+          </div>
         </div>
-      </form>
+
+        {/* Dados Técnicos */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Dados Técnicos</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <InfoRow label="Fabricante" value={equipamento.fabricante || '-'} />
+            <InfoRow label="Modelo" value={equipamento.modelo || '-'} />
+            <InfoRow label="Ano de Fabricação" value={equipamento.ano_fabricacao?.toString() || '-'} />
+            <InfoRow label="Número de Série" value={equipamento.numero_serie || '-'} />
+          </div>
+        </div>
+
+        {/* Controle */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Controle</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <InfoRow label="Status" value={equipamento.ativo ? 'Ativo' : 'Inativo'} />
+            <InfoRow
+              label="Cadastrado em"
+              value={new Date(equipamento.criado_em).toLocaleDateString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            />
+            <InfoRow
+              label="Última atualização"
+              value={new Date(equipamento.atualizado_em).toLocaleDateString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* QR Code Modal */}
+      <QRCodeModal
+        isOpen={qrModalOpen}
+        onClose={() => setQrModalOpen(false)}
+        equipamentoUuid={equipamento.uuid}
+        equipamentoCodigo={equipamento.codigo}
+        equipamentoDescricao={equipamento.descricao}
+      />
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-start">
+      <span className="text-sm text-gray-500">{label}</span>
+      <span className="text-sm font-medium text-gray-900 text-right max-w-[60%]">{value}</span>
     </div>
   );
 }

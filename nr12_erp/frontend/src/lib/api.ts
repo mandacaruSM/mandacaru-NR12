@@ -668,7 +668,7 @@ export const nr12Api = {
     },
 
     duplicar: async (id: number) => {
-      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}duplicar/`, {
+      return apiFetch<ModeloChecklist>(`/nr12/modelos-checklist/${id}/duplicar/`, {
         method: 'POST',
       });
     },
@@ -749,14 +749,14 @@ export const nr12Api = {
     },
 
     finalizar: async (id: number, observacoes?: string) => {
-      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}finalizar/`, {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/finalizar/`, {
         method: 'POST',
         body: JSON.stringify({ observacoes_gerais: observacoes }),
       });
     },
 
     cancelar: async (id: number, motivo?: string) => {
-      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}cancelar/`, {
+      return apiFetch<ChecklistRealizado>(`/nr12/checklists/${id}/cancelar/`, {
         method: 'POST',
         body: JSON.stringify({ motivo_cancelamento: motivo }),
       });
@@ -1145,7 +1145,7 @@ export const orcamentosApi = {
   },
 
   get: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}`);
+    return apiFetch<Orcamento>(`/orcamentos/${id}/`);
   },
 
   create: async (data: Partial<Orcamento>) => {
@@ -1156,32 +1156,32 @@ export const orcamentosApi = {
   },
 
   update: async (id: number, data: Partial<Orcamento>) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/orcamentos/${id}`, {
+    return apiFetch<void>(`/orcamentos/${id}/`, {
       method: 'DELETE',
     });
   },
 
   aprovar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}aprovar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}/aprovar/`, {
       method: 'POST',
     });
   },
 
   rejeitar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}rejeitar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}/rejeitar/`, {
       method: 'POST',
     });
   },
 
   enviar: async (id: number) => {
-    return apiFetch<Orcamento>(`/orcamentos/${id}enviar/`, {
+    return apiFetch<Orcamento>(`/orcamentos/${id}/enviar/`, {
       method: 'POST',
     });
   },
@@ -1496,7 +1496,7 @@ export const financeiroApi = {
       forma_pagamento: string;
       comprovante?: string;
     }) => {
-      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}receber/`, {
+      return apiFetch<ContaReceber>(`/financeiro/contas-receber/${id}/receber/`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -1555,7 +1555,7 @@ export const financeiroApi = {
       forma_pagamento: string;
       comprovante?: string;
     }) => {
-      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}pagar/`, {
+      return apiFetch<ContaPagar>(`/financeiro/contas-pagar/${id}/pagar/`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
