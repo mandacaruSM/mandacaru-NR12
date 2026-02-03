@@ -321,7 +321,7 @@ class PagamentoViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        pagamentos = self.queryset.filter(conta_receber_id=conta_id)
+        pagamentos = self.get_queryset().filter(conta_receber_id=conta_id)
         serializer = PagamentoListSerializer(pagamentos, many=True)
 
         # Calcular totais

@@ -40,6 +40,18 @@ class ManutencaoViewSet(viewsets.ModelViewSet):
         return Response(created, status=status.HTTP_201_CREATED)
 
 class AnexoManutencaoViewSet(viewsets.ModelViewSet):
-    queryset = AnexoManutencao.objects.select_related('manutencao').all()
+    queryset = AnexoManutencao.objects.select_related('manutencao', 'manutencao__equipamento').all()
     serializer_class = AnexoManutencaoSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'delete']  # leitura e remoção
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente:
+                return qs.filter(manutencao__equipamento__cliente=cliente)
+            return qs.none()
+        return qs
