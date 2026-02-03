@@ -100,6 +100,9 @@ class EstoqueViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        if get_user_role_safe(self.request.user) == 'CLIENTE':
+            return queryset.none()
 
         # Filtro por local
         local = self.request.query_params.get('local', None)
@@ -151,6 +154,9 @@ class MovimentoViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        from core.permissions import get_user_role_safe
+        if get_user_role_safe(self.request.user) == 'CLIENTE':
+            return queryset.none()
 
         # Filtro por tipo de movimento
         tipo = self.request.query_params.get('tipo', None)

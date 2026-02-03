@@ -4,11 +4,14 @@
 import { useState, useEffect } from 'react';
 import { equipamentosApi, clientesApi, empreendimentosApi, Equipamento, Cliente, Empreendimento } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import QRCodeModal from '@/components/QRCodeModal';
 
 export default function EquipamentosPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const isCliente = user?.profile?.role === 'CLIENTE';
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
@@ -28,7 +31,7 @@ export default function EquipamentosPage() {
   };
 
   useEffect(() => {
-    loadClientes();
+    if (!isCliente) loadClientes();
     loadEquipamentos();
   }, []);
 
@@ -132,12 +135,14 @@ export default function EquipamentosPage() {
               </p>
             </div>
 
-            <Link
-              href="/dashboard/equipamentos/novo"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
-            >
-              + Novo Equipamento
-            </Link>
+            {!isCliente && (
+              <Link
+                href="/dashboard/equipamentos/novo"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
+              >
+                + Novo Equipamento
+              </Link>
+            )}
           </div>
 
           {/* Filtros */}
@@ -150,18 +155,20 @@ export default function EquipamentosPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
             />
 
-            <select
-              value={selectedCliente}
-              onChange={(e) => setSelectedCliente(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
-            >
-              <option value="">Todos os clientes</option>
-              {clientes.map(cliente => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome_razao}
-                </option>
-              ))}
-            </select>
+            {!isCliente && (
+              <select
+                value={selectedCliente}
+                onChange={(e) => setSelectedCliente(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+              >
+                <option value="">Todos os clientes</option>
+                {clientes.map(cliente => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nome_razao}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <select
               value={selectedEmpreendimento}

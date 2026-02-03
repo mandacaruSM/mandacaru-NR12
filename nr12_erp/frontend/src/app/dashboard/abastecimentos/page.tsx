@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { abastecimentosApi, equipamentosApi, cadastroApi, type Abastecimento, type Equipamento } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AbastecimentosPage() {
+  const { user } = useAuth();
+  const isCliente = user?.profile?.role === 'CLIENTE';
   const [items, setItems] = useState<Abastecimento[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +27,9 @@ export default function AbastecimentosPage() {
 
   // Carregar clientes ao montar o componente
   useEffect(() => {
-    carregarClientes();
+    if (!isCliente) {
+      carregarClientes();
+    }
   }, []);
 
   // Carregar empreendimentos quando cliente é selecionado
@@ -161,36 +166,40 @@ export default function AbastecimentosPage() {
           >
             Início
           </Link>
-          <Link
-            href="/dashboard/abastecimentos/novo"
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            + Novo Abastecimento
-          </Link>
+          {!isCliente && (
+            <Link
+              href="/dashboard/abastecimentos/novo"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              + Novo Abastecimento
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <h2 className="text-sm font-medium text-gray-900 mb-3">Filtros</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Cliente
-            </label>
-            <select
-              value={filtroCliente || ''}
-              onChange={(e) => setFiltroCliente(e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-            >
-              <option value="" className="text-gray-900 bg-white">Todos os clientes</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id} className="text-gray-900 bg-white">
-                  {cliente.nome_razao}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className={`grid grid-cols-1 ${isCliente ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4 mb-4`}>
+          {!isCliente && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Cliente
+              </label>
+              <select
+                value={filtroCliente || ''}
+                onChange={(e) => setFiltroCliente(e.target.value ? Number(e.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+              >
+                <option value="" className="text-gray-900 bg-white">Todos os clientes</option>
+                {clientes.map((cliente) => (
+                  <option key={cliente.id} value={cliente.id} className="text-gray-900 bg-white">
+                    {cliente.nome_razao}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -324,14 +333,16 @@ export default function AbastecimentosPage() {
           <p className="mt-2 text-sm text-gray-500">
             Comece criando um novo abastecimento.
           </p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard/abastecimentos/novo"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              + Novo Abastecimento
-            </Link>
-          </div>
+          {!isCliente && (
+            <div className="mt-6">
+              <Link
+                href="/dashboard/abastecimentos/novo"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                + Novo Abastecimento
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 """
 Permissões customizadas baseadas em roles e módulos habilitados
 """
+from django.db import models
 from rest_framework import permissions
 
 
@@ -82,8 +83,36 @@ def filter_by_role(queryset, user):
         except Exception:
             pass
 
-    # OPERADOR, TECNICO, FINANCEIRO, COMPRAS: retorna tudo (HasModuleAccess controla acesso)
-    if role in ('OPERADOR', 'TECNICO', 'FINANCEIRO', 'COMPRAS'):
+    if role == 'OPERADOR':
+        try:
+            operador = getattr(user, 'operador_profile', None)
+            if not operador:
+                return queryset
+            model = queryset.model
+            # Operador ve apenas equipamentos autorizados
+            if model.__name__ == 'Equipamento':
+                return queryset.filter(
+                    models.Q(id__in=operador.equipamentos_autorizados.values_list('id', flat=True)) |
+                    models.Q(cliente__in=operador.clientes.all())
+                ).distinct()
+            # Models com equipamento (Checklist, Abastecimento, Manutencao, etc)
+            if hasattr(model, 'equipamento'):
+                return queryset.filter(
+                    models.Q(equipamento__in=operador.equipamentos_autorizados.all()) |
+                    models.Q(equipamento__cliente__in=operador.clientes.all())
+                ).distinct()
+            # Empreendimento
+            if model.__name__ == 'Empreendimento':
+                return queryset.filter(cliente__in=operador.clientes.all())
+            # Cliente
+            if model.__name__ == 'Cliente':
+                return queryset.filter(id__in=operador.clientes.values_list('id', flat=True))
+        except Exception:
+            pass
+        return queryset
+
+    # TECNICO, FINANCEIRO, COMPRAS: retorna tudo (HasModuleAccess controla acesso)
+    if role in ('TECNICO', 'FINANCEIRO', 'COMPRAS'):
         return queryset
 
     # Role desconhecido: bloqueia por segurança

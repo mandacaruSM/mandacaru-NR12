@@ -86,6 +86,12 @@ class PedidoCompra(models.Model):
         null=True, blank=True, related_name='pedidos_compra',
         verbose_name="Equipamento"
     )
+    # Vínculo com ordem de servico (opcional)
+    ordem_servico = models.ForeignKey(
+        'ordens_servico.OrdemServico', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='pedidos_compra',
+        verbose_name="Ordem de Servico"
+    )
     status = models.CharField(
         max_length=10, choices=StatusPedido.choices,
         default=StatusPedido.RASCUNHO, verbose_name="Status"

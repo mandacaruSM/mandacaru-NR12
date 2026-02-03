@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { empreendimentosApi, clientesApi, Empreendimento, Cliente } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 const TIPO_LABELS = {
@@ -15,6 +16,8 @@ const TIPO_LABELS = {
 
 export default function EmpreendimentosPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const isCliente = user?.profile?.role === 'CLIENTE';
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +26,9 @@ export default function EmpreendimentosPage() {
   const [selectedCliente, setSelectedCliente] = useState<string>('');
 
   useEffect(() => {
-    loadClientes();
+    if (!isCliente) {
+      loadClientes();
+    }
     loadEmpreendimentos();
   }, []);
 
@@ -106,16 +111,18 @@ export default function EmpreendimentosPage() {
               </p>
             </div>
 
-            <Link
-              href="/dashboard/empreendimentos/novo"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
-            >
-              + Novo Empreendimento
-            </Link>
+            {!isCliente && (
+              <Link
+                href="/dashboard/empreendimentos/novo"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
+              >
+                + Novo Empreendimento
+              </Link>
+            )}
           </div>
 
           {/* Filtros */}
-          <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <form onSubmit={handleSearch} className={`grid grid-cols-1 ${isCliente ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-3`}>
             <input
               type="text"
               placeholder="Buscar por nome..."
@@ -124,18 +131,20 @@ export default function EmpreendimentosPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
             />
 
-            <select
-              value={selectedCliente}
-              onChange={(e) => setSelectedCliente(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
-            >
-              <option value="">Todos os clientes</option>
-              {clientes.map(cliente => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome_razao}
-                </option>
-              ))}
-            </select>
+            {!isCliente && (
+              <select
+                value={selectedCliente}
+                onChange={(e) => setSelectedCliente(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+              >
+                <option value="">Todos os clientes</option>
+                {clientes.map(cliente => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nome_razao}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <div className="flex gap-2">
               <button
@@ -168,12 +177,14 @@ export default function EmpreendimentosPage() {
         {empreendimentos.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Nenhum empreendimento encontrado</p>
-            <Link
-              href="/dashboard/empreendimentos/novo"
-              className="inline-block mt-4 text-blue-600 hover:text-blue-700"
-            >
-              Cadastre o primeiro empreendimento
-            </Link>
+            {!isCliente && (
+              <Link
+                href="/dashboard/empreendimentos/novo"
+                className="inline-block mt-4 text-blue-600 hover:text-blue-700"
+              >
+                Cadastre o primeiro empreendimento
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

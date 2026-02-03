@@ -11,13 +11,18 @@ import {
   operadoresApi,
   supervisoresApi,
   ordensServicoApi,
+  orcamentosApi,
+  pedidosCompraApi,
   abastecimentosApi,
   nr12Api,
   manutencoesApi,
   Cliente,
   Equipamento,
   Abastecimento,
-  ChecklistRealizado
+  ChecklistRealizado,
+  Orcamento,
+  OrdemServico,
+  PedidoCompra,
 } from '@/lib/api';
 
 interface StatCard {
@@ -55,9 +60,20 @@ export default function DashboardPage() {
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [scannerOpen, setScannerOpen] = useState(false);
 
+  // CLIENTE-specific state
+  const [orcamentosPendentes, setOrcamentosPendentes] = useState<Orcamento[]>([]);
+  const [osEmAndamento, setOsEmAndamento] = useState<OrdemServico[]>([]);
+  const [osFinalizadas, setOsFinalizadas] = useState<OrdemServico[]>([]);
+  const [pedidosCliente, setPedidosCliente] = useState<PedidoCompra[]>([]);
+  const [clienteDataLoading, setClienteDataLoading] = useState(true);
+
   useEffect(() => {
     loadDashboardData();
-    loadRecentActivities();
+    if (isCliente) {
+      loadClienteDashboard();
+    } else {
+      loadRecentActivities();
+    }
   }, []);
 
   async function loadDashboardData() {
@@ -99,6 +115,26 @@ export default function DashboardPage() {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadClienteDashboard() {
+    try {
+      setClienteDataLoading(true);
+      const [orcRes, osAndamentoRes, osConcluidasRes, pedidosRes] = await Promise.all([
+        orcamentosApi.list({ status: 'ENVIADO' }).catch(() => ({ results: [] })),
+        ordensServicoApi.list({ status: 'EM_EXECUCAO' }).catch(() => ({ results: [] })),
+        ordensServicoApi.list({ status: 'CONCLUIDA' }).catch(() => ({ results: [] })),
+        pedidosCompraApi.list({ destino: 'CLIENTE' }).catch(() => ({ results: [] })),
+      ]);
+      setOrcamentosPendentes(orcRes.results || []);
+      setOsEmAndamento(osAndamentoRes.results || []);
+      setOsFinalizadas((osConcluidasRes.results || []).slice(0, 10));
+      setPedidosCliente(pedidosRes.results || []);
+    } catch (error) {
+      console.error('Erro ao carregar dashboard do cliente:', error);
+    } finally {
+      setClienteDataLoading(false);
     }
   }
 
@@ -323,8 +359,233 @@ export default function DashboardPage() {
         <ClientPlanCard />
       )}
 
-      {/* Recent Activity and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* CLIENTE Dashboard Sections */}
+      {isCliente && (
+        <div className="space-y-6">
+          {clienteDataLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {/* Resumo Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-sm text-yellow-700 font-medium">Orcamentos Pendentes</p>
+                  <p className="text-2xl font-bold text-yellow-800 mt-1">{orcamentosPendentes.length}</p>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-blue-700 font-medium">OS em Andamento</p>
+                  <p className="text-2xl font-bold text-blue-800 mt-1">{osEmAndamento.length}</p>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <p className="text-sm text-green-700 font-medium">OS Finalizadas</p>
+                  <p className="text-2xl font-bold text-green-800 mt-1">{osFinalizadas.length}</p>
+                </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                  <p className="text-sm text-purple-700 font-medium">Pedidos de Compra</p>
+                  <p className="text-2xl font-bold text-purple-800 mt-1">{pedidosCliente.length}</p>
+                </div>
+              </div>
+
+              {/* Orcamentos Aguardando Aprovacao */}
+              {orcamentosPendentes.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">Orcamentos Aguardando Aprovacao</h2>
+                    <Link href="/dashboard/orcamentos" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Ver todos
+                    </Link>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numero</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipamento</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Validade</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {orcamentosPendentes.map((orc) => (
+                          <tr key={orc.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{orc.numero}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{orc.tipo_display || orc.tipo}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{orc.equipamento_codigo || '-'}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                              R$ {Number(orc.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-700">
+                              {orc.data_validade ? new Date(orc.data_validade).toLocaleDateString('pt-BR') : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Link href={`/dashboard/orcamentos/${orc.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Ver detalhes
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* OS em Andamento */}
+              {osEmAndamento.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">Ordens de Servico em Andamento</h2>
+                    <Link href="/dashboard/ordens-servico" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Ver todas
+                    </Link>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numero</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipamento</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tecnico</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Previsao</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {osEmAndamento.map((os) => (
+                          <tr key={os.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{os.numero}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{os.equipamento_codigo || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{os.tecnico_nome || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">
+                              {os.data_prevista ? new Date(os.data_prevista).toLocaleDateString('pt-BR') : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Link href={`/dashboard/ordens-servico/${os.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Acompanhar
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* OS Finalizadas Recentemente */}
+              {osFinalizadas.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">OS Finalizadas Recentemente</h2>
+                    <Link href="/dashboard/ordens-servico" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Ver todas
+                    </Link>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numero</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipamento</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conclusao</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Final</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {osFinalizadas.map((os) => (
+                          <tr key={os.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{os.numero}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{os.equipamento_codigo || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">
+                              {os.data_conclusao ? new Date(os.data_conclusao).toLocaleDateString('pt-BR') : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                              R$ {Number(os.valor_final || os.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Link href={`/dashboard/ordens-servico/${os.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Ver detalhes
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Pedidos de Compra do Cliente */}
+              {pedidosCliente.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">Pedidos de Compra</h2>
+                    <Link href="/dashboard/compras/pedidos" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Ver todos
+                    </Link>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numero</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fornecedor</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {pedidosCliente.map((ped) => (
+                          <tr key={ped.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{ped.numero}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{ped.fornecedor_nome || '-'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                ped.status === 'ENTREGUE' ? 'bg-green-100 text-green-800' :
+                                ped.status === 'ENVIADO' ? 'bg-blue-100 text-blue-800' :
+                                ped.status === 'APROVADO' ? 'bg-indigo-100 text-indigo-800' :
+                                ped.status === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {ped.status_display || ped.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                              R$ {Number(ped.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Link href={`/dashboard/compras/pedidos/${ped.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Ver detalhes
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Mensagem vazia */}
+              {orcamentosPendentes.length === 0 && osEmAndamento.length === 0 && osFinalizadas.length === 0 && pedidosCliente.length === 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                  <p className="text-gray-500 text-lg">Nenhuma atividade recente encontrada.</p>
+                  <p className="text-gray-400 mt-2">Seus orcamentos, ordens de servico e pedidos aparecerão aqui.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Recent Activity and Quick Actions (Admin only) */}
+      {!isCliente && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Feed */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">

@@ -166,12 +166,13 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
         leitura_equipamento = data.get('leitura_equipamento')
 
         if equipamento and leitura_equipamento is not None:
-            # Verifica a leitura atual do equipamento
-            if leitura_equipamento < equipamento.leitura_atual:
+            # Verifica a leitura atual do equipamento (pode ser None)
+            leitura_atual = equipamento.leitura_atual
+            if leitura_atual is not None and leitura_equipamento < leitura_atual:
                 raise serializers.ValidationError({
                     'leitura_equipamento': (
                         f"A leitura informada ({leitura_equipamento}) não pode ser menor que "
-                        f"a leitura atual do equipamento ({equipamento.leitura_atual}). "
+                        f"a leitura atual do equipamento ({leitura_atual}). "
                         f"Tipo de medição: {equipamento.get_tipo_medicao_display()}"
                     )
                 })

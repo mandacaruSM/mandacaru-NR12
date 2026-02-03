@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes as perm_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Sum, Count, Q, Avg
 from django.utils import timezone
@@ -8,9 +9,11 @@ from ordens_servico.models import OrdemServico
 from manutencao.models import Manutencao
 from equipamentos.models import Equipamento
 from orcamentos.models import Orcamento
+from core.permissions import get_user_role_safe
 
 
 @api_view(['GET'])
+@perm_classes([IsAuthenticated])
 def relatorio_operacional(request):
     """
     Relatório operacional consolidado do sistema.
@@ -64,6 +67,17 @@ def relatorio_operacional(request):
     if tecnico_id:
         os_filters &= Q(tecnico_responsavel_id=tecnico_id)
         manutencao_filters &= Q(tecnico_id=tecnico_id)
+
+    # Filtro por role do usuario
+    role = get_user_role_safe(request.user)
+    if role == 'CLIENTE':
+        cliente = getattr(request.user, 'cliente_profile', None)
+        if cliente:
+            os_filters &= Q(cliente=cliente)
+            orcamento_filters &= Q(cliente=cliente)
+            manutencao_filters &= Q(equipamento__cliente=cliente)
+        else:
+            return Response({'detail': 'Cliente nao vinculado.'}, status=403)
 
     # Buscar dados
     ordens_servico = OrdemServico.objects.filter(os_filters).select_related(

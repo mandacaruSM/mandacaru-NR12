@@ -1706,10 +1706,16 @@ export interface PedidoCompra {
   numero?: string;
   fornecedor: number;
   fornecedor_nome?: string;
+  fornecedor_cnpj?: string;
+  fornecedor_contato?: string;
+  fornecedor_telefone?: string;
+  fornecedor_email?: string;
   destino: 'PROPRIO' | 'CLIENTE';
   destino_display?: string;
   orcamento?: number | null;
   orcamento_numero?: string;
+  ordem_servico?: number | null;
+  ordem_servico_numero?: string;
   cliente?: number | null;
   cliente_nome?: string;
   equipamento?: number | null;

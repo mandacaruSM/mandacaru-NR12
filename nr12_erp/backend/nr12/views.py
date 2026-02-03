@@ -199,19 +199,19 @@ class ChecklistRealizadoViewSet(BaseAuthViewSet):
         equipamento = self.request.query_params.get('equipamento')
         if equipamento:
             qs = qs.filter(equipamento_id=equipamento)
-        
+
         modelo = self.request.query_params.get('modelo')
         if modelo:
             qs = qs.filter(modelo_id=modelo)
-        
+
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)
-        
+
         resultado = self.request.query_params.get('resultado')
         if resultado:
             qs = qs.filter(resultado_geral=resultado)
-        
+
         # Filtro por data
         data_inicio = self.request.query_params.get('data_inicio')
         data_fim = self.request.query_params.get('data_fim')
@@ -219,8 +219,12 @@ class ChecklistRealizadoViewSet(BaseAuthViewSet):
             qs = qs.filter(data_hora_inicio__gte=data_inicio)
         if data_fim:
             qs = qs.filter(data_hora_inicio__lte=data_fim)
-        
+
         return qs
+
+    def perform_create(self, serializer):
+        """Define o usuario logado automaticamente ao criar checklist."""
+        serializer.save(usuario=self.request.user)
 
     @action(detail=True, methods=['post'])
     def finalizar(self, request, pk=None):
@@ -743,6 +747,10 @@ class ManutencaoPreventivaRealizadaViewSet(BaseAuthViewSet):
             qs = qs.filter(data_hora_inicio__lte=data_fim)
 
         return qs
+
+    def perform_create(self, serializer):
+        """Define o usuario logado automaticamente ao criar manutencao preventiva."""
+        serializer.save(usuario=self.request.user)
 
     @action(detail=True, methods=['post'])
     def finalizar(self, request, pk=None):

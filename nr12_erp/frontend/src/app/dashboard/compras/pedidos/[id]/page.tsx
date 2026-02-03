@@ -3,7 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { pedidosCompraApi, almoxarifadoApi, type PedidoCompra, type LocalEstoque } from '@/lib/api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { pedidosCompraApi, almoxarifadoApi, type PedidoCompra, type ItemPedidoCompra, type LocalEstoque } from '@/lib/api';
+
+function formatCurrency(value: number): string {
+  return 'R$ ' + Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('pt-BR');
+}
 
 export default function DetalhePedidoPage() {
   const params = useParams();
@@ -19,6 +30,10 @@ export default function DetalhePedidoPage() {
   const [showReceber, setShowReceber] = useState(false);
   const [receberForm, setReceberForm] = useState({ numero_nf: '', local_estoque: '' });
   const [locaisEstoque, setLocaisEstoque] = useState<LocalEstoque[]>([]);
+
+  // Para edicao de itens
+  const [editingItens, setEditingItens] = useState(false);
+  const [editedItens, setEditedItens] = useState<ItemPedidoCompra[]>([]);
 
   useEffect(() => {
     loadPedido();
@@ -116,6 +131,176 @@ export default function DetalhePedidoPage() {
     }
   }
 
+  // --- PDF Generation ---
+  function handleGerarPDF() {
+    if (!pedido) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PEDIDO DE COMPRA', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+
+    doc.setFontSize(14);
+    doc.text(`PC-${pedido.numero}`, pageWidth / 2, y, { align: 'center' });
+    y += 7;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const dataPedido = pedido.data_pedido ? formatDate(pedido.data_pedido) : '-';
+    doc.text(`Data: ${dataPedido}`, pageWidth / 2, y, { align: 'center' });
+    y += 4;
+
+    doc.setFontSize(9);
+    doc.text(`Status: ${pedido.status_display || pedido.status}`, pageWidth / 2, y, { align: 'center' });
+    y += 10;
+
+    // Fornecedor
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, y, pageWidth - 14, y);
+    y += 6;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FORNECEDOR', 14, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    if (pedido.fornecedor_nome) { doc.text(`Nome: ${pedido.fornecedor_nome}`, 14, y); y += 5; }
+    if (pedido.fornecedor_cnpj) { doc.text(`CNPJ: ${pedido.fornecedor_cnpj}`, 14, y); y += 5; }
+    if (pedido.fornecedor_contato) { doc.text(`Contato: ${pedido.fornecedor_contato}`, 14, y); y += 5; }
+    if (pedido.fornecedor_telefone) { doc.text(`Telefone: ${pedido.fornecedor_telefone}`, 14, y); y += 5; }
+    if (pedido.fornecedor_email) { doc.text(`Email: ${pedido.fornecedor_email}`, 14, y); y += 5; }
+    y += 4;
+
+    // Destino
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESTINO', 14, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    if (pedido.destino === 'PROPRIO') {
+      doc.text('Uso Proprio', 14, y);
+    } else {
+      doc.text(`Cliente: ${pedido.cliente_nome || '-'}`, 14, y);
+    }
+    y += 8;
+
+    // Items table
+    const itens = pedido.itens || [];
+    const tableBody = itens.map((item) => [
+      item.descricao,
+      item.codigo_fornecedor || '-',
+      String(item.quantidade),
+      item.unidade,
+      formatCurrency(Number(item.valor_unitario || 0)),
+      formatCurrency(Number(item.valor_total || 0)),
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Descricao', 'Cod. Forn.', 'Qtd', 'Un', 'Vlr Unit.', 'Subtotal']],
+      body: tableBody,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 55 },
+        2: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'right' },
+      },
+      theme: 'striped',
+    });
+
+    // Total
+    const finalY = (doc as any).lastAutoTable?.finalY || y + 20;
+    let ty = finalY + 8;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL GERAL: ${formatCurrency(Number(pedido.valor_total || 0))}`, pageWidth - 14, ty, { align: 'right' });
+    ty += 10;
+
+    // Observacoes
+    if (pedido.observacoes) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('OBSERVACOES', 14, ty);
+      ty += 5;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      const lines = doc.splitTextToSize(pedido.observacoes, pageWidth - 28);
+      doc.text(lines, 14, ty);
+      ty += lines.length * 4 + 6;
+    }
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(128, 128, 128);
+    const emitido = `Emitido em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`;
+    doc.text(emitido, 14, pageHeight - 10);
+    doc.text('Mandacaru NR12 ERP', pageWidth - 14, pageHeight - 10, { align: 'right' });
+
+    doc.save(`PC-${pedido.numero}.pdf`);
+  }
+
+  // --- Item Editing ---
+  function toggleEditItens() {
+    if (!editingItens && pedido?.itens) {
+      setEditedItens(pedido.itens.map(item => ({ ...item })));
+    }
+    setEditingItens(!editingItens);
+  }
+
+  function handleItemChange(index: number, field: 'valor_unitario' | 'quantidade', value: string) {
+    setEditedItens(prev => {
+      const updated = [...prev];
+      const numValue = parseFloat(value) || 0;
+      updated[index] = {
+        ...updated[index],
+        [field]: numValue,
+        valor_total: field === 'quantidade'
+          ? numValue * Number(updated[index].valor_unitario || 0)
+          : Number(updated[index].quantidade || 0) * numValue,
+      };
+      return updated;
+    });
+  }
+
+  async function handleSaveItens() {
+    try {
+      setActionLoading('save_itens');
+      setError('');
+      setSuccessMsg('');
+      const itens_data = editedItens.map(item => ({
+        id: item.id,
+        produto: item.produto,
+        descricao: item.descricao,
+        codigo_fornecedor: item.codigo_fornecedor,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        valor_unitario: item.valor_unitario,
+      }));
+      const result = await pedidosCompraApi.update(id, { itens_data });
+      setPedido(result);
+      setEditingItens(false);
+      setSuccessMsg('Itens atualizados com sucesso!');
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar itens');
+    } finally {
+      setActionLoading('');
+    }
+  }
+
   function getStatusColor(status: string) {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
       RASCUNHO: { bg: 'bg-gray-50', text: 'text-gray-800', border: 'border-gray-300' },
@@ -149,6 +334,12 @@ export default function DetalhePedidoPage() {
   }
 
   const statusColor = getStatusColor(pedido.status);
+  const canEditItens = pedido.status === 'RASCUNHO' || pedido.status === 'ENVIADO';
+  const canGeneratePDF = pedido.status !== 'RASCUNHO';
+  const displayItens = editingItens ? editedItens : (pedido.itens || []);
+  const editedTotal = editingItens
+    ? editedItens.reduce((sum, item) => sum + Number(item.valor_total || 0), 0)
+    : Number(pedido.valor_total || 0);
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
@@ -282,6 +473,32 @@ export default function DetalhePedidoPage() {
             {actionLoading === 'cancelar' ? 'Cancelando...' : 'Cancelar Pedido'}
           </button>
         )}
+
+        {/* Gerar PDF */}
+        {canGeneratePDF && (
+          <button
+            onClick={handleGerarPDF}
+            className="py-3.5 px-6 bg-green-700 text-white rounded-lg hover:bg-green-800 font-medium text-sm transition-colors inline-flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Gerar PDF
+          </button>
+        )}
+
+        {/* Editar Itens */}
+        {canEditItens && !editingItens && (
+          <button
+            onClick={toggleEditItens}
+            className="py-3.5 px-6 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 font-medium text-sm transition-colors inline-flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Editar Itens
+          </button>
+        )}
       </div>
 
       {/* Dados do Pedido */}
@@ -302,6 +519,7 @@ export default function DetalhePedidoPage() {
             {pedido.cliente_nome && <InfoItem label="Cliente" value={pedido.cliente_nome} />}
             {pedido.equipamento_codigo && <InfoItem label="Equipamento" value={pedido.equipamento_codigo} />}
             {pedido.orcamento_numero && <InfoItem label="Orcamento" value={`#${pedido.orcamento_numero}`} />}
+            {pedido.ordem_servico_numero && <InfoItem label="Ordem de Servico" value={`OS-${pedido.ordem_servico_numero}`} />}
             {pedido.local_estoque_nome && <InfoItem label="Local de Estoque" value={pedido.local_estoque_nome} />}
             <InfoItem
               label="Data do Pedido"
@@ -336,7 +554,26 @@ export default function DetalhePedidoPage() {
       <div className="bg-white rounded-lg shadow">
         <div className="px-4 sm:px-6 py-4 border-b flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-900">Itens</h2>
-          <span className="text-sm text-gray-500">{pedido.itens?.length || 0} item(ns)</span>
+          <div className="flex items-center gap-3">
+            {editingItens && (
+              <>
+                <button
+                  onClick={handleSaveItens}
+                  disabled={actionLoading === 'save_itens'}
+                  className="px-4 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium text-sm transition-colors"
+                >
+                  {actionLoading === 'save_itens' ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button
+                  onClick={toggleEditItens}
+                  className="px-4 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm transition-colors"
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
+            <span className="text-sm text-gray-500">{pedido.itens?.length || 0} item(ns)</span>
+          </div>
         </div>
 
         {!pedido.itens || pedido.itens.length === 0 ? (
@@ -345,8 +582,8 @@ export default function DetalhePedidoPage() {
           <>
             {/* Mobile: Cards de itens */}
             <div className="divide-y divide-gray-100 lg:hidden">
-              {pedido.itens.map((item) => (
-                <div key={item.id} className="p-4">
+              {displayItens.map((item, idx) => (
+                <div key={item.id || idx} className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{item.descricao}</p>
@@ -363,21 +600,57 @@ export default function DetalhePedidoPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">
-                      {item.quantidade} {item.unidade} x R$ {Number(item.valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                    <span className="font-bold text-gray-900">
-                      R$ {Number(item.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
+
+                  {editingItens ? (
+                    <div className="space-y-2 mt-2">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="block text-xs text-gray-500 mb-0.5">Quantidade</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={item.quantidade}
+                            onChange={(e) => handleItemChange(idx, 'quantidade', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-xs text-gray-500 mb-0.5">Vlr Unitario</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.valor_unitario}
+                            onChange={(e) => handleItemChange(idx, 'valor_unitario', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500">Subtotal:</span>
+                        <span className="font-bold text-gray-900">
+                          {formatCurrency(Number(item.valor_total || 0))}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">
+                        {item.quantidade} {item.unidade} x {formatCurrency(Number(item.valor_unitario || 0))}
+                      </span>
+                      <span className="font-bold text-gray-900">
+                        {formatCurrency(Number(item.valor_total || 0))}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
               {/* Total mobile */}
               <div className="p-4 bg-gray-50 flex justify-between items-center">
                 <span className="font-bold text-gray-900">TOTAL</span>
                 <span className="text-lg font-bold text-gray-900">
-                  R$ {Number(pedido.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  {formatCurrency(editedTotal)}
                 </span>
               </div>
             </div>
@@ -397,8 +670,8 @@ export default function DetalhePedidoPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {pedido.itens.map((item) => (
-                    <tr key={item.id}>
+                  {displayItens.map((item, idx) => (
+                    <tr key={item.id || idx}>
                       <td className="px-6 py-3 text-sm text-gray-900">
                         {item.descricao}
                         {item.produto_nome && (
@@ -406,13 +679,37 @@ export default function DetalhePedidoPage() {
                         )}
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-500">{item.codigo_fornecedor || '-'}</td>
-                      <td className="px-6 py-3 text-sm text-gray-900 text-right">{item.quantidade}</td>
+                      <td className="px-6 py-3 text-sm text-gray-900 text-right">
+                        {editingItens ? (
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={item.quantidade}
+                            onChange={(e) => handleItemChange(idx, 'quantidade', e.target.value)}
+                            className="w-20 px-2 py-1 border rounded text-sm text-right text-gray-900 bg-white"
+                          />
+                        ) : (
+                          item.quantidade
+                        )}
+                      </td>
                       <td className="px-6 py-3 text-sm text-gray-500">{item.unidade}</td>
                       <td className="px-6 py-3 text-sm text-gray-900 text-right">
-                        R$ {Number(item.valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {editingItens ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.valor_unitario}
+                            onChange={(e) => handleItemChange(idx, 'valor_unitario', e.target.value)}
+                            className="w-28 px-2 py-1 border rounded text-sm text-right text-gray-900 bg-white"
+                          />
+                        ) : (
+                          formatCurrency(Number(item.valor_unitario || 0))
+                        )}
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-900 text-right font-medium">
-                        R$ {Number(item.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {formatCurrency(Number(item.valor_total || 0))}
                       </td>
                       <td className="px-6 py-3 text-center">
                         {item.entregue ? (
@@ -428,7 +725,7 @@ export default function DetalhePedidoPage() {
                   <tr className="bg-gray-50">
                     <td colSpan={5} className="px-6 py-3 text-sm font-bold text-gray-900 text-right">TOTAL:</td>
                     <td className="px-6 py-3 text-sm font-bold text-gray-900 text-right">
-                      R$ {Number(pedido.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {formatCurrency(editedTotal)}
                     </td>
                     <td></td>
                   </tr>

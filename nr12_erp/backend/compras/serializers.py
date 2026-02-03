@@ -38,9 +38,14 @@ class ItemPedidoCompraSerializer(serializers.ModelSerializer):
 class PedidoCompraSerializer(serializers.ModelSerializer):
     itens = ItemPedidoCompraSerializer(many=True, read_only=True)
     fornecedor_nome = serializers.CharField(source='fornecedor.nome', read_only=True)
+    fornecedor_cnpj = serializers.CharField(source='fornecedor.cnpj_cpf', read_only=True)
+    fornecedor_contato = serializers.CharField(source='fornecedor.contato', read_only=True)
+    fornecedor_telefone = serializers.CharField(source='fornecedor.telefone', read_only=True)
+    fornecedor_email = serializers.EmailField(source='fornecedor.email', read_only=True)
     cliente_nome = serializers.SerializerMethodField(read_only=True)
     equipamento_codigo = serializers.SerializerMethodField(read_only=True)
     orcamento_numero = serializers.SerializerMethodField(read_only=True)
+    ordem_servico_numero = serializers.SerializerMethodField(read_only=True)
     local_estoque_nome = serializers.SerializerMethodField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     destino_display = serializers.CharField(source='get_destino_display', read_only=True)
@@ -52,8 +57,10 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         model = PedidoCompra
         fields = [
             'id', 'numero', 'fornecedor', 'fornecedor_nome',
+            'fornecedor_cnpj', 'fornecedor_contato', 'fornecedor_telefone', 'fornecedor_email',
             'destino', 'destino_display',
             'orcamento', 'orcamento_numero',
+            'ordem_servico', 'ordem_servico_numero',
             'cliente', 'cliente_nome',
             'equipamento', 'equipamento_codigo',
             'status', 'status_display',
@@ -75,6 +82,9 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
 
     def get_orcamento_numero(self, obj):
         return obj.orcamento.numero if obj.orcamento else None
+
+    def get_ordem_servico_numero(self, obj):
+        return obj.ordem_servico.numero if obj.ordem_servico else None
 
     def get_local_estoque_nome(self, obj):
         return obj.local_estoque.nome if obj.local_estoque else None

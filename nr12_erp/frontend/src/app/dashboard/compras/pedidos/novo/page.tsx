@@ -10,11 +10,13 @@ import {
   equipamentosApi,
   almoxarifadoApi,
   orcamentosApi,
+  ordensServicoApi,
   type Fornecedor,
   type Cliente,
   type Equipamento,
   type LocalEstoque,
   type Orcamento,
+  type OrdemServico,
   type Produto,
   type ItemPedidoCompra,
 } from '@/lib/api';
@@ -39,6 +41,7 @@ export default function NovoPedidoPage() {
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [locaisEstoque, setLocaisEstoque] = useState<LocalEstoque[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [ordensServico, setOrdensServico] = useState<OrdemServico[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
   // Form
@@ -48,6 +51,7 @@ export default function NovoPedidoPage() {
     cliente: '',
     equipamento: '',
     orcamento: '',
+    ordem_servico: '',
     local_estoque: '',
     data_previsao: '',
     observacoes: '',
@@ -92,14 +96,18 @@ export default function NovoPedidoPage() {
     }
   }, [form.cliente]);
 
-  // Carregar orcamentos quando cliente mudar
+  // Carregar orcamentos e OS quando cliente mudar
   useEffect(() => {
     if (form.cliente) {
       orcamentosApi.list({ cliente: Number(form.cliente), status: 'APROVADO' })
         .then(data => setOrcamentos(data.results || []))
         .catch(() => setOrcamentos([]));
+      ordensServicoApi.list({ cliente: Number(form.cliente) })
+        .then(data => setOrdensServico((data.results || []).filter((os: OrdemServico) => os.status !== 'CANCELADA')))
+        .catch(() => setOrdensServico([]));
     } else {
       setOrcamentos([]);
+      setOrdensServico([]);
     }
   }, [form.cliente]);
 
@@ -163,6 +171,7 @@ export default function NovoPedidoPage() {
       if (form.cliente) payload.cliente = Number(form.cliente);
       if (form.equipamento) payload.equipamento = Number(form.equipamento);
       if (form.orcamento) payload.orcamento = Number(form.orcamento);
+      if (form.ordem_servico) payload.ordem_servico = Number(form.ordem_servico);
       if (form.local_estoque) payload.local_estoque = Number(form.local_estoque);
       if (form.data_previsao) payload.data_previsao = form.data_previsao;
 
@@ -232,16 +241,28 @@ export default function NovoPedidoPage() {
               </select>
             </div>
             {form.destino === 'CLIENTE' && form.cliente && (
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Orcamento Vinculado</label>
-                <select name="orcamento" value={form.orcamento} onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded text-black bg-white">
-                  <option value="">Nenhum</option>
-                  {orcamentos.map(o => (
-                    <option key={o.id} value={o.id}>#{o.numero} - R$ {Number(o.valor_total || 0).toFixed(2)}</option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Orcamento Vinculado</label>
+                  <select name="orcamento" value={form.orcamento} onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded text-black bg-white">
+                    <option value="">Nenhum</option>
+                    {orcamentos.map(o => (
+                      <option key={o.id} value={o.id}>#{o.numero} - R$ {Number(o.valor_total || 0).toFixed(2)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Ordem de Servico Vinculada</label>
+                  <select name="ordem_servico" value={form.ordem_servico} onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded text-black bg-white">
+                    <option value="">Nenhuma</option>
+                    {ordensServico.map(os => (
+                      <option key={os.id} value={os.id}>OS-{os.numero} - {os.status_display} - {os.equipamento_codigo || ''}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">Local de Estoque (entrega)</label>

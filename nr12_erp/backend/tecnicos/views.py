@@ -11,6 +11,7 @@ from core.permissions import IsAdminUser
 class TecnicoViewSet(viewsets.ModelViewSet):
     queryset = Tecnico.objects.prefetch_related('clientes', 'empreendimentos_vinculados').all()
     serializer_class = TecnicoSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "put", "patch", "delete"]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["ativo"]
