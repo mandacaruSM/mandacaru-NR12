@@ -137,7 +137,7 @@ class MedicaoEquipamento(models.Model):
         ("MANUAL", "Manual"),
     ]
     equipamento = models.ForeignKey(Equipamento, on_delete=models.CASCADE, related_name="medicoes")
-    origem = models.CharField(max_length=20, choices=ORIGEM_CHOICES, default="MANUAL")
+    origem = models.CharField(max_length=30, choices=ORIGEM_CHOICES, default="MANUAL")
     leitura = models.DecimalField(max_digits=12, decimal_places=2)  # km ou horas
     observacao = models.CharField(max_length=255, blank=True, default="")
     criado_em = models.DateTimeField(auto_now_add=True)
