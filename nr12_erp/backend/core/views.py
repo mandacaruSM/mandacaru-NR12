@@ -98,24 +98,12 @@ class OperadorViewSet(viewsets.ModelViewSet):
         return OperadorDetailSerializer if self.action == 'retrieve' else OperadorSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        # Filtro por role (CLIENTE vê apenas operadores vinculados)
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(clientes=cliente)
-            else:
-                return qs.none()
+        from core.permissions import filter_by_role
+        qs = filter_by_role(super().get_queryset(), self.request.user)
         # filtro por cliente
         cliente_id = self.request.query_params.get("cliente")
         if cliente_id:
             qs = qs.filter(clientes__id=cliente_id)
-        # filtro por ativo
-        ativo = self.request.query_params.get('ativo')
-        if ativo is not None:
-            qs = qs.filter(ativo=ativo.lower() == 'true')
         # filtro por vinculação telegram
         telegram_vinculado = self.request.query_params.get('telegram_vinculado')
         if telegram_vinculado is not None:

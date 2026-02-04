@@ -52,6 +52,9 @@ def filter_by_role(queryset, user):
             # Model é Empreendimento
             if model.__name__ == 'Empreendimento':
                 return queryset.filter(cliente=cliente)
+            # Tecnico/Operador com M2M 'clientes'
+            if model.__name__ in ('Tecnico', 'Operador'):
+                return queryset.filter(clientes=cliente).distinct()
             # Model tem campo 'cliente' direto (Orcamento, OrdemServico, ContaReceber, PedidoCompra)
             if hasattr(model, 'cliente'):
                 return queryset.filter(cliente=cliente)
@@ -64,6 +67,18 @@ def filter_by_role(queryset, user):
             # Model tem campo 'manutencao' (RespostaItemManutencao)
             if hasattr(model, 'manutencao'):
                 return queryset.filter(manutencao__equipamento__cliente=cliente)
+            # Model tem campo 'ordem_servico' (ItemOrdemServico)
+            if hasattr(model, 'ordem_servico'):
+                return queryset.filter(ordem_servico__cliente=cliente)
+            # Model tem campo 'orcamento' (ItemOrcamento)
+            if hasattr(model, 'orcamento'):
+                return queryset.filter(orcamento__cliente=cliente)
+            # Model tem campo 'pedido' (ItemPedidoCompra)
+            if hasattr(model, 'pedido'):
+                return queryset.filter(pedido__cliente=cliente)
+            # Model tem campo 'conta_receber' (Pagamento)
+            if hasattr(model, 'conta_receber'):
+                return queryset.filter(conta_receber__cliente=cliente)
         except Exception:
             pass
         return queryset.none()
@@ -76,6 +91,13 @@ def filter_by_role(queryset, user):
             model = queryset.model
             if model.__name__ == 'Empreendimento':
                 return queryset.filter(supervisor=supervisor)
+            # Tecnico/Operador: supervisor vê os vinculados aos seus clientes
+            if model.__name__ in ('Tecnico', 'Operador'):
+                from cadastro.models import Empreendimento as EmpSup
+                clientes_ids_sup = EmpSup.objects.filter(
+                    supervisor=supervisor
+                ).values_list('cliente_id', flat=True)
+                return queryset.filter(clientes__id__in=clientes_ids_sup).distinct()
             if hasattr(model, 'equipamento'):
                 return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
             if hasattr(model, 'checklist'):
@@ -84,6 +106,23 @@ def filter_by_role(queryset, user):
                 return queryset.filter(manutencao__equipamento__empreendimento__supervisor=supervisor)
             if hasattr(model, 'empreendimento'):
                 return queryset.filter(empreendimento__supervisor=supervisor)
+            # Sub-recursos com FK indireto via cliente
+            if hasattr(model, 'ordem_servico'):
+                return queryset.filter(ordem_servico__empreendimento__supervisor=supervisor)
+            if hasattr(model, 'orcamento'):
+                return queryset.filter(orcamento__empreendimento__supervisor=supervisor)
+            if hasattr(model, 'pedido'):
+                from cadastro.models import Empreendimento as Emp
+                clientes_sup = Emp.objects.filter(
+                    supervisor=supervisor
+                ).values_list('cliente_id', flat=True)
+                return queryset.filter(pedido__cliente_id__in=clientes_sup)
+            if hasattr(model, 'conta_receber'):
+                from cadastro.models import Empreendimento as Emp2
+                clientes_sup2 = Emp2.objects.filter(
+                    supervisor=supervisor
+                ).values_list('cliente_id', flat=True)
+                return queryset.filter(conta_receber__cliente_id__in=clientes_sup2)
             if hasattr(model, 'cliente'):
                 from cadastro.models import Empreendimento
                 clientes_ids = Empreendimento.objects.filter(
@@ -122,6 +161,23 @@ def filter_by_role(queryset, user):
                 return queryset.filter(
                     models.Q(manutencao__equipamento__in=operador.equipamentos_autorizados.all()) |
                     models.Q(manutencao__equipamento__cliente__in=operador.clientes.all())
+                ).distinct()
+            # Sub-recursos com FK indireto
+            if hasattr(model, 'ordem_servico'):
+                return queryset.filter(
+                    ordem_servico__equipamento__cliente__in=operador.clientes.all()
+                ).distinct()
+            if hasattr(model, 'orcamento'):
+                return queryset.filter(
+                    orcamento__equipamento__cliente__in=operador.clientes.all()
+                ).distinct()
+            if hasattr(model, 'pedido'):
+                return queryset.filter(
+                    pedido__cliente__in=operador.clientes.all()
+                ).distinct()
+            if hasattr(model, 'conta_receber'):
+                return queryset.filter(
+                    conta_receber__cliente__in=operador.clientes.all()
                 ).distinct()
             # Empreendimento
             if model.__name__ == 'Empreendimento':

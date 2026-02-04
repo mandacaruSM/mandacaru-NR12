@@ -6,7 +6,7 @@ from django.utils.crypto import get_random_string
 from .models import Tecnico
 from .serializers import TecnicoSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-from core.permissions import IsAdminUser
+from core.permissions import IsAdminUser, filter_by_role
 
 class TecnicoViewSet(viewsets.ModelViewSet):
     queryset = Tecnico.objects.prefetch_related('clientes', 'empreendimentos_vinculados').all()
@@ -20,15 +20,7 @@ class TecnicoViewSet(viewsets.ModelViewSet):
     ordering = ["nome"]
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                return qs.filter(clientes=cliente).distinct()
-            return qs.none()
-        return qs
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     @action(detail=True, methods=['post'])
     def gerar_codigo_telegram(self, request, pk=None):

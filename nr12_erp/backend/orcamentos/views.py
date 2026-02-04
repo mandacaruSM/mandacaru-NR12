@@ -170,12 +170,4 @@ class ItemOrcamentoViewSet(viewsets.ModelViewSet):
     filterset_fields = ['orcamento', 'tipo']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                return qs.filter(orcamento__cliente=cliente)
-            return qs.none()
-        return qs
+        return filter_by_role(super().get_queryset(), self.request.user)

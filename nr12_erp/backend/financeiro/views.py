@@ -230,15 +230,7 @@ class PagamentoViewSet(viewsets.ModelViewSet):
     ordering = ['-data_pagamento', '-created_at']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                return qs.filter(conta_receber__cliente=cliente)
-            return qs.none()
-        return qs
+        return filter_by_role(super().get_queryset(), self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'list':

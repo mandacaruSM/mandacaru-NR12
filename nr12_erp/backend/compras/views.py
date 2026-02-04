@@ -19,6 +19,15 @@ class FornecedorViewSet(viewsets.ModelViewSet):
     ordering_fields = ['nome', 'created_at']
     ordering = ['nome']
 
+    def get_queryset(self):
+        from core.permissions import get_user_role_safe
+        qs = super().get_queryset()
+        role = get_user_role_safe(self.request.user)
+        # CLIENTE e OPERADOR nao devem ver fornecedores (dados internos)
+        if role in ('CLIENTE', 'OPERADOR'):
+            return qs.none()
+        return qs
+
 
 class PedidoCompraViewSet(viewsets.ModelViewSet):
     queryset = PedidoCompra.objects.select_related(
@@ -129,12 +138,4 @@ class ItemPedidoCompraViewSet(viewsets.ModelViewSet):
     filterset_fields = ['pedido', 'entregue']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                return qs.filter(pedido__cliente=cliente)
-            return qs.none()
-        return qs
+        return filter_by_role(super().get_queryset(), self.request.user)
