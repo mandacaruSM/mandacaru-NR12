@@ -310,17 +310,7 @@ class RespostaItemChecklistViewSet(BaseAuthViewSet):
     ordering = ['-data_hora_resposta']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-
-        # Filtro por role (CLIENTE vê apenas respostas de seus equipamentos)
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(checklist__equipamento__cliente=cliente)
-            else:
-                return qs.none()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
 
         # Filtro por checklist
         checklist_id = self.request.query_params.get('checklist')
@@ -841,17 +831,7 @@ class RespostaItemManutencaoViewSet(BaseAuthViewSet):
     ordering = ['-data_hora_resposta']
 
     def get_queryset(self):
-        qs = super().get_queryset()
-
-        # Filtro por role (CLIENTE vê apenas respostas de seus equipamentos)
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(manutencao__equipamento__cliente=cliente)
-            else:
-                return qs.none()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
 
         # Filtro por manutenção
         manutencao_id = self.request.query_params.get('manutencao')

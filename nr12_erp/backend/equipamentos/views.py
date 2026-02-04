@@ -71,15 +71,7 @@ class PlanoManutencaoItemViewSet(BaseAuthViewSet):
     ordering = ["titulo"]
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(equipamento__cliente=cliente)
-            else:
-                return qs.none()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
         eq_id = self.request.query_params.get("equipamento")
         if eq_id:
             qs = qs.filter(equipamento_id=eq_id)
@@ -92,15 +84,7 @@ class MedicaoEquipamentoViewSet(BaseAuthViewSet):
     ordering = ["-criado_em"]
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        from core.permissions import get_user_role_safe
-        role = get_user_role_safe(self.request.user)
-        if role == 'CLIENTE':
-            cliente = getattr(self.request.user, 'cliente_profile', None)
-            if cliente:
-                qs = qs.filter(equipamento__cliente=cliente)
-            else:
-                return qs.none()
+        qs = filter_by_role(super().get_queryset(), self.request.user)
         eq_id = self.request.query_params.get("equipamento")
         if eq_id:
             qs = qs.filter(equipamento_id=eq_id)

@@ -2,62 +2,95 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.crypto import get_random_string
-from .models import Profile, Supervisor
+from .models import Profile, Operador, Supervisor
 from cadastro.models import Cliente
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
+    """Cria Profile padrao apenas se nao existir (evita sobrescrever roles especificos)."""
     if created:
-        Profile.objects.create(user=instance, role="ADMIN", modules_enabled=[
-            "clientes","empreendimentos","equipamentos","nr12","manutencoes","abastecimentos","almoxarifado","os","orcamentos","financeiro","compras","tecnicos","operadores","supervisores","relatorios"
-        ])
+        Profile.objects.get_or_create(
+            user=instance,
+            defaults={
+                'role': 'ADMIN',
+                'modules_enabled': [
+                    "clientes","empreendimentos","equipamentos","nr12","manutencoes",
+                    "abastecimentos","almoxarifado","os","orcamentos","financeiro",
+                    "compras","tecnicos","operadores","supervisores","relatorios"
+                ]
+            }
+        )
 
 @receiver(post_save, sender=Supervisor)
 def create_supervisor_user(sender, instance, created, **kwargs):
     """
-    Cria automaticamente um usuário Django quando um Supervisor é cadastrado.
-    Username: cpf do supervisor (sem pontuação)
-    Password: gerada aleatoriamente e enviada por email (TODO: implementar envio)
-    Role: SUPERVISOR com módulos específicos
+    Cria automaticamente um usuario Django quando um Supervisor e cadastrado.
+    Username: cpf do supervisor (sem pontuacao)
+    Role: SUPERVISOR com modulos especificos
     """
     if created and not instance.user_id:
-        # Username baseado no CPF (remove pontuação)
-        username = ''.join(filter(str.isdigit, instance.cpf))
+        cpf_limpo = ''.join(filter(str.isdigit, instance.cpf or ''))
+        if not cpf_limpo:
+            return
 
-        # Gera senha aleatória de 8 caracteres
-        password = get_random_string(8)
+        if User.objects.filter(username=cpf_limpo).exists():
+            user = User.objects.get(username=cpf_limpo)
+        else:
+            password = get_random_string(8)
+            user = User.objects.create_user(
+                username=cpf_limpo,
+                email=instance.email or '',
+                password=password,
+                first_name=instance.nome_completo.split()[0] if instance.nome_completo else '',
+                last_name=' '.join(instance.nome_completo.split()[1:]) if instance.nome_completo and len(instance.nome_completo.split()) > 1 else ''
+            )
+            print(f"[SUPERVISOR CRIADO] Username: {cpf_limpo} | Senha: {password}")
 
-        # Cria o usuário
-        user = User.objects.create_user(
-            username=username,
-            email=instance.email,
-            password=password,
-            first_name=instance.nome_completo.split()[0] if instance.nome_completo else '',
-            last_name=' '.join(instance.nome_completo.split()[1:]) if instance.nome_completo and len(instance.nome_completo.split()) > 1 else ''
-        )
-
-        # Atualiza o Profile com role SUPERVISOR e módulos específicos
-        profile = user.profile
+        # Garante Profile com role SUPERVISOR
+        profile, _ = Profile.objects.get_or_create(user=user)
         profile.role = "SUPERVISOR"
         profile.modules_enabled = [
-            "dashboard",
-            "empreendimentos",
-            "equipamentos",
-            "abastecimentos",
-            "manutencoes",
-            "manutencao_preventiva",
-            "nr12",
-            "operadores",
-            "relatorios"
+            "dashboard", "empreendimentos", "equipamentos", "abastecimentos",
+            "manutencoes", "manutencao_preventiva", "nr12", "operadores", "relatorios"
         ]
         profile.save()
 
-        # Vincula o usuário ao supervisor
         instance.user = user
         instance.save(update_fields=['user'])
 
-        # TODO: Enviar email com credenciais
-        print(f"[SUPERVISOR CRIADO] Username: {username} | Senha: {password} | Email: {instance.email}")
+@receiver(post_save, sender=Operador)
+def create_operador_user(sender, instance, created, **kwargs):
+    """
+    Cria automaticamente um usuario Django quando um Operador e cadastrado.
+    Username: cpf do operador (sem pontuacao)
+    Role: OPERADOR com modulos especificos
+    """
+    if created and not instance.user_id:
+        cpf_limpo = ''.join(filter(str.isdigit, instance.cpf or ''))
+        if not cpf_limpo:
+            return  # Sem CPF, nao cria usuario
+
+        if User.objects.filter(username=cpf_limpo).exists():
+            user = User.objects.get(username=cpf_limpo)
+        else:
+            password = get_random_string(8)
+            user = User.objects.create_user(
+                username=cpf_limpo,
+                email=instance.email or '',
+                password=password,
+                first_name=instance.nome_completo[:30] if instance.nome_completo else '',
+            )
+            print(f"[OPERADOR CRIADO] Username: {cpf_limpo} | Senha: {password}")
+
+        # Garante Profile com role OPERADOR
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.role = 'OPERADOR'
+        profile.modules_enabled = ['dashboard', 'equipamentos', 'nr12', 'abastecimentos', 'manutencoes']
+        profile.save()
+
+        instance.user = user
+        instance.save(update_fields=['user'])
+
 
 @receiver(post_save, sender=Cliente)
 def create_cliente_user(sender, instance, created, **kwargs):

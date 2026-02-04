@@ -585,7 +585,7 @@ export default function DashboardPage() {
       )}
 
       {/* Recent Activity and Quick Actions (Admin only) */}
-      {!isCliente && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {!isCliente && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Feed */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
@@ -778,7 +778,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>)}
 
       {/* QR Code Scanner Modal */}
       <QRCodeScanner

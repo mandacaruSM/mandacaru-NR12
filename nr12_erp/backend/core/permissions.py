@@ -58,6 +58,12 @@ def filter_by_role(queryset, user):
             # Model tem campo 'equipamento' (Abastecimento, Manutencao, ChecklistRealizado)
             if hasattr(model, 'equipamento'):
                 return queryset.filter(equipamento__cliente=cliente)
+            # Model tem campo 'checklist' (RespostaItemChecklist)
+            if hasattr(model, 'checklist'):
+                return queryset.filter(checklist__equipamento__cliente=cliente)
+            # Model tem campo 'manutencao' (RespostaItemManutencao)
+            if hasattr(model, 'manutencao'):
+                return queryset.filter(manutencao__equipamento__cliente=cliente)
         except Exception:
             pass
         return queryset.none()
@@ -72,6 +78,10 @@ def filter_by_role(queryset, user):
                 return queryset.filter(supervisor=supervisor)
             if hasattr(model, 'equipamento'):
                 return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
+            if hasattr(model, 'checklist'):
+                return queryset.filter(checklist__equipamento__empreendimento__supervisor=supervisor)
+            if hasattr(model, 'manutencao'):
+                return queryset.filter(manutencao__equipamento__empreendimento__supervisor=supervisor)
             if hasattr(model, 'empreendimento'):
                 return queryset.filter(empreendimento__supervisor=supervisor)
             if hasattr(model, 'cliente'):
@@ -100,6 +110,18 @@ def filter_by_role(queryset, user):
                 return queryset.filter(
                     models.Q(equipamento__in=operador.equipamentos_autorizados.all()) |
                     models.Q(equipamento__cliente__in=operador.clientes.all())
+                ).distinct()
+            # Models com checklist (RespostaItemChecklist)
+            if hasattr(model, 'checklist'):
+                return queryset.filter(
+                    models.Q(checklist__equipamento__in=operador.equipamentos_autorizados.all()) |
+                    models.Q(checklist__equipamento__cliente__in=operador.clientes.all())
+                ).distinct()
+            # Models com manutencao (RespostaItemManutencao)
+            if hasattr(model, 'manutencao'):
+                return queryset.filter(
+                    models.Q(manutencao__equipamento__in=operador.equipamentos_autorizados.all()) |
+                    models.Q(manutencao__equipamento__cliente__in=operador.clientes.all())
                 ).distinct()
             # Empreendimento
             if model.__name__ == 'Empreendimento':

@@ -133,6 +133,7 @@ class MedicaoEquipamento(models.Model):
         ("CHECKLIST", "Checklist"),
         ("ABASTECIMENTO", "Abastecimento"),
         ("MANUTENCAO", "Manutenção"),
+        ("MANUTENCAO_PREVENTIVA", "Manutenção Preventiva"),
         ("MANUAL", "Manual"),
     ]
     equipamento = models.ForeignKey(Equipamento, on_delete=models.CASCADE, related_name="medicoes")
@@ -146,3 +147,10 @@ class MedicaoEquipamento(models.Model):
 
     def __str__(self):
         return f"{self.equipamento.codigo} {self.leitura} ({self.origem})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Atualiza leitura_atual do equipamento se a nova leitura for maior
+        if self.leitura and self.leitura > (self.equipamento.leitura_atual or 0):
+            self.equipamento.leitura_atual = self.leitura
+            self.equipamento.save(update_fields=['leitura_atual'])

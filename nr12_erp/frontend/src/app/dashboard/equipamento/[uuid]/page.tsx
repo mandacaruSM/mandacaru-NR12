@@ -4,6 +4,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { api } from '@/lib/api';
 import {
@@ -23,7 +24,9 @@ interface PageProps {
 export default function EquipamentoResumePage({ params }: PageProps) {
   const { uuid } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
   const toast = useToast();
+  const userRole = user?.profile?.role;
 
   const [loading, setLoading] = useState(true);
   const [equipamento, setEquipamento] = useState<Equipamento | null>(null);
@@ -271,7 +274,7 @@ export default function EquipamentoResumePage({ params }: PageProps) {
 
       {/* Botoes de Acao Fixos */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
-        <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+        <div className={`grid ${userRole === 'OPERADOR' ? 'grid-cols-3' : 'grid-cols-2'} gap-3 max-w-lg mx-auto`}>
           <Link
             href={`/dashboard/abastecimentos/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo_medicao=${equipamento.tipo_medicao}`}
             className="flex items-center justify-center gap-2 py-3 px-4 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
@@ -284,22 +287,34 @@ export default function EquipamentoResumePage({ params }: PageProps) {
             className="flex items-center justify-center gap-2 py-3 px-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
           >
             <span className="text-xl">📋</span>
-            Checklist NR12
+            Checklist
           </Link>
-          <Link
-            href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=preventiva`}
-            className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
-          >
-            <span className="text-xl">🔧</span>
-            Preventiva
-          </Link>
-          <Link
-            href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
-            className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
-          >
-            <span className="text-xl">🛠️</span>
-            Corretiva
-          </Link>
+          {userRole === 'OPERADOR' ? (
+            <Link
+              href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
+              className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+            >
+              <span className="text-xl">🛠️</span>
+              Manutencao
+            </Link>
+          ) : (
+            <>
+              <Link
+                href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=preventiva`}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+              >
+                <span className="text-xl">🔧</span>
+                Preventiva
+              </Link>
+              <Link
+                href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                <span className="text-xl">🛠️</span>
+                Corretiva
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>
