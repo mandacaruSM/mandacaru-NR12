@@ -1840,6 +1840,202 @@ export const pedidosCompraApi = {
   },
 };
 
+// ============================================
+// MÉTRICAS API (Dashboard de Gestão)
+// ============================================
+
+export interface MetricaDashboard {
+  periodo: {
+    data_inicio: string;
+    data_fim: string;
+    dias: number;
+  };
+  totais: {
+    equipamentos: number;
+    combustivel_litros: number;
+    combustivel_valor: number;
+    custo_servicos: number;
+    custo_produtos: number;
+    custo_total: number;
+  };
+  metricas: {
+    disponibilidade_fisica: {
+      media_percent: number;
+      total_horas_periodo: number;
+      total_horas_manutencao: number;
+      equipamentos_analisados: number;
+      detalhes: Array<{
+        equipamento_id: number;
+        codigo: string;
+        tipo: string;
+        horas_manutencao: number;
+        disponibilidade_percent: number;
+      }>;
+    };
+    consumo_medio: {
+      media_litros_hora: number;
+      total_litros: number;
+      equipamentos_analisados: number;
+      aviso?: string;
+      detalhes: Array<{
+        equipamento_id: number;
+        codigo: string;
+        tipo: string;
+        tipo_medicao: string;
+        litros_total: number;
+        diferenca_leitura: number;
+        consumo_medio: number;
+        unidade: string;
+      }>;
+    };
+    utilizacao_frota: {
+      percentual: number;
+      operando: number;
+      parados: number;
+      total: number;
+      equipamentos_parados: Array<{
+        id: number;
+        codigo: string;
+        descricao: string;
+        leitura_atual: string;
+        tipo__nome: string;
+      }>;
+    };
+    cph: {
+      cph_medio: number;
+      custo_total: number;
+      horas_totais: number;
+      equipamentos_analisados: number;
+      aviso?: string;
+      detalhes: Array<{
+        equipamento_id: number;
+        codigo: string;
+        tipo: string;
+        custo_combustivel: number;
+        custo_mao_obra: number;
+        custo_pecas: number;
+        custo_total: number;
+        horas_trabalhadas: number;
+        cph: number;
+      }>;
+    };
+  };
+  alertas: {
+    total: number;
+    criticos: number;
+    urgentes: number;
+    lista: AlertaManutencao[];
+  };
+  graficos: {
+    consumo_por_equipamento: Array<{
+      codigo: string;
+      descricao: string;
+      tipo: string;
+      litros: number;
+    }>;
+  };
+  aviso?: string;
+}
+
+export interface AlertaManutencao {
+  equipamento_id: number;
+  codigo: string;
+  tipo_equipamento: string;
+  item: string;
+  tipo: 'PLANO' | 'MANUTENCAO';
+  leitura_atual: number;
+  proxima_leitura: number;
+  diferenca: number;
+  unidade: string;
+  prioridade: 'CRITICO' | 'URGENTE' | 'ATENCAO';
+  status: 'VENCIDO' | 'PROXIMO' | 'PROGRAMAR';
+  periodicidade?: string;
+  ultima_manutencao?: string;
+}
+
+export interface MetricasFiltros {
+  data_inicio?: string;
+  data_fim?: string;
+  empreendimento?: number;
+}
+
+export const metricasApi = {
+  dashboard: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<MetricaDashboard>(`/relatorios/metricas/dashboard/${query}`);
+  },
+
+  disponibilidade: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ periodo: { data_inicio: string; data_fim: string }; dados: MetricaDashboard['metricas']['disponibilidade_fisica'] }>(
+      `/relatorios/metricas/disponibilidade/${query}`
+    );
+  },
+
+  consumo: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ periodo: { data_inicio: string; data_fim: string }; dados: MetricaDashboard['metricas']['consumo_medio'] }>(
+      `/relatorios/metricas/consumo/${query}`
+    );
+  },
+
+  utilizacao: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ periodo: { data_inicio: string; data_fim: string }; dados: MetricaDashboard['metricas']['utilizacao_frota'] }>(
+      `/relatorios/metricas/utilizacao/${query}`
+    );
+  },
+
+  cph: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ periodo: { data_inicio: string; data_fim: string }; dados: MetricaDashboard['metricas']['cph'] }>(
+      `/relatorios/metricas/cph/${query}`
+    );
+  },
+
+  alertasManutencao: async (empreendimento?: number) => {
+    const params = new URLSearchParams();
+    if (empreendimento) params.append('empreendimento', empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{
+      total: number;
+      criticos: number;
+      urgentes: number;
+      atencao: number;
+      alertas: AlertaManutencao[];
+    }>(`/relatorios/metricas/alertas-manutencao/${query}`);
+  },
+
+  exportar: async (filters?: MetricasFiltros) => {
+    const params = new URLSearchParams();
+    if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters?.empreendimento) params.append('empreendimento', filters.empreendimento.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<any>(`/relatorios/metricas/exportar/${query}`);
+  },
+};
+
 // EXPORT DEFAULT
 // ============================================
 
@@ -1861,6 +2057,7 @@ export default {
   financeiro: financeiroApi,
   fornecedores: fornecedoresApi,
   pedidosCompra: pedidosCompraApi,
+  metricas: metricasApi,
 };
 
 

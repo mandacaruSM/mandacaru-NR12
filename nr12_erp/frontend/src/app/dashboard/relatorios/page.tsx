@@ -146,6 +146,11 @@ export default function RelatoriosPage() {
       color: 'from-red-500 to-red-600',
       reports: [
         {
+          name: 'Metricas de Gestao',
+          href: '/dashboard/relatorios/metricas',
+          description: 'DF%, Consumo, CPH, Utilizacao e Alertas de Manutencao',
+        },
+        {
           name: 'Dashboard Executivo',
           href: '/dashboard/relatorios/dashboard-executivo',
           description: 'Principais indicadores consolidados',
