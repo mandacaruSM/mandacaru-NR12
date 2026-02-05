@@ -43,6 +43,7 @@ export default function NovoChecklistPage() {
   const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<number | null>(null);
   const [operadorSelecionado, setOperadorSelecionado] = useState<number | null>(null);
   const [leituraEquipamento, setLeituraEquipamento] = useState('');
+  const [leituraConfirmada, setLeituraConfirmada] = useState(false);
 
   const [respostas, setRespostas] = useState<RespostaTemp[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -67,7 +68,7 @@ export default function NovoChecklistPage() {
         const equipamento = equipamentos.find(eq => eq.id === equipamentoId);
         if (equipamento) {
           setEquipamentoSelecionado(equipamentoId);
-          // Pré-preencher leitura do equipamento
+          // Pré-preencher leitura do equipamento (mas NÃO confirmar - usuario deve informar)
           if (equipamento.leitura_atual) {
             setLeituraEquipamento(parseFloat(equipamento.leitura_atual).toString());
           }
@@ -171,6 +172,11 @@ export default function NovoChecklistPage() {
       return;
     }
 
+    if (!leituraEquipamento) {
+      toast.error('Informe o horímetro/km do equipamento');
+      return;
+    }
+
     // Verificar se todos os itens obrigatórios foram respondidos
     const itensObrigatorios = itensChecklist.filter(item => item.obrigatorio);
     const respostasObrigatorias = respostas.filter((resp, index) => {
@@ -204,7 +210,7 @@ export default function NovoChecklistPage() {
         modelo: modeloSelecionado,
         equipamento: equipamentoSelecionado,
         origem: 'WEB',
-        leitura_equipamento: leituraEquipamento || null,
+        leitura_equipamento: leituraEquipamento ? parseFloat(leituraEquipamento) : null,
         respostas: respostasValidas,
       };
 
@@ -311,26 +317,6 @@ export default function NovoChecklistPage() {
               </p>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Leitura do Equipamento (opcional)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min={equipamentos.find(eq => eq.id === equipamentoSelecionado)?.leitura_atual ? parseFloat(equipamentos.find(eq => eq.id === equipamentoSelecionado)!.leitura_atual) : 0}
-                value={leituraEquipamento}
-                onChange={(e) => setLeituraEquipamento(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="Ex: 1250.50"
-              />
-              {equipamentos.find(eq => eq.id === equipamentoSelecionado) && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Leitura atual: {parseFloat(equipamentos.find(eq => eq.id === equipamentoSelecionado)!.leitura_atual).toFixed(2)} {equipamentos.find(eq => eq.id === equipamentoSelecionado)!.tipo_medicao}
-                </p>
-              )}
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {equipamentos.map(eq => (
                 <button
@@ -348,8 +334,78 @@ export default function NovoChecklistPage() {
           </div>
         )}
 
+        {/* Etapa 3: Horímetro / KM (obrigatório antes dos itens) */}
+        {modeloSelecionado && equipamentoSelecionado && !leituraConfirmada && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <button
+              type="button"
+              onClick={() => {
+                setEquipamentoSelecionado(null);
+                setLeituraEquipamento('');
+              }}
+              className="text-blue-600 hover:underline mb-4"
+            >
+              ← Trocar equipamento
+            </button>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              3. Informe o {equipamentos.find(eq => eq.id === equipamentoSelecionado)?.tipo_medicao === 'KM' ? 'Quilometragem' : 'Horímetro'} Atual
+            </h2>
+
+            {(() => {
+              const equipSel = equipamentos.find(eq => eq.id === equipamentoSelecionado);
+              const leituraAtual = equipSel ? parseFloat(equipSel.leitura_atual) : 0;
+              const tipoMedicao = equipSel?.tipo_medicao === 'KM' ? 'km' : 'h';
+              return (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{tipoMedicao === 'km' ? '🛣️' : '⏱️'}</span>
+                      <div>
+                        <p className="text-sm text-blue-700 font-medium">Equipamento: {equipSel?.codigo}</p>
+                        <p className="text-sm text-blue-600">
+                          Leitura atual registrada: <strong>{leituraAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {tipoMedicao}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {tipoMedicao === 'km' ? 'Quilometragem' : 'Horímetro'} no momento da inspeção *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min={leituraAtual}
+                      value={leituraEquipamento}
+                      onChange={(e) => setLeituraEquipamento(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-lg"
+                      placeholder={`Ex: ${(leituraAtual + 10).toFixed(2)}`}
+                      autoFocus
+                    />
+                    {leituraEquipamento && parseFloat(leituraEquipamento) < leituraAtual && (
+                      <p className="mt-2 text-sm text-red-600">
+                        A leitura não pode ser menor que a atual ({leituraAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {tipoMedicao})
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!leituraEquipamento || parseFloat(leituraEquipamento) < leituraAtual}
+                    onClick={() => setLeituraConfirmada(true)}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Confirmar e Iniciar Checklist →
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {/* Perguntas do Checklist */}
-        {modeloSelecionado && equipamentoSelecionado && itemAtual && (
+        {modeloSelecionado && equipamentoSelecionado && leituraConfirmada && itemAtual && (
           <>
             <div className="bg-white rounded-lg shadow p-6">
               <div className="mb-6">
