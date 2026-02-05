@@ -124,16 +124,29 @@ def create_cliente_user(sender, instance, created, **kwargs):
         if not plano_padrao:
             plano_padrao = Plano.objects.filter(ativo=True).first()
 
-        # Se não houver planos cadastrados, usa módulos padrão
+        # Modulos minimos que todo CLIENTE deve ter (visualizacao dos proprios dados)
+        modulos_cliente_base = [
+            "dashboard",
+            "clientes",
+            "empreendimentos",
+            "equipamentos",
+            "nr12",
+            "manutencoes",
+            "abastecimentos",
+            "orcamentos",
+            "os",
+            "ordens_servico",
+            "relatorios",
+            "compras",
+            "financeiro",
+        ]
+
+        # Se tiver plano, usa modulos do plano + base
         if plano_padrao:
-            modulos_habilitados = plano_padrao.modulos_habilitados
+            modulos_plano = set(plano_padrao.modulos_habilitados or [])
+            modulos_habilitados = list(modulos_plano | set(modulos_cliente_base))
         else:
-            modulos_habilitados = [
-                "dashboard",
-                "empreendimentos",
-                "equipamentos",
-                "relatorios"
-            ]
+            modulos_habilitados = modulos_cliente_base
 
         # Atualiza o Profile com role CLIENTE e módulos do plano
         profile = user.profile
