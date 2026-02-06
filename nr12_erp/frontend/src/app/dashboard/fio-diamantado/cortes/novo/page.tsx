@@ -176,7 +176,7 @@ export default function NovoRegistroCortePage() {
         {/* Fio e Maquina */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Fio Diamantado <span className="text-red-500">*</span>
             </label>
             <select
@@ -195,7 +195,7 @@ export default function NovoRegistroCortePage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Maquina de Corte <span className="text-red-500">*</span>
             </label>
             <select
@@ -218,7 +218,7 @@ export default function NovoRegistroCortePage() {
         {/* Fonte de Energia */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Fonte de Energia <span className="text-red-500">*</span>
             </label>
             <select
@@ -233,7 +233,7 @@ export default function NovoRegistroCortePage() {
           </div>
           {formData.fonte_energia === 'GERADOR_DIESEL' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Gerador <span className="text-red-500">*</span>
               </label>
               <select
@@ -266,7 +266,7 @@ export default function NovoRegistroCortePage() {
           <h3 className="text-sm font-medium text-gray-900 mb-4">Data e Horarios</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Data do Corte <span className="text-red-500">*</span>
               </label>
               <input
@@ -279,7 +279,7 @@ export default function NovoRegistroCortePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Hora Inicial <span className="text-red-500">*</span>
               </label>
               <input
@@ -292,7 +292,7 @@ export default function NovoRegistroCortePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Hora Final <span className="text-red-500">*</span>
               </label>
               <input
@@ -310,7 +310,7 @@ export default function NovoRegistroCortePage() {
         {/* Horimetro */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Horimetro Inicial <span className="text-red-500">*</span>
             </label>
             <input
@@ -325,7 +325,7 @@ export default function NovoRegistroCortePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Horimetro Final <span className="text-red-500">*</span>
             </label>
             <input
@@ -346,7 +346,7 @@ export default function NovoRegistroCortePage() {
           <h3 className="text-sm font-medium text-gray-900 mb-4">Medicoes do Corte</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Comprimento do Corte (m) <span className="text-red-500">*</span>
               </label>
               <input
@@ -362,7 +362,7 @@ export default function NovoRegistroCortePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Altura/Largura do Corte (m) <span className="text-red-500">*</span>
               </label>
               <input
@@ -378,10 +378,10 @@ export default function NovoRegistroCortePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Area Calculada (m2)
               </label>
-              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+              <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900">
                 {areaCalculada !== null ? areaCalculada.toFixed(2) : '-'}
               </div>
             </div>
@@ -393,7 +393,7 @@ export default function NovoRegistroCortePage() {
           <h3 className="text-sm font-medium text-gray-900 mb-4">Medicoes das Perolas</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Diametro Inicial (mm) <span className="text-red-500">*</span>
               </label>
               <input
@@ -410,7 +410,7 @@ export default function NovoRegistroCortePage() {
               <p className="text-xs text-gray-500 mt-1">Medicao antes do corte</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Diametro Final (mm) <span className="text-red-500">*</span>
               </label>
               <input
@@ -432,7 +432,7 @@ export default function NovoRegistroCortePage() {
         {/* Consumo Combustivel */}
         {formData.fonte_energia === 'GERADOR_DIESEL' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Consumo de Combustivel (litros)
             </label>
             <input
@@ -451,7 +451,7 @@ export default function NovoRegistroCortePage() {
         {/* Operador e Observacoes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Nome do Operador
             </label>
             <input
@@ -464,7 +464,7 @@ export default function NovoRegistroCortePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Observacoes
             </label>
             <input
@@ -482,7 +482,7 @@ export default function NovoRegistroCortePage() {
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Link
             href="/dashboard/fio-diamantado"
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm font-medium"
+            className="px-4 py-2 text-gray-900 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm font-medium"
           >
             Cancelar
           </Link>

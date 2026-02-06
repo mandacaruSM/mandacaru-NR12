@@ -151,7 +151,7 @@ export default function ListaCortesPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data Inicio</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Data Inicio</label>
             <input
               type="date"
               value={dataInicio}
@@ -160,7 +160,7 @@ export default function ListaCortesPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Data Fim</label>
             <input
               type="date"
               value={dataFim}
@@ -169,7 +169,7 @@ export default function ListaCortesPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fio</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Fio</label>
             <select
               value={filtroFio}
               onChange={(e) => setFiltroFio(e.target.value)}
@@ -184,7 +184,7 @@ export default function ListaCortesPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fonte de Energia</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Fonte de Energia</label>
             <select
               value={filtroFonte}
               onChange={(e) => setFiltroFonte(e.target.value)}
@@ -230,7 +230,7 @@ export default function ListaCortesPage() {
                 ) : (
                   cortes.map((corte) => (
                     <tr key={corte.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-700">
+                      <td className="px-4 py-3 text-sm text-gray-900">
                         {new Date(corte.data).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-4 py-3">
@@ -241,23 +241,23 @@ export default function ListaCortesPage() {
                           {corte.fio_codigo}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{corte.maquina_codigo}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
+                      <td className="px-4 py-3 text-sm text-gray-900">{corte.maquina_codigo}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
                         {corte.fonte_energia === 'GERADOR_DIESEL' ? '⛽ Diesel' : '⚡ Rede'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
                         {corte.area_corte_m2?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700">
+                      <td className="px-4 py-3 text-sm text-right text-gray-900">
                         {corte.tempo_execucao_horas?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700">
+                      <td className="px-4 py-3 text-sm text-right text-gray-900">
                         {corte.velocidade_corte_m2h?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} m2/h
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700">
+                      <td className="px-4 py-3 text-sm text-right text-gray-900">
                         {corte.desgaste_mm?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{corte.operador_nome || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{corte.operador_nome || '-'}</td>
                     </tr>
                   ))
                 )}

@@ -112,7 +112,7 @@ export default function NovoFioDiamantadoPage() {
         {/* Cliente */}
         {!isCliente && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Cliente <span className="text-red-500">*</span>
             </label>
             <select
@@ -135,7 +135,7 @@ export default function NovoFioDiamantadoPage() {
         {/* Identificacao */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Codigo do Fio <span className="text-red-500">*</span>
             </label>
             <input
@@ -149,7 +149,7 @@ export default function NovoFioDiamantadoPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Fabricante <span className="text-red-500">*</span>
             </label>
             <input
@@ -165,7 +165,7 @@ export default function NovoFioDiamantadoPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-900 mb-1">
             Numero de Serie
           </label>
           <input
@@ -183,7 +183,7 @@ export default function NovoFioDiamantadoPage() {
           <h3 className="text-sm font-medium text-gray-900 mb-4">Especificacoes Tecnicas</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Comprimento (metros) <span className="text-red-500">*</span>
               </label>
               <input
@@ -199,7 +199,7 @@ export default function NovoFioDiamantadoPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Perolas por Metro <span className="text-red-500">*</span>
               </label>
               <input
@@ -214,7 +214,7 @@ export default function NovoFioDiamantadoPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Diametro Inicial (mm) <span className="text-red-500">*</span>
               </label>
               <input
@@ -230,7 +230,7 @@ export default function NovoFioDiamantadoPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Diametro Minimo (mm) <span className="text-red-500">*</span>
               </label>
               <input
@@ -251,7 +251,7 @@ export default function NovoFioDiamantadoPage() {
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1">Status</label>
           <select
             name="status"
             value={formData.status}
@@ -266,7 +266,7 @@ export default function NovoFioDiamantadoPage() {
 
         {/* Observacoes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Observacoes</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1">Observacoes</label>
           <textarea
             name="observacoes"
             value={formData.observacoes}
@@ -281,7 +281,7 @@ export default function NovoFioDiamantadoPage() {
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Link
             href="/dashboard/fio-diamantado"
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm font-medium"
+            className="px-4 py-2 text-gray-900 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm font-medium"
           >
             Cancelar
           </Link>

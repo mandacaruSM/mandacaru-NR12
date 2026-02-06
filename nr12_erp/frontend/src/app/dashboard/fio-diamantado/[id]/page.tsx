@@ -398,25 +398,25 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
               <tbody className="divide-y divide-gray-200">
                 {cortes.map((corte) => (
                   <tr key={corte.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-900">
                       {new Date(corte.data).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-900">
                       {corte.hora_inicial} - {corte.hora_final}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-900">
                       {corte.fonte_energia === 'GERADOR_DIESEL' ? '⛽ Diesel' : '⚡ Rede'}
                     </td>
                     <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
                       {corte.area_corte_m2?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-700">
+                    <td className="px-4 py-3 text-sm text-right text-gray-900">
                       {corte.tempo_execucao_horas?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-700">
+                    <td className="px-4 py-3 text-sm text-right text-gray-900">
                       {corte.velocidade_corte_m2h?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} m2/h
                     </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-700">
+                    <td className="px-4 py-3 text-sm text-right text-gray-900">
                       {corte.desgaste_mm?.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
@@ -434,7 +434,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
       {fio.observacoes && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
           <h3 className="font-semibold text-gray-900 mb-2">Observacoes</h3>
-          <p className="text-gray-700 whitespace-pre-wrap">{fio.observacoes}</p>
+          <p className="text-gray-900 whitespace-pre-wrap">{fio.observacoes}</p>
         </div>
       )}
     </div>

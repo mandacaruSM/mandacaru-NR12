@@ -59,7 +59,7 @@ export default function FioDiamantadoPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fio Diamantado</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-900 mt-1">
             Controle de fios diamantados e registros de corte
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function FioDiamantadoPage() {
                 </div>
                 <Link
                   href={`/dashboard/fio-diamantado/${alerta.fio_id}`}
-                  className="px-3 py-1 bg-white text-gray-700 rounded text-sm hover:bg-gray-50"
+                  className="px-3 py-1 bg-white text-gray-900 rounded text-sm hover:bg-gray-50"
                 >
                   Ver
                 </Link>
@@ -179,7 +179,7 @@ export default function FioDiamantadoPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Buscar</label>
             <input
               type="text"
               value={search}
@@ -189,7 +189,7 @@ export default function FioDiamantadoPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Status</label>
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
@@ -312,11 +312,11 @@ export default function FioDiamantadoPage() {
               <tbody className="divide-y divide-gray-200">
                 {dashboard.cortes_recentes.slice(0, 5).map((corte) => (
                   <tr key={corte.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-900">
                       {new Date(corte.data).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{corte.fio_codigo}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-900">
                       {corte.fonte_energia === 'GERADOR_DIESEL' ? '⛽ Diesel' : '⚡ Rede'}
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-gray-900">
