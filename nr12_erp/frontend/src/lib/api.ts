@@ -129,11 +129,50 @@ export interface UserProfile {
   modules_enabled: string[];
 }
 
+export interface UserCliente {
+  id: number;
+  nome_razao: string;
+  tipo_pessoa: string;
+  documento: string;
+  email_financeiro?: string;
+  telefone?: string;
+}
+
+export interface UserSupervisor {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  email?: string;
+  telefone?: string;
+}
+
+export interface UserOperador {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  email?: string;
+  telefone?: string;
+}
+
+export interface UserTecnico {
+  id: number;
+  nome_completo: string;
+  cpf: string;
+  email?: string;
+  telefone?: string;
+}
+
 export interface User {
   id: number;
   username: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   profile: UserProfile;
+  cliente?: UserCliente | null;
+  supervisor?: UserSupervisor | null;
+  operador?: UserOperador | null;
+  tecnico?: UserTecnico | null;
 }
 
 export const authApi = {

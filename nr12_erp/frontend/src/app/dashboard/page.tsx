@@ -286,6 +286,16 @@ export default function DashboardPage() {
   const stats = allStats.filter(s => !s.adminOnly || !isCliente);
 
 
+  // Determina o nome de exibicao do usuario
+  const getDisplayName = () => {
+    if (user?.cliente?.nome_razao) return user.cliente.nome_razao;
+    if (user?.supervisor?.nome_completo) return user.supervisor.nome_completo;
+    if (user?.operador?.nome_completo) return user.operador.nome_completo;
+    if (user?.tecnico?.nome_completo) return user.tecnico.nome_completo;
+    if (user?.first_name) return `${user.first_name} ${user.last_name || ''}`.trim();
+    return user?.username || 'Usuario';
+  };
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -293,10 +303,10 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-black">
-              Olá, {user?.username}!
+              Ola, {getDisplayName()}!
             </h1>
             <p className="text-lg text-black">
-              Bem-vindo ao sistema de gestão NR12
+              Bem-vindo ao sistema de gestao NR12
             </p>
           </div>
           <div className="hidden md:flex items-center space-x-4">
