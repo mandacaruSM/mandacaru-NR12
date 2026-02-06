@@ -183,7 +183,7 @@ export default function NovoRegistroCortePage() {
               name="fio"
               value={formData.fio}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             >
               <option value="">Selecione o fio...</option>
@@ -202,7 +202,7 @@ export default function NovoRegistroCortePage() {
               name="maquina"
               value={formData.maquina}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             >
               <option value="">Selecione a maquina...</option>
@@ -225,7 +225,7 @@ export default function NovoRegistroCortePage() {
               name="fonte_energia"
               value={formData.fonte_energia}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
               <option value="REDE_ELETRICA">Rede Eletrica</option>
               <option value="GERADOR_DIESEL">Gerador Diesel</option>
@@ -240,7 +240,7 @@ export default function NovoRegistroCortePage() {
                 name="gerador"
                 value={formData.gerador}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               >
                 <option value="">Selecione o gerador...</option>
                 {geradores.length > 0 ? (
@@ -274,7 +274,7 @@ export default function NovoRegistroCortePage() {
                 name="data"
                 value={formData.data}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -287,7 +287,7 @@ export default function NovoRegistroCortePage() {
                 name="hora_inicial"
                 value={formData.hora_inicial}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -300,7 +300,7 @@ export default function NovoRegistroCortePage() {
                 name="hora_final"
                 value={formData.hora_final}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -320,7 +320,7 @@ export default function NovoRegistroCortePage() {
               value={formData.horimetro_inicial}
               onChange={handleChange}
               placeholder="Ex: 1234.50"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             />
           </div>
@@ -335,7 +335,7 @@ export default function NovoRegistroCortePage() {
               value={formData.horimetro_final}
               onChange={handleChange}
               placeholder="Ex: 1238.50"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             />
           </div>
@@ -357,7 +357,7 @@ export default function NovoRegistroCortePage() {
                 value={formData.comprimento_corte_m}
                 onChange={handleChange}
                 placeholder="Ex: 10.50"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -373,7 +373,7 @@ export default function NovoRegistroCortePage() {
                 value={formData.altura_largura_corte_m}
                 onChange={handleChange}
                 placeholder="Ex: 3.00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -404,7 +404,7 @@ export default function NovoRegistroCortePage() {
                 value={formData.diametro_inicial_mm}
                 onChange={handleChange}
                 placeholder="Ex: 10.50"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">Medicao antes do corte</p>
@@ -421,7 +421,7 @@ export default function NovoRegistroCortePage() {
                 value={formData.diametro_final_mm}
                 onChange={handleChange}
                 placeholder="Ex: 10.30"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">Medicao apos o corte</p>
@@ -443,7 +443,7 @@ export default function NovoRegistroCortePage() {
               value={formData.consumo_combustivel_litros}
               onChange={handleChange}
               placeholder="Ex: 25.50"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
         )}
@@ -460,7 +460,7 @@ export default function NovoRegistroCortePage() {
               value={formData.operador_nome}
               onChange={handleChange}
               placeholder="Nome do operador"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
           <div>
@@ -473,7 +473,7 @@ export default function NovoRegistroCortePage() {
               value={formData.observacoes}
               onChange={handleChange}
               placeholder="Observacoes adicionais"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
         </div>

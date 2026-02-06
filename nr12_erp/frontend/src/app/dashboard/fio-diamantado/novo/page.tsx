@@ -119,7 +119,7 @@ export default function NovoFioDiamantadoPage() {
               name="cliente"
               value={formData.cliente}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             >
               <option value="">Selecione...</option>
@@ -144,7 +144,7 @@ export default function NovoFioDiamantadoPage() {
               value={formData.codigo}
               onChange={handleChange}
               placeholder="Ex: FD-001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             />
           </div>
@@ -158,7 +158,7 @@ export default function NovoFioDiamantadoPage() {
               value={formData.fabricante}
               onChange={handleChange}
               placeholder="Ex: Diamond Wire Co."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             />
           </div>
@@ -174,7 +174,7 @@ export default function NovoFioDiamantadoPage() {
             value={formData.numero_serie}
             onChange={handleChange}
             placeholder="Opcional"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
 
@@ -194,7 +194,7 @@ export default function NovoFioDiamantadoPage() {
                 value={formData.comprimento_metros}
                 onChange={handleChange}
                 placeholder="Ex: 100.00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -209,7 +209,7 @@ export default function NovoFioDiamantadoPage() {
                 value={formData.perolas_por_metro}
                 onChange={handleChange}
                 placeholder="Ex: 40"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -225,7 +225,7 @@ export default function NovoFioDiamantadoPage() {
                 value={formData.diametro_inicial_mm}
                 onChange={handleChange}
                 placeholder="Ex: 11.50"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
             </div>
@@ -241,7 +241,7 @@ export default function NovoFioDiamantadoPage() {
                 value={formData.diametro_minimo_mm}
                 onChange={handleChange}
                 placeholder="Ex: 6.00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">Diametro minimo antes da substituicao</p>
@@ -256,7 +256,7 @@ export default function NovoFioDiamantadoPage() {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="ATIVO">Ativo</option>
             <option value="MANUTENCAO">Em Manutencao</option>
@@ -273,7 +273,7 @@ export default function NovoFioDiamantadoPage() {
             onChange={handleChange}
             rows={3}
             placeholder="Observacoes adicionais..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
 

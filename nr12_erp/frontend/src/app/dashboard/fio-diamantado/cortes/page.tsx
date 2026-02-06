@@ -156,7 +156,7 @@ export default function ListaCortesPage() {
               type="date"
               value={dataInicio}
               onChange={(e) => setDataInicio(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
           <div>
@@ -165,7 +165,7 @@ export default function ListaCortesPage() {
               type="date"
               value={dataFim}
               onChange={(e) => setDataFim(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
           <div>
@@ -173,7 +173,7 @@ export default function ListaCortesPage() {
             <select
               value={filtroFio}
               onChange={(e) => setFiltroFio(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
               <option value="">Todos</option>
               {fios.map((f) => (
@@ -188,7 +188,7 @@ export default function ListaCortesPage() {
             <select
               value={filtroFonte}
               onChange={(e) => setFiltroFonte(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
               <option value="">Todas</option>
               <option value="GERADOR_DIESEL">Gerador Diesel</option>

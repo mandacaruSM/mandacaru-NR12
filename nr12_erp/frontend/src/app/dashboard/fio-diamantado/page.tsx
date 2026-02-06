@@ -185,7 +185,7 @@ export default function FioDiamantadoPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Codigo, fabricante, serie..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             />
           </div>
           <div>
@@ -193,7 +193,7 @@ export default function FioDiamantadoPage() {
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
               <option value="">Todos</option>
               <option value="ATIVO">Ativo</option>
