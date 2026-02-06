@@ -56,6 +56,7 @@ urlpatterns = [
     path('api/v1/', include('ordens_servico.urls')),
     path('api/v1/financeiro/', include('financeiro.urls')),
     path('api/v1/relatorios/', include('relatorios.urls')),
+    path('api/v1/fio-diamantado/', include('fio_diamantado.urls')),
 
     # Bot do Telegram
     path('bot/', include('bot_telegram.urls')),

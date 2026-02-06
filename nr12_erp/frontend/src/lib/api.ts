@@ -1998,6 +1998,243 @@ export interface MetricasFiltros {
   empreendimento?: number;
 }
 
+// ============================================
+// FIO DIAMANTADO API
+// ============================================
+
+export interface FioDiamantado {
+  id: number;
+  cliente: number;
+  cliente_nome?: string;
+  codigo: string;
+  fabricante: string;
+  numero_serie?: string;
+  comprimento_metros: number;
+  perolas_por_metro: number;
+  diametro_inicial_mm: number;
+  diametro_minimo_mm: number;
+  diametro_atual_mm?: number;
+  desgaste_total_mm?: number;
+  percentual_vida_util?: number;
+  area_total_cortada_m2?: number;
+  total_perolas?: number;
+  precisa_substituicao?: boolean;
+  status: 'ATIVO' | 'FINALIZADO' | 'MANUTENCAO';
+  status_display?: string;
+  observacoes?: string;
+  data_cadastro?: string;
+  criado_em?: string;
+  atualizado_em?: string;
+}
+
+export interface FioDiamantadoMetricas {
+  total_cortes: number;
+  area_total_cortada_m2: number;
+  tempo_total_horas: number;
+  desgaste_total_mm: number;
+  velocidade_media_m2h: number;
+  rendimento_m2_por_mm: number;
+  consumo_total_combustivel: number;
+  custo_combustivel: number;
+}
+
+export interface RegistroCorte {
+  id: number;
+  fio: number;
+  fio_codigo?: string;
+  fio_cliente?: string;
+  maquina: number;
+  maquina_codigo?: string;
+  gerador?: number | null;
+  gerador_codigo?: string;
+  fonte_energia: 'GERADOR_DIESEL' | 'REDE_ELETRICA';
+  fonte_energia_display?: string;
+  data: string;
+  hora_inicial: string;
+  hora_final: string;
+  horimetro_inicial: number;
+  horimetro_final: number;
+  comprimento_corte_m: number;
+  altura_largura_corte_m: number;
+  diametro_inicial_mm: number;
+  diametro_final_mm: number;
+  area_corte_m2?: number;
+  tempo_execucao_horas?: number;
+  desgaste_mm?: number;
+  velocidade_corte_m2h?: number;
+  consumo_combustivel_litros?: number;
+  operador_nome?: string;
+  observacoes?: string;
+  criado_em?: string;
+  atualizado_em?: string;
+}
+
+export interface HistoricoDesgaste {
+  data: string;
+  diametro_mm: number;
+  area_corte_m2: number;
+  area_acumulada_m2: number;
+}
+
+export interface DashboardFioDiamantado {
+  totais: {
+    fios_ativos: number;
+    fios_criticos: number;
+    fios_urgentes: number;
+    area_total_cortada_m2: number;
+  };
+  alertas: Array<{
+    tipo: 'CRITICO' | 'URGENTE' | 'ATENCAO';
+    fio_id: number;
+    fio_codigo: string;
+    mensagem: string;
+    diametro_atual?: number;
+    percentual_restante?: number;
+  }>;
+  fios: Array<{
+    id: number;
+    codigo: string;
+    diametro_atual: number;
+    percentual_vida_util: number;
+    area_total_m2: number;
+  }>;
+  cortes_recentes: RegistroCorte[];
+  metricas_30_dias: {
+    total_cortes: number;
+    area_total_m2: number;
+    tempo_total_horas: number;
+    consumo_combustivel_litros: number;
+    custo_combustivel: number;
+  };
+}
+
+export const fioDiamantadoApi = {
+  fios: {
+    list: async (filters?: { status?: string; cliente?: number; search?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.cliente) params.append('cliente', filters.cliente.toString());
+      if (filters?.search) params.append('search', filters.search);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: FioDiamantado[]; count: number }>(`/fio-diamantado/fios/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<FioDiamantado & { metricas?: FioDiamantadoMetricas }>(`/fio-diamantado/fios/${id}/`);
+    },
+
+    create: async (data: Partial<FioDiamantado>) => {
+      return apiFetch<FioDiamantado>('/fio-diamantado/fios/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<FioDiamantado>) => {
+      return apiFetch<FioDiamantado>(`/fio-diamantado/fios/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: number) => {
+      return apiFetch<void>(`/fio-diamantado/fios/${id}/`, {
+        method: 'DELETE',
+      });
+    },
+
+    historicoDesgaste: async (id: number) => {
+      return apiFetch<HistoricoDesgaste[]>(`/fio-diamantado/fios/${id}/historico_desgaste/`);
+    },
+
+    dashboard: async (id: number) => {
+      return apiFetch<{
+        fio: FioDiamantado & { metricas?: FioDiamantadoMetricas };
+        historico_desgaste: HistoricoDesgaste[];
+        custos_por_fonte: {
+          diesel: { area_total_m2: number; consumo_litros: number; tempo_horas: number; custo_total: number };
+          rede_eletrica: { area_total_m2: number; tempo_horas: number; custo_estimado: number };
+        };
+        alertas: Array<{ tipo: string; mensagem: string; diametro_atual?: number; percentual_restante?: number }>;
+      }>(`/fio-diamantado/fios/${id}/dashboard/`);
+    },
+
+    resumo: async () => {
+      return apiFetch<{
+        totais: { total: number; ativos: number; finalizados: number; manutencao: number };
+        alertas: Array<{ id: number; codigo: string; diametro_atual?: number; diametro_minimo?: number; percentual_vida_util?: number; tipo_alerta?: string }>;
+      }>('/fio-diamantado/fios/resumo/');
+    },
+  },
+
+  cortes: {
+    list: async (filters?: {
+      fio?: number;
+      maquina?: number;
+      data_inicio?: string;
+      data_fim?: string;
+      fonte_energia?: string;
+    }) => {
+      const params = new URLSearchParams();
+      if (filters?.fio) params.append('fio', filters.fio.toString());
+      if (filters?.maquina) params.append('maquina', filters.maquina.toString());
+      if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+      if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+      if (filters?.fonte_energia) params.append('fonte_energia', filters.fonte_energia);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: RegistroCorte[]; count: number }>(`/fio-diamantado/cortes/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<RegistroCorte>(`/fio-diamantado/cortes/${id}/`);
+    },
+
+    create: async (data: Partial<RegistroCorte>) => {
+      return apiFetch<RegistroCorte>('/fio-diamantado/cortes/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<RegistroCorte>) => {
+      return apiFetch<RegistroCorte>(`/fio-diamantado/cortes/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: number) => {
+      return apiFetch<void>(`/fio-diamantado/cortes/${id}/`, {
+        method: 'DELETE',
+      });
+    },
+
+    metricas: async (filters?: { data_inicio?: string; data_fim?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
+      if (filters?.data_fim) params.append('data_fim', filters.data_fim);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{
+        totais: {
+          total_cortes: number;
+          area_total_m2: number;
+          tempo_total_horas: number;
+          velocidade_media_m2h: number;
+          desgaste_total_mm: number;
+          consumo_combustivel_litros: number;
+          custo_combustivel: number;
+        };
+        por_fonte_energia: Array<{ fonte_energia: string; cortes: number; area: number; tempo: number }>;
+        por_fio: Array<{ fio__codigo: string; fio_id: number; cortes: number; area: number; desgaste: number }>;
+      }>(`/fio-diamantado/cortes/metricas/${query}`);
+    },
+  },
+
+  dashboard: async () => {
+    return apiFetch<DashboardFioDiamantado>('/fio-diamantado/dashboard/');
+  },
+};
+
 export const metricasApi = {
   dashboard: async (filters?: MetricasFiltros) => {
     const params = new URLSearchParams();
@@ -2097,6 +2334,7 @@ export default {
   fornecedores: fornecedoresApi,
   pedidosCompra: pedidosCompraApi,
   metricas: metricasApi,
+  fioDiamantado: fioDiamantadoApi,
 };
 
 

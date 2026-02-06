@@ -27,6 +27,7 @@ const menuItems: MenuItem[] = [
   { name: 'Manutenções', href: '/dashboard/manutencoes', module: 'manutencoes', icon: '🔧' },
   { name: 'Manutenção Preventiva', href: '/dashboard/manutencao-preventiva', module: 'nr12', icon: '⚙️' },
   { name: 'Abastecimentos', href: '/dashboard/abastecimentos', module: 'abastecimentos', icon: '⛽' },
+  { name: 'Fio Diamantado', href: '/dashboard/fio-diamantado', module: 'fio_diamantado', icon: '💎' },
   { name: 'NR12', href: '/dashboard/nr12', module: 'nr12', icon: '📋' },
 
   // Pessoas
