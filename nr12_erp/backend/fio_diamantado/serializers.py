@@ -314,6 +314,13 @@ class FinalizarCorteSerializer(serializers.Serializer):
             instance.observacoes = validated_data['observacoes']
         instance.status = 'FINALIZADO'
         instance.save()
+
+        # Atualizar horimetro da maquina (similar ao abastecimento)
+        if instance.maquina and instance.horimetro_final:
+            if instance.horimetro_final > instance.maquina.leitura_atual:
+                instance.maquina.leitura_atual = instance.horimetro_final
+                instance.maquina.save(update_fields=['leitura_atual'])
+
         return instance
 
 

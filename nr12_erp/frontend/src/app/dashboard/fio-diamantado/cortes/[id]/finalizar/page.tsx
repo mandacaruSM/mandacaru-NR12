@@ -91,16 +91,9 @@ export default function FinalizarCortePage() {
     ? corte.diametro_inicial_mm - parseFloat(formData.diametro_final_mm)
     : 0;
 
-  // Calcular tempo estimado
-  const tempoEstimado = corte && formData.hora_final
-    ? (() => {
-        const [hi, mi] = corte.hora_inicial.split(':').map(Number);
-        const [hf, mf] = formData.hora_final.split(':').map(Number);
-        const inicioMin = hi * 60 + mi;
-        const fimMin = hf * 60 + mf;
-        const diffMin = fimMin >= inicioMin ? fimMin - inicioMin : (24 * 60 - inicioMin) + fimMin;
-        return diffMin / 60;
-      })()
+  // Calcular tempo estimado baseado no horimetro (nao hora do relogio)
+  const tempoEstimado = corte && formData.horimetro_final && corte.horimetro_inicial
+    ? parseFloat(formData.horimetro_final) - corte.horimetro_inicial
     : 0;
 
   // Calcular velocidade de corte
@@ -116,12 +109,21 @@ export default function FinalizarCortePage() {
       setError('Hora final e obrigatoria');
       return;
     }
+    if (!formData.horimetro_final) {
+      setError('Horimetro final e obrigatorio');
+      return;
+    }
     if (!formData.diametro_final_mm) {
       setError('Diametro final e obrigatorio');
       return;
     }
     if (!formData.bloco_comprimento_m || !formData.bloco_altura_m) {
       setError('Medidas do bloco sao obrigatorias');
+      return;
+    }
+    // Validar que horimetro final >= horimetro inicial
+    if (corte && parseFloat(formData.horimetro_final) < corte.horimetro_inicial) {
+      setError('Horimetro final nao pode ser menor que o horimetro inicial');
       return;
     }
 
@@ -136,19 +138,14 @@ export default function FinalizarCortePage() {
 
       const payload: Record<string, unknown> = {
         hora_final: formData.hora_final,
+        horimetro_final: parseFloat(formData.horimetro_final),
         diametro_final_mm: parseFloat(formData.diametro_final_mm),
-        bloco_comprimento_m: parseFloat(formData.bloco_comprimento_m),
-        bloco_altura_m: parseFloat(formData.bloco_altura_m),
+        comprimento_corte_m: parseFloat(formData.bloco_comprimento_m),
+        altura_largura_corte_m: parseFloat(formData.bloco_altura_m),
       };
 
-      if (formData.horimetro_final) {
-        payload.horimetro_final = parseFloat(formData.horimetro_final);
-      }
       if (formData.litros_diesel) {
-        payload.litros_diesel = parseFloat(formData.litros_diesel);
-      }
-      if (formData.preco_diesel) {
-        payload.preco_diesel = parseFloat(formData.preco_diesel);
+        payload.consumo_combustivel_litros = parseFloat(formData.litros_diesel);
       }
       if (formData.observacoes) {
         payload.observacoes = formData.observacoes;
@@ -289,7 +286,7 @@ export default function FinalizarCortePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Horimetro Final
+                  Horimetro Final *
                 </label>
                 <input
                   type="number"
@@ -298,7 +295,8 @@ export default function FinalizarCortePage() {
                   onChange={handleChange}
                   step="0.1"
                   min={corte.horimetro_inicial || 0}
-                  placeholder="Ex: 1250.5"
+                  placeholder={`Min: ${corte.horimetro_inicial || 0}`}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>

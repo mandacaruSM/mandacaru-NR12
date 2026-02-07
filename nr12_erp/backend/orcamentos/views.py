@@ -45,12 +45,9 @@ class OrcamentoViewSet(viewsets.ModelViewSet):
 
         Fluxo:
         1. Aprova o orçamento
-        2. Cria uma OS com os mesmos dados
-        3. Copia todos os itens do orçamento para a OS
+        2. O signal post_save cria a OS automaticamente (signals.py)
         """
         from django.utils import timezone
-        from django.db import transaction
-        from ordens_servico.models import OrdemServico, ItemOrdemServico
 
         orcamento = self.get_object()
 
@@ -60,54 +57,21 @@ class OrcamentoViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        with transaction.atomic():
-            # Aprovar orçamento
-            orcamento.status = 'APROVADO'
-            orcamento.aprovado_por = request.user
-            orcamento.data_aprovacao = timezone.now().date()
-            orcamento.save()
+        # Aprovar orçamento - o signal post_save cria a OS automaticamente
+        orcamento.status = 'APROVADO'
+        orcamento.aprovado_por = request.user
+        orcamento.data_aprovacao = timezone.now().date()
+        orcamento.save()
 
-            # Criar Ordem de Serviço
-            data_prevista = request.data.get('data_prevista')
-            if not data_prevista:
-                # Se não informado, usar data_validade do orçamento
-                data_prevista = orcamento.data_validade
-
-            os = OrdemServico.objects.create(
-                orcamento=orcamento,
-                cliente=orcamento.cliente,
-                empreendimento=orcamento.empreendimento,
-                equipamento=orcamento.equipamento,
-                data_prevista=data_prevista,
-                valor_servicos=orcamento.valor_servicos,
-                valor_produtos=orcamento.valor_produtos,
-                valor_deslocamento=orcamento.valor_deslocamento,
-                valor_desconto=orcamento.valor_desconto,
-                valor_total=orcamento.valor_total,
-                descricao=orcamento.descricao,
-                observacoes=orcamento.observacoes,
-                aberto_por=request.user
-            )
-
-            # Copiar itens do orçamento para a OS
-            for item_orc in orcamento.itens.all():
-                ItemOrdemServico.objects.create(
-                    ordem_servico=os,
-                    tipo=item_orc.tipo,
-                    produto=item_orc.produto,
-                    descricao=item_orc.descricao,
-                    quantidade=item_orc.quantidade,
-                    valor_unitario=item_orc.valor_unitario,
-                    observacao=item_orc.observacao,
-                    executado=False
-                )
+        # Buscar a OS criada pelo signal
+        os = orcamento.ordens_servico.first()
 
         serializer = self.get_serializer(orcamento)
-        return Response({
-            **serializer.data,
-            'ordem_servico_numero': os.numero,
-            'ordem_servico_id': os.id
-        })
+        response_data = serializer.data
+        if os:
+            response_data['ordem_servico_numero'] = os.numero
+            response_data['ordem_servico_id'] = os.id
+        return Response(response_data)
 
     @action(detail=True, methods=['post'])
     def rejeitar(self, request, pk=None):

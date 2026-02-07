@@ -500,15 +500,18 @@ class RegistroCorte(models.Model):
         # Calcular area do corte
         self.area_corte_m2 = self.comprimento_corte_m * self.altura_largura_corte_m
 
-        # Calcular tempo de execucao
-        from datetime import datetime, timedelta
-        hora_ini = datetime.combine(self.data, self.hora_inicial)
-        hora_fim = datetime.combine(self.data, self.hora_final)
-        # Se hora final for menor que inicial, assumir que passou da meia-noite
-        if hora_fim < hora_ini:
-            hora_fim += timedelta(days=1)
-        delta = hora_fim - hora_ini
-        self.tempo_execucao_horas = Decimal(str(delta.total_seconds() / 3600))
+        # Calcular tempo de execucao baseado no horimetro da maquina (nao hora do relogio)
+        if self.horimetro_final and self.horimetro_inicial:
+            self.tempo_execucao_horas = self.horimetro_final - self.horimetro_inicial
+        else:
+            # Fallback para calculo por hora do relogio se nao tiver horimetro
+            from datetime import datetime, timedelta
+            hora_ini = datetime.combine(self.data, self.hora_inicial)
+            hora_fim = datetime.combine(self.data, self.hora_final)
+            if hora_fim < hora_ini:
+                hora_fim += timedelta(days=1)
+            delta = hora_fim - hora_ini
+            self.tempo_execucao_horas = Decimal(str(delta.total_seconds() / 3600))
 
         # Calcular desgaste
         self.desgaste_mm = self.diametro_inicial_mm - self.diametro_final_mm
