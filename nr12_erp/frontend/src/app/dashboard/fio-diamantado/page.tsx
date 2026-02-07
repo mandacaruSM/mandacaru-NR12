@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fioDiamantadoApi, FioDiamantado, DashboardFioDiamantado } from '@/lib/api';
+import { fioDiamantadoApi, FioDiamantado, DashboardFioDiamantado, CorteEmAndamento } from '@/lib/api';
 
 export default function FioDiamantadoPage() {
   const [fios, setFios] = useState<FioDiamantado[]>([]);
   const [dashboard, setDashboard] = useState<DashboardFioDiamantado | null>(null);
+  const [cortesEmAndamento, setCortesEmAndamento] = useState<CorteEmAndamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState('');
   const [search, setSearch] = useState('');
@@ -18,15 +19,17 @@ export default function FioDiamantadoPage() {
   async function loadData() {
     try {
       setLoading(true);
-      const [fiosRes, dashboardRes] = await Promise.all([
+      const [fiosRes, dashboardRes, cortesRes] = await Promise.all([
         fioDiamantadoApi.fios.list({
           status: filtroStatus || undefined,
           search: search || undefined,
         }),
         fioDiamantadoApi.dashboard(),
+        fioDiamantadoApi.cortes.emAndamento(),
       ]);
       setFios(fiosRes.results || []);
       setDashboard(dashboardRes);
+      setCortesEmAndamento(cortesRes);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -65,10 +68,16 @@ export default function FioDiamantadoPage() {
         </div>
         <div className="flex gap-2">
           <Link
-            href="/dashboard/fio-diamantado/cortes/novo"
+            href="/dashboard/fio-diamantado/cortes/iniciar"
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
           >
-            Registrar Corte
+            Iniciar Corte
+          </Link>
+          <Link
+            href="/dashboard/fio-diamantado/transferir"
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
+          >
+            Transferir Fio
           </Link>
           <Link
             href="/dashboard/fio-diamantado/novo"
@@ -81,7 +90,7 @@ export default function FioDiamantadoPage() {
 
       {/* Cards Resumo */}
       {dashboard && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
             <p className="text-sm font-medium text-gray-500">Fios Ativos</p>
             <p className="text-2xl font-bold text-blue-600 mt-1">{dashboard.totais.fios_ativos}</p>
@@ -101,6 +110,68 @@ export default function FioDiamantadoPage() {
             <p className="text-2xl font-bold text-gray-900 mt-1">
               {dashboard.totais.area_total_cortada_m2.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} m2
             </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <p className="text-sm font-medium text-gray-500">Valor Total Fios</p>
+            <p className="text-2xl font-bold text-green-600 mt-1">
+              R$ {(dashboard.totais.valor_total_fios || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Cortes em Andamento */}
+      {cortesEmAndamento.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-orange-800 flex items-center gap-2">
+              <span className="animate-pulse">🔄</span>
+              Cortes em Andamento ({cortesEmAndamento.length})
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cortesEmAndamento.map((corte: CorteEmAndamento) => (
+              <div
+                key={corte.id}
+                className="bg-white rounded-lg border border-orange-200 p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">{corte.fio_codigo}</p>
+                    <p className="text-sm text-gray-600">{corte.empreendimento_nome}</p>
+                  </div>
+                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                    Em Andamento
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <p className="text-gray-500">Iniciado em</p>
+                    <p className="font-medium text-gray-900">
+                      {new Date(corte.data).toLocaleDateString('pt-BR')} {corte.hora_inicial}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Maquina</p>
+                    <p className="font-medium text-gray-900">{corte.maquina_codigo || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Operador</p>
+                    <p className="font-medium text-gray-900">{corte.operador_nome}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Diametro Inicial</p>
+                    <p className="font-medium text-gray-900">{corte.diametro_inicial_mm} mm</p>
+                  </div>
+                </div>
+                <Link
+                  href={`/dashboard/fio-diamantado/cortes/${corte.id}/finalizar`}
+                  className="w-full block text-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
+                >
+                  Finalizar Corte
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       )}

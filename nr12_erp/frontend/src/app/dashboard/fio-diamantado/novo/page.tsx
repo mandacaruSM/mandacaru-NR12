@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { fioDiamantadoApi, clientesApi, Cliente } from '@/lib/api';
+import { fioDiamantadoApi, clientesApi, empreendimentosApi, Cliente, Empreendimento } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function NovoFioDiamantadoPage() {
@@ -13,6 +13,7 @@ export default function NovoFioDiamantadoPage() {
 
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [formData, setFormData] = useState({
     cliente: '',
     codigo: '',
@@ -23,9 +24,20 @@ export default function NovoFioDiamantadoPage() {
     diametro_inicial_mm: '',
     diametro_minimo_mm: '6.0',
     status: 'ATIVO',
+    // Novos campos
+    nota_fiscal: '',
+    valor_por_metro: '',
+    data_compra: '',
+    localizacao: 'ALMOXARIFADO',
+    empreendimento: '',
     observacoes: '',
   });
   const [error, setError] = useState('');
+
+  // Calcular valor total estimado
+  const valorTotal = formData.comprimento_metros && formData.valor_por_metro
+    ? (parseFloat(formData.comprimento_metros) * parseFloat(formData.valor_por_metro)).toFixed(2)
+    : null;
 
   useEffect(() => {
     if (!isCliente) {
@@ -33,12 +45,29 @@ export default function NovoFioDiamantadoPage() {
     }
   }, [isCliente]);
 
+  useEffect(() => {
+    if (formData.cliente) {
+      loadEmpreendimentos(parseInt(formData.cliente));
+    } else {
+      setEmpreendimentos([]);
+    }
+  }, [formData.cliente]);
+
   async function loadClientes() {
     try {
       const res = await clientesApi.list({ page_size: 100 });
       setClientes(res.results || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
+    }
+  }
+
+  async function loadEmpreendimentos(clienteId: number) {
+    try {
+      const res = await empreendimentosApi.list({ cliente: clienteId, page_size: 100 });
+      setEmpreendimentos(res.results || []);
+    } catch (error) {
+      console.error('Erro ao carregar empreendimentos:', error);
     }
   }
 
@@ -62,6 +91,12 @@ export default function NovoFioDiamantadoPage() {
       return;
     }
 
+    // Se localizacao for EMPREENDIMENTO, deve ter empreendimento selecionado
+    if (formData.localizacao === 'EMPREENDIMENTO' && !formData.empreendimento) {
+      setError('Selecione o empreendimento onde o fio esta localizado');
+      return;
+    }
+
     try {
       setLoading(true);
       const payload: any = {
@@ -74,6 +109,12 @@ export default function NovoFioDiamantadoPage() {
         diametro_minimo_mm: parseFloat(formData.diametro_minimo_mm),
         status: formData.status,
         observacoes: formData.observacoes,
+        // Novos campos
+        nota_fiscal: formData.nota_fiscal || undefined,
+        valor_por_metro: formData.valor_por_metro ? parseFloat(formData.valor_por_metro) : undefined,
+        data_compra: formData.data_compra || undefined,
+        localizacao: formData.localizacao,
+        empreendimento: formData.empreendimento ? parseInt(formData.empreendimento) : undefined,
       };
 
       if (!isCliente) {
@@ -178,6 +219,60 @@ export default function NovoFioDiamantadoPage() {
           />
         </div>
 
+        {/* Dados da Compra */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Dados da Compra</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Nota Fiscal
+              </label>
+              <input
+                type="text"
+                name="nota_fiscal"
+                value={formData.nota_fiscal}
+                onChange={handleChange}
+                placeholder="Ex: NF-12345"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Data de Compra
+              </label>
+              <input
+                type="date"
+                name="data_compra"
+                value={formData.data_compra}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Valor por Metro (R$)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                name="valor_por_metro"
+                value={formData.valor_por_metro}
+                onChange={handleChange}
+                placeholder="Ex: 150.00"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              />
+            </div>
+          </div>
+          {valorTotal && (
+            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">Valor Total Estimado:</span> R$ {parseFloat(valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Especificacoes */}
         <div className="border-t border-gray-200 pt-6">
           <h3 className="text-sm font-medium text-gray-900 mb-4">Especificacoes Tecnicas</h3>
@@ -246,6 +341,51 @@ export default function NovoFioDiamantadoPage() {
               />
               <p className="text-xs text-gray-500 mt-1">Diametro minimo antes da substituicao</p>
             </div>
+          </div>
+        </div>
+
+        {/* Localizacao */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Localizacao Inicial</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Localizacao <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="localizacao"
+                value={formData.localizacao}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              >
+                <option value="ALMOXARIFADO">Almoxarifado</option>
+                <option value="EMPREENDIMENTO">Empreendimento</option>
+              </select>
+            </div>
+            {formData.localizacao === 'EMPREENDIMENTO' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Empreendimento <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="empreendimento"
+                  value={formData.empreendimento}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  {empreendimentos.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.nome}
+                    </option>
+                  ))}
+                </select>
+                {empreendimentos.length === 0 && formData.cliente && (
+                  <p className="text-xs text-yellow-600 mt-1">Nenhum empreendimento encontrado para este cliente</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
