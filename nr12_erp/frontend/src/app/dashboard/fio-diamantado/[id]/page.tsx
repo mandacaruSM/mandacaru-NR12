@@ -121,12 +121,20 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
           </div>
           <p className="text-sm text-gray-500 mt-1">{fio.fabricante} {fio.numero_serie && `- ${fio.numero_serie}`}</p>
         </div>
-        <Link
-          href={`/dashboard/fio-diamantado/cortes/novo?fio=${id}`}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-        >
-          Registrar Corte
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/dashboard/fio-diamantado/${id}/editar`}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium"
+          >
+            Editar
+          </Link>
+          <Link
+            href={`/dashboard/fio-diamantado/cortes/novo?fio=${id}`}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+          >
+            Registrar Corte
+          </Link>
+        </div>
       </div>
 
       {/* Alertas */}
