@@ -175,7 +175,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
           <p className="text-sm font-medium text-gray-500">Area Total Cortada</p>
           <p className="text-2xl font-bold text-blue-600 mt-1">
-            {(fio.area_total_cortada_m2 || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} m2
+            {(fio.area_total_cortada_m2 || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m2
           </p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
@@ -345,7 +345,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-gray-500">Area Cortada</dt>
-                <dd className="font-medium text-gray-900">{custos.diesel.area_total_m2.toFixed(1)} m2</dd>
+                <dd className="font-medium text-gray-900">{custos.diesel.area_total_m2.toFixed(2)} m2</dd>
               </div>
               <div>
                 <dt className="text-gray-500">Tempo</dt>
@@ -372,7 +372,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-gray-500">Area Cortada</dt>
-                <dd className="font-medium text-gray-900">{custos.rede_eletrica.area_total_m2.toFixed(1)} m2</dd>
+                <dd className="font-medium text-gray-900">{custos.rede_eletrica.area_total_m2.toFixed(2)} m2</dd>
               </div>
               <div>
                 <dt className="text-gray-500">Tempo</dt>
