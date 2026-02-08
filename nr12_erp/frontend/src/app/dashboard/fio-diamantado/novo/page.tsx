@@ -43,16 +43,29 @@ export default function NovoFioDiamantadoPage() {
   useEffect(() => {
     if (!isCliente) {
       loadClientes();
+    } else {
+      // Se for cliente, carrega empreendimentos automaticamente (backend filtra pelo cliente do usuario)
+      loadEmpreendimentosCliente();
     }
   }, [isCliente]);
 
   useEffect(() => {
-    if (formData.cliente) {
+    if (formData.cliente && !isCliente) {
       loadEmpreendimentos(parseInt(formData.cliente));
-    } else {
+    } else if (!isCliente) {
       setEmpreendimentos([]);
     }
-  }, [formData.cliente]);
+  }, [formData.cliente, isCliente]);
+
+  async function loadEmpreendimentosCliente() {
+    try {
+      // Para CLIENTE, o backend ja filtra pelos empreendimentos do proprio cliente
+      const res = await empreendimentosApi.list({ page_size: 100 });
+      setEmpreendimentos(res.results || []);
+    } catch (error) {
+      console.error('Erro ao carregar empreendimentos:', error);
+    }
+  }
 
   async function loadClientes() {
     try {

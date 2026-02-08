@@ -71,6 +71,20 @@ class FioDiamantadoViewSet(viewsets.ModelViewSet):
             return FioDiamantadoCreateSerializer
         return FioDiamantadoDetailSerializer
 
+    def perform_create(self, serializer):
+        """Auto-atribui cliente quando usuario e CLIENTE"""
+        user = self.request.user
+        role = None
+        if hasattr(user, 'profile') and user.profile:
+            role = user.profile.role
+
+        if role == 'CLIENTE':
+            cliente = getattr(user, 'cliente_profile', None)
+            if cliente:
+                serializer.save(cliente=cliente)
+                return
+        serializer.save()
+
     @action(detail=True, methods=['get'])
     def historico_desgaste(self, request, pk=None):
         """Retorna historico de desgaste para grafico"""
