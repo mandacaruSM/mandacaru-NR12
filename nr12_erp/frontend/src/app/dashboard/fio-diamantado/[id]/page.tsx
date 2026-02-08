@@ -11,6 +11,7 @@ interface PageProps {
 export default function DetalheFioDiamantadoPage({ params }: PageProps) {
   const { id } = use(params);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [fio, setFio] = useState<(FioDiamantado & { metricas?: FioDiamantadoMetricas }) | null>(null);
   const [historico, setHistorico] = useState<HistoricoDesgaste[]>([]);
   const [cortes, setCortes] = useState<RegistroCorte[]>([]);
@@ -27,6 +28,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
   async function loadData() {
     try {
       setLoading(true);
+      setError(null);
       const [dashboardRes, cortesRes] = await Promise.all([
         fioDiamantadoApi.fios.dashboard(parseInt(id)),
         fioDiamantadoApi.cortes.list({ fio: parseInt(id) }),
@@ -37,8 +39,10 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
       setCustos(dashboardRes.custos_por_fonte);
       setAlertas(dashboardRes.alertas);
       setCortes(cortesRes.results || []);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+    } catch (err: unknown) {
+      console.error('Erro ao carregar dados:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -67,6 +71,20 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Erro ao carregar fio</h2>
+          <p className="text-red-700 text-sm mb-4">{error}</p>
+          <Link href="/dashboard/fio-diamantado" className="text-blue-600 hover:text-blue-800">
+            Voltar para lista
+          </Link>
+        </div>
       </div>
     );
   }
@@ -220,7 +238,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
               </div>
               <div>
                 <dt className="text-gray-500">Rendimento</dt>
-                <dd className="font-medium text-gray-900">{fio.metricas.rendimento_m2_por_mm.toFixed(2)} m2/mm</dd>
+                <dd className="font-medium text-gray-900">{(fio.metricas.rendimento_m2_por_mm || fio.metricas.rendimento_acumulado_m2_mm || 0).toFixed(2)} m2/mm</dd>
               </div>
               <div>
                 <dt className="text-gray-500">Consumo Combustivel</dt>
@@ -229,7 +247,7 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
               <div>
                 <dt className="text-gray-500">Custo Combustivel</dt>
                 <dd className="font-medium text-green-600">
-                  R$ {fio.metricas.custo_combustivel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {(fio.metricas.custo_combustivel || fio.metricas.custo_total_combustivel || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </dd>
               </div>
             </dl>

@@ -264,6 +264,23 @@ class IniciarCorteSerializer(serializers.ModelSerializer):
                 'fio': 'Este fio ja possui um corte em andamento'
             })
 
+        # Validar duplicacao: mesmo fio, maquina, data e horimetro inicial
+        maquina = data.get('maquina')
+        data_corte = data.get('data')
+        horimetro_inicial = data.get('horimetro_inicial')
+
+        if fio and maquina and data_corte and horimetro_inicial:
+            corte_existente = RegistroCorte.objects.filter(
+                fio=fio,
+                maquina=maquina,
+                data=data_corte,
+                horimetro_inicial=horimetro_inicial
+            ).exists()
+            if corte_existente:
+                raise serializers.ValidationError({
+                    'fio': 'Ja existe um corte registrado com os mesmos dados (fio, maquina, data e horimetro inicial)'
+                })
+
         return data
 
     def create(self, validated_data):

@@ -69,6 +69,19 @@ export default function IniciarCortePage() {
     }
   }, [formData.fio, fios]);
 
+  useEffect(() => {
+    // Quando seleciona uma maquina, auto-preenche o horimetro inicial
+    if (formData.maquina) {
+      const maquinaSelecionada = maquinas.find(m => m.id === parseInt(formData.maquina));
+      if (maquinaSelecionada && maquinaSelecionada.leitura_atual) {
+        setFormData(prev => ({
+          ...prev,
+          horimetro_inicial: maquinaSelecionada.leitura_atual?.toString() || ''
+        }));
+      }
+    }
+  }, [formData.maquina, maquinas]);
+
   async function loadInitialData() {
     try {
       setLoadingData(true);
@@ -246,7 +259,7 @@ export default function IniciarCortePage() {
               </option>
               {maquinas.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.codigo} - {m.descricao}
+                  {m.codigo} - {m.descricao} (Horim: {m.leitura_atual}h)
                 </option>
               ))}
             </select>

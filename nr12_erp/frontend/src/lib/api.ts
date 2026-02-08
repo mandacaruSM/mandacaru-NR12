@@ -2045,13 +2045,16 @@ export interface FioDiamantado {
 
 export interface FioDiamantadoMetricas {
   total_cortes: number;
-  area_total_cortada_m2: number;
+  cortes_em_andamento?: number;
+  area_total_m2: number;
   tempo_total_horas: number;
-  desgaste_total_mm: number;
   velocidade_media_m2h: number;
-  rendimento_m2_por_mm: number;
+  rendimento_m2_por_mm?: number;
+  rendimento_acumulado_m2_mm?: number;
+  eficiencia_m2_metro_fio?: number;
   consumo_total_combustivel: number;
-  custo_combustivel: number;
+  custo_combustivel?: number;
+  custo_total_combustivel?: number;
 }
 
 export interface RegistroCorte {
