@@ -118,7 +118,7 @@ export default function FinalizarCortePage() {
       return;
     }
     if (!formData.bloco_comprimento_m || !formData.bloco_altura_m) {
-      setError('Medidas do bloco sao obrigatorias');
+      setError('Medidas da bancada/bloco sao obrigatorias');
       return;
     }
     // Validar que horimetro final >= horimetro inicial
@@ -319,9 +319,9 @@ export default function FinalizarCortePage() {
             </div>
           </div>
 
-          {/* Medidas do Bloco */}
+          {/* Medidas da Bancada/Bloco */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Medidas do Bloco Cortado</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Medidas da Bancada/Bloco Cortado</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">

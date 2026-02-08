@@ -83,6 +83,11 @@ class FioDiamantado(models.Model):
         blank=True,
         verbose_name='Nota Fiscal'
     )
+    fornecedor = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Fornecedor'
+    )
     valor_por_metro = models.DecimalField(
         max_digits=10,
         decimal_places=2,

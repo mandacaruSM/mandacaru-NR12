@@ -26,6 +26,7 @@ export default function NovoFioDiamantadoPage() {
     status: 'ATIVO',
     // Novos campos
     nota_fiscal: '',
+    fornecedor: '',
     valor_por_metro: '',
     data_compra: '',
     localizacao: 'ALMOXARIFADO',
@@ -111,6 +112,7 @@ export default function NovoFioDiamantadoPage() {
         observacoes: formData.observacoes,
         // Novos campos
         nota_fiscal: formData.nota_fiscal || undefined,
+        fornecedor: formData.fornecedor || undefined,
         valor_por_metro: formData.valor_por_metro ? parseFloat(formData.valor_por_metro) : undefined,
         data_compra: formData.data_compra || undefined,
         localizacao: formData.localizacao,
@@ -222,7 +224,20 @@ export default function NovoFioDiamantadoPage() {
         {/* Dados da Compra */}
         <div className="border-t border-gray-200 pt-6">
           <h3 className="text-sm font-medium text-gray-900 mb-4">Dados da Compra</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Fornecedor
+              </label>
+              <input
+                type="text"
+                name="fornecedor"
+                value={formData.fornecedor}
+                onChange={handleChange}
+                placeholder="Ex: Diamond Wire Ltda"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">
                 Nota Fiscal
@@ -236,6 +251,8 @@ export default function NovoFioDiamantadoPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">
                 Data de Compra

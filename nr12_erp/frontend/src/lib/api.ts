@@ -2023,6 +2023,7 @@ export interface FioDiamantado {
   status_display?: string;
   // Novos campos de logistica e financeiro
   nota_fiscal?: string;
+  fornecedor?: string;
   valor_por_metro?: number;
   valor_total?: number;
   data_compra?: string;

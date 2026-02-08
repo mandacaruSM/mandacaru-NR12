@@ -30,7 +30,7 @@ class FioDiamantadoListSerializer(serializers.ModelSerializer):
             'desgaste_total_mm', 'percentual_vida_util',
             'area_total_cortada_m2', 'precisa_substituicao',
             # Novos campos logisticos
-            'nota_fiscal', 'valor_por_metro', 'valor_total', 'data_compra',
+            'nota_fiscal', 'fornecedor', 'valor_por_metro', 'valor_total', 'data_compra',
             'localizacao', 'localizacao_display',
             'empreendimento', 'empreendimento_nome',
             'maquina_instalada', 'maquina_instalada_codigo',
@@ -134,7 +134,7 @@ class FioDiamantadoCreateSerializer(serializers.ModelSerializer):
             'diametro_inicial_mm', 'diametro_minimo_mm',
             'status', 'observacoes',
             # Novos campos
-            'nota_fiscal', 'valor_por_metro', 'data_compra',
+            'nota_fiscal', 'fornecedor', 'valor_por_metro', 'data_compra',
             'localizacao', 'empreendimento', 'maquina_instalada',
         ]
 
