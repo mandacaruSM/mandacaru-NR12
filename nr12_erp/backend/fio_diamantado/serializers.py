@@ -141,6 +141,26 @@ class FioDiamantadoCreateSerializer(serializers.ModelSerializer):
             'cliente': {'required': False, 'allow_null': True}
         }
 
+    def validate(self, data):
+        # Verificar duplicidade de codigo para o cliente
+        cliente = data.get('cliente')
+        codigo = data.get('codigo')
+
+        if cliente and codigo:
+            existe = FioDiamantado.objects.filter(
+                cliente=cliente,
+                codigo=codigo
+            )
+            # Se for update, excluir o proprio objeto
+            if self.instance:
+                existe = existe.exclude(pk=self.instance.pk)
+
+            if existe.exists():
+                raise serializers.ValidationError({
+                    'codigo': f'Ja existe um fio com o codigo "{codigo}" para este cliente'
+                })
+        return data
+
 
 class MovimentacaoFioListSerializer(serializers.ModelSerializer):
     """Serializer para listagem de movimentacoes"""
