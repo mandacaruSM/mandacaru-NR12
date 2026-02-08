@@ -16,6 +16,7 @@ export default function FinalizarCortePage() {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
+    data_final: '',
     hora_final: '',
     horimetro_final: '',
     diametro_final_mm: '',
@@ -62,11 +63,15 @@ export default function FinalizarCortePage() {
         setFormData(prev => ({ ...prev, observacoes: data.observacoes || '' }));
       }
 
-      // Definir hora final atual se não preenchido
+      // Definir data e hora final atual se não preenchido
       if (!data.hora_final) {
         const now = new Date();
         const horaAtual = now.toTimeString().slice(0, 5);
-        setFormData(prev => ({ ...prev, hora_final: horaAtual }));
+        const dataAtual = now.toISOString().slice(0, 10);
+        setFormData(prev => ({ ...prev, hora_final: horaAtual, data_final: dataAtual }));
+      }
+      if (data.data_final) {
+        setFormData(prev => ({ ...prev, data_final: data.data_final || '' }));
       }
     } catch (err) {
       console.error('Erro ao carregar corte:', err);
@@ -105,6 +110,10 @@ export default function FinalizarCortePage() {
     e.preventDefault();
     setError('');
 
+    if (!formData.data_final) {
+      setError('Data final e obrigatoria');
+      return;
+    }
     if (!formData.hora_final) {
       setError('Hora final e obrigatoria');
       return;
@@ -137,6 +146,7 @@ export default function FinalizarCortePage() {
       setSaving(true);
 
       const payload: Record<string, unknown> = {
+        data_final: formData.data_final,
         hora_final: formData.hora_final,
         horimetro_final: parseFloat(formData.horimetro_final),
         diametro_final_mm: parseFloat(formData.diametro_final_mm),
@@ -270,7 +280,21 @@ export default function FinalizarCortePage() {
           {/* Dados Finais */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Dados Finais</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Data Final *
+                </label>
+                <input
+                  type="date"
+                  name="data_final"
+                  value={formData.data_final}
+                  onChange={handleChange}
+                  min={corte.data}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">
                   Hora Final *

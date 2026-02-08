@@ -394,6 +394,11 @@ class RegistroCorte(models.Model):
     )
 
     # Campos de FINALIZACAO do corte (preenchidos posteriormente)
+    data_final = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Data Final'
+    )
     hora_final = models.TimeField(
         null=True,
         blank=True,
@@ -511,8 +516,10 @@ class RegistroCorte(models.Model):
         else:
             # Fallback para calculo por hora do relogio se nao tiver horimetro
             from datetime import datetime, timedelta
-            hora_ini = datetime.combine(self.data, self.hora_inicial)
-            hora_fim = datetime.combine(self.data, self.hora_final)
+            data_inicio = self.data
+            data_fim = self.data_final if self.data_final else self.data
+            hora_ini = datetime.combine(data_inicio, self.hora_inicial)
+            hora_fim = datetime.combine(data_fim, self.hora_final)
             if hora_fim < hora_ini:
                 hora_fim += timedelta(days=1)
             delta = hora_fim - hora_ini

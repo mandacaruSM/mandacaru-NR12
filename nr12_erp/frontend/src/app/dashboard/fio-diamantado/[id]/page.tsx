@@ -400,9 +400,12 @@ export default function DetalheFioDiamantadoPage({ params }: PageProps) {
                   <tr key={corte.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {new Date(corte.data).toLocaleDateString('pt-BR')}
+                      {corte.data_final && corte.data_final !== corte.data && (
+                        <span className="text-gray-500"> - {new Date(corte.data_final).toLocaleDateString('pt-BR')}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {corte.hora_inicial} - {corte.hora_final}
+                      {corte.hora_inicial} - {corte.hora_final || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {corte.fonte_energia === 'GERADOR_DIESEL' ? '⛽ Diesel' : '⚡ Rede'}

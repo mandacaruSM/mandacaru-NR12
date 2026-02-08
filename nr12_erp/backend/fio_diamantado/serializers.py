@@ -229,7 +229,7 @@ class RegistroCorteListSerializer(serializers.ModelSerializer):
             'empreendimento', 'empreendimento_nome',
             'fonte_energia', 'fonte_energia_display',
             'status', 'status_display',
-            'data', 'hora_inicial', 'hora_final',
+            'data', 'hora_inicial', 'data_final', 'hora_final',
             'horimetro_inicial', 'horimetro_final',
             'comprimento_corte_m', 'altura_largura_corte_m', 'area_corte_m2',
             'diametro_inicial_mm', 'diametro_final_mm', 'desgaste_mm',
@@ -273,6 +273,7 @@ class IniciarCorteSerializer(serializers.ModelSerializer):
 
 class FinalizarCorteSerializer(serializers.Serializer):
     """Serializer para FINALIZAR um corte (apenas campos de finalizacao)"""
+    data_final = serializers.DateField()
     hora_final = serializers.TimeField()
     horimetro_final = serializers.DecimalField(max_digits=10, decimal_places=2)
     diametro_final_mm = serializers.DecimalField(max_digits=6, decimal_places=2)
@@ -304,6 +305,7 @@ class FinalizarCorteSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
+        instance.data_final = validated_data['data_final']
         instance.hora_final = validated_data['hora_final']
         instance.horimetro_final = validated_data['horimetro_final']
         instance.diametro_final_mm = validated_data['diametro_final_mm']
@@ -330,7 +332,7 @@ class RegistroCorteCreateSerializer(serializers.ModelSerializer):
         model = RegistroCorte
         fields = [
             'fio', 'maquina', 'gerador', 'empreendimento', 'fonte_energia',
-            'data', 'hora_inicial', 'hora_final',
+            'data', 'hora_inicial', 'data_final', 'hora_final',
             'horimetro_inicial', 'horimetro_final',
             'comprimento_corte_m', 'altura_largura_corte_m',
             'diametro_inicial_mm', 'diametro_final_mm',

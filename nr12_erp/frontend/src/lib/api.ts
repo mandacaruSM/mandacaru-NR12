@@ -2072,6 +2072,7 @@ export interface RegistroCorte {
   status_display?: string;
   data: string;
   hora_inicial: string;
+  data_final?: string;
   hora_final?: string;
   horimetro_inicial: number;
   horimetro_final?: number;
