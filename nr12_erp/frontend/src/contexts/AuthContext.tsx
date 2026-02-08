@@ -127,6 +127,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasModule = (module: string): boolean => {
     if (!module) return true;
     if (user?.profile?.role === 'ADMIN') return true;
+
+    // CLIENTE tem acesso automatico a fio_diamantado e orcamentos
+    if (user?.profile?.role === 'CLIENTE') {
+      const modulosClienteDefault = ['fio_diamantado', 'orcamentos', 'os', 'equipamentos', 'empreendimentos'];
+      if (modulosClienteDefault.includes(module)) return true;
+    }
+
     return user?.profile?.modules_enabled?.includes(module) ?? false;
   };
 
