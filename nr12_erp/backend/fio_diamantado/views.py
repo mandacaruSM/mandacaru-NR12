@@ -71,19 +71,34 @@ class FioDiamantadoViewSet(viewsets.ModelViewSet):
             return FioDiamantadoCreateSerializer
         return FioDiamantadoDetailSerializer
 
-    def perform_create(self, serializer):
-        """Auto-atribui cliente quando usuario e CLIENTE"""
-        user = self.request.user
+    def create(self, request, *args, **kwargs):
+        """Auto-atribui cliente quando usuario e CLIENTE antes da validacao"""
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+
+        user = request.user
         role = None
         if hasattr(user, 'profile') and user.profile:
             role = user.profile.role
 
+        # Se usuario e CLIENTE, injetar o cliente_id
         if role == 'CLIENTE':
             cliente = getattr(user, 'cliente_profile', None)
             if cliente:
-                serializer.save(cliente=cliente)
-                return
-        serializer.save()
+                data['cliente'] = cliente.id
+
+        # Validar que cliente foi informado (para outros roles)
+        if not data.get('cliente') and role != 'CLIENTE':
+            from rest_framework.response import Response
+            return Response(
+                {'cliente': ['Cliente e obrigatorio']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=['get'])
     def historico_desgaste(self, request, pk=None):

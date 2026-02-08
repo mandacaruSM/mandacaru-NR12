@@ -126,13 +126,6 @@ class FioDiamantadoDetailSerializer(serializers.ModelSerializer):
 
 class FioDiamantadoCreateSerializer(serializers.ModelSerializer):
     """Serializer para criacao/edicao"""
-    # Cliente opcional - sera preenchido automaticamente para usuarios CLIENTE
-    cliente = serializers.PrimaryKeyRelatedField(
-        queryset=FioDiamantado._meta.get_field('cliente').related_model.objects.all(),
-        required=False,
-        allow_null=True
-    )
-
     class Meta:
         model = FioDiamantado
         fields = [
@@ -144,23 +137,9 @@ class FioDiamantadoCreateSerializer(serializers.ModelSerializer):
             'nota_fiscal', 'fornecedor', 'valor_por_metro', 'data_compra',
             'localizacao', 'empreendimento', 'maquina_instalada',
         ]
-
-    def validate(self, data):
-        request = self.context.get('request')
-        user = request.user if request else None
-
-        # Se cliente nao foi informado e usuario nao e CLIENTE, erro
-        if not data.get('cliente'):
-            if user and hasattr(user, 'profile') and user.profile:
-                if user.profile.role != 'CLIENTE':
-                    raise serializers.ValidationError({
-                        'cliente': 'Cliente e obrigatorio'
-                    })
-            else:
-                raise serializers.ValidationError({
-                    'cliente': 'Cliente e obrigatorio'
-                })
-        return data
+        extra_kwargs = {
+            'cliente': {'required': False, 'allow_null': True}
+        }
 
 
 class MovimentacaoFioListSerializer(serializers.ModelSerializer):
