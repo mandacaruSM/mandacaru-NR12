@@ -534,6 +534,31 @@ class RegistroCorte(models.Model):
         else:
             self.velocidade_corte_m2h = Decimal('0')
 
+        # Calcular consumo estimado de combustivel se usar gerador diesel
+        self._calcular_consumo_gerador()
+
+    def _calcular_consumo_gerador(self):
+        """
+        Calcula o consumo estimado de combustivel quando o corte usa gerador diesel.
+        Consumo = Tempo de Corte (horas) x Consumo Nominal do Gerador (L/h)
+        """
+        # Apenas calcula se:
+        # 1. Fonte de energia for gerador diesel
+        # 2. Tiver um gerador selecionado
+        # 3. O gerador tiver consumo nominal cadastrado
+        # 4. Nao tiver consumo ja informado manualmente
+        if (self.fonte_energia == 'GERADOR_DIESEL' and
+            self.gerador and
+            self.tempo_execucao_horas and
+            self.tempo_execucao_horas > 0):
+
+            # Verifica se o gerador tem consumo nominal cadastrado
+            consumo_nominal = self.gerador.consumo_nominal_L_h
+            if consumo_nominal and consumo_nominal > 0:
+                # Se nao tiver consumo informado manualmente, calcula automaticamente
+                if not self.consumo_combustivel_litros:
+                    self.consumo_combustivel_litros = self.tempo_execucao_horas * consumo_nominal
+
     def save(self, *args, **kwargs):
         # Calcular metricas apenas quando finalizado
         if self.status == 'FINALIZADO':

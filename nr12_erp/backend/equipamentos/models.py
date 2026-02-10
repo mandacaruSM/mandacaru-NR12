@@ -34,6 +34,24 @@ class Equipamento(models.Model):
     tipo_medicao = models.CharField(max_length=4, choices=MEDICAO_CHOICES, default="HORA")
     leitura_atual = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # km ou horas
 
+    # Consumo nominal de combustível
+    consumo_nominal_L_h = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Consumo Nominal (L/h)",
+        help_text="Consumo de combustível em litros por hora (para equipamentos com horímetro)"
+    )
+    consumo_nominal_km_L = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Consumo Nominal (km/L)",
+        help_text="Consumo de combustível em quilômetros por litro (para veículos)"
+    )
+
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)

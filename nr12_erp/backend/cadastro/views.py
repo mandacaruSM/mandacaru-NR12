@@ -99,7 +99,12 @@ class ClienteViewSet(BaseAuthViewSet):
                 Profile.objects.create(
                     user=user,
                     role='CLIENTE',
-                    modules_enabled=['dashboard', 'equipamentos', 'manutencoes', 'abastecimentos']
+                    modules_enabled=[
+                        'dashboard', 'clientes', 'empreendimentos', 'equipamentos',
+                        'nr12', 'manutencoes', 'abastecimentos', 'orcamentos',
+                        'os', 'ordens_servico', 'relatorios', 'compras',
+                        'financeiro', 'operadores', 'supervisores'
+                    ]
                 )
 
                 # Vincula ao cliente

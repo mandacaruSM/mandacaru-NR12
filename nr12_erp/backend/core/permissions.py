@@ -328,7 +328,10 @@ class HasModuleAccess(permissions.BasePermission):
 
 class CanManageOperadores(permissions.BasePermission):
     """
-    Permite gerenciar operadores para ADMIN e SUPERVISOR
+    Permite gerenciar operadores para ADMIN, SUPERVISOR e CLIENTE
+    - ADMIN: acesso total
+    - SUPERVISOR: leitura e escrita dos seus empreendimentos
+    - CLIENTE: leitura e escrita dos seus operadores
     """
     message = "Você não tem permissão para gerenciar operadores."
 
@@ -336,12 +339,42 @@ class CanManageOperadores(permissions.BasePermission):
         if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
             return False
 
-        # Leitura permitida para supervisor e admin
-        if request.method in permissions.SAFE_METHODS:
-            return request.user.profile.role in ['ADMIN', 'SUPERVISOR']
+        role = request.user.profile.role
 
-        # Escrita apenas para admin
-        return request.user.profile.role == 'ADMIN'
+        # ADMIN tem acesso total
+        if role == 'ADMIN':
+            return True
+
+        # SUPERVISOR e CLIENTE podem ler e escrever
+        if role in ['SUPERVISOR', 'CLIENTE']:
+            return True
+
+        return False
+
+
+class CanManageSupervisores(permissions.BasePermission):
+    """
+    Permite gerenciar supervisores para ADMIN e CLIENTE
+    - ADMIN: acesso total
+    - CLIENTE: pode criar/editar supervisores vinculados ao seu cliente
+    """
+    message = "Você não tem permissão para gerenciar supervisores."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        role = request.user.profile.role
+
+        # ADMIN tem acesso total
+        if role == 'ADMIN':
+            return True
+
+        # CLIENTE pode gerenciar seus supervisores
+        if role == 'CLIENTE':
+            return True
+
+        return False
 
 
 class CanViewOwnDataOnly(permissions.BasePermission):

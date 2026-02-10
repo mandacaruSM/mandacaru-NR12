@@ -30,6 +30,8 @@ export default function DetalhePedidoPage() {
   const [showReceber, setShowReceber] = useState(false);
   const [receberForm, setReceberForm] = useState({ numero_nf: '', local_estoque: '' });
   const [locaisEstoque, setLocaisEstoque] = useState<LocalEstoque[]>([]);
+  const [loadingLocais, setLoadingLocais] = useState(false);
+  const [locaisError, setLocaisError] = useState('');
 
   // Para edicao de itens
   const [editingItens, setEditingItens] = useState(false);
@@ -88,11 +90,23 @@ export default function DetalhePedidoPage() {
     setShowReceber(true);
     setError('');
     setSuccessMsg('');
+    setLocaisError('');
+
     if (locaisEstoque.length === 0) {
       try {
+        setLoadingLocais(true);
         const res = await almoxarifadoApi.locais.list();
-        setLocaisEstoque(res.results || []);
-      } catch {}
+        const locais = res.results || [];
+        setLocaisEstoque(locais);
+        if (locais.length === 0) {
+          setLocaisError('Nenhum local de estoque cadastrado. Cadastre um local primeiro.');
+        }
+      } catch (err: any) {
+        console.error('Erro ao carregar locais de estoque:', err);
+        setLocaisError(err.message || 'Erro ao carregar locais de estoque');
+      } finally {
+        setLoadingLocais(false);
+      }
     }
     if (pedido?.numero_nf) {
       setReceberForm(prev => ({ ...prev, numero_nf: pedido.numero_nf || '' }));
@@ -388,16 +402,30 @@ export default function DetalhePedidoPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Local de Estoque</label>
-                <select
-                  value={receberForm.local_estoque}
-                  onChange={(e) => setReceberForm(prev => ({ ...prev, local_estoque: e.target.value }))}
-                  className="w-full px-4 py-3 border rounded-lg text-gray-900 bg-white text-base"
-                >
-                  <option value="">Selecione o local...</option>
-                  {locaisEstoque.map(l => (
-                    <option key={l.id} value={l.id}>{l.nome}</option>
-                  ))}
-                </select>
+                {loadingLocais ? (
+                  <div className="w-full px-4 py-3 border rounded-lg text-gray-500 bg-gray-50 text-base flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    Carregando locais...
+                  </div>
+                ) : locaisError ? (
+                  <div className="w-full px-4 py-3 border border-yellow-300 rounded-lg text-yellow-800 bg-yellow-50 text-sm">
+                    {locaisError}
+                    <Link href="/dashboard/almoxarifado/locais" className="block mt-1 text-blue-600 underline">
+                      Ir para cadastro de locais
+                    </Link>
+                  </div>
+                ) : (
+                  <select
+                    value={receberForm.local_estoque}
+                    onChange={(e) => setReceberForm(prev => ({ ...prev, local_estoque: e.target.value }))}
+                    className="w-full px-4 py-3 border rounded-lg text-gray-900 bg-white text-base"
+                  >
+                    <option value="">Selecione o local...</option>
+                    {locaisEstoque.map(l => (
+                      <option key={l.id} value={l.id}>{l.nome}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="flex flex-col gap-2 pt-2">
                 <button

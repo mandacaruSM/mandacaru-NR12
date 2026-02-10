@@ -552,6 +552,8 @@ export interface Equipamento {
   numero_serie: string;
   tipo_medicao: 'KM' | 'HORA';
   leitura_atual: string;
+  consumo_nominal_L_h: string | null;
+  consumo_nominal_km_L: string | null;
   ativo: boolean;
   uuid: string;
   qr_code: string | null;

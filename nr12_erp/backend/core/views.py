@@ -81,7 +81,10 @@ class MeView(APIView):
 class OperadorViewSet(viewsets.ModelViewSet):
     """
     Gerencia operadores via API web.
-    Permissões: ADMIN (full), SUPERVISOR (read)
+    Permissões:
+    - ADMIN: acesso total
+    - SUPERVISOR: leitura de operadores dos seus empreendimentos
+    - CLIENTE: gerencia operadores vinculados ao seu cliente
     """
     from .permissions import CanManageOperadores, HasModuleAccess
     permission_classes = [IsAuthenticated, HasModuleAccess, CanManageOperadores]
@@ -114,7 +117,19 @@ class OperadorViewSet(viewsets.ModelViewSet):
         return qs.distinct()
 
     def perform_create(self, serializer):
-        serializer.save(criado_por=self.request.user)
+        operador = serializer.save(criado_por=self.request.user)
+
+        # Se o usuario e CLIENTE, vincula automaticamente ao seu cliente
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente and cliente not in operador.clientes.all():
+                OperadorCliente.objects.get_or_create(
+                    operador=operador,
+                    cliente=cliente,
+                    defaults={'vinculado_por': self.request.user}
+                )
 
     @action(detail=True, methods=['post'])
     def gerar_codigo_vinculacao(self, request, pk=None):
@@ -263,20 +278,53 @@ class OperadorViewSet(viewsets.ModelViewSet):
 class SupervisorViewSet(viewsets.ModelViewSet):
     """
     Gerencia supervisores via API web.
-    Permissões: Apenas ADMIN pode gerenciar supervisores
+    Permissões:
+    - ADMIN: acesso total
+    - CLIENTE: pode gerenciar supervisores vinculados ao seu cliente
     """
-    from .permissions import IsAdminUser, HasModuleAccess
+    from .permissions import HasModuleAccess, CanManageSupervisores
     queryset = Supervisor.objects.all()
     serializer_class = SupervisorSerializer
-    permission_classes = [IsAuthenticated, HasModuleAccess, IsAdminUser]
+    permission_classes = [IsAuthenticated, HasModuleAccess, CanManageSupervisores]
     required_module = 'supervisores'
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["nome_completo", "cpf", "telefone"]
     ordering_fields = ["nome_completo", "cpf", "id"]
     ordering = ["nome_completo"]
 
+    def get_queryset(self):
+        """Filtra supervisores baseado no role do usuario"""
+        from core.permissions import get_user_role_safe
+        qs = super().get_queryset()
+        user = self.request.user
+        role = get_user_role_safe(user)
+
+        if role == 'ADMIN':
+            return qs
+
+        if role == 'CLIENTE':
+            # CLIENTE ve apenas supervisores vinculados aos seus empreendimentos
+            cliente = getattr(user, 'cliente_profile', None)
+            if cliente:
+                from cadastro.models import Empreendimento
+                supervisor_ids = Empreendimento.objects.filter(
+                    cliente=cliente
+                ).values_list('supervisor_id', flat=True)
+                return qs.filter(id__in=supervisor_ids)
+            return qs.none()
+
+        return qs
+
     def perform_create(self, serializer):
-        serializer.save(criado_por=self.request.user)
+        supervisor = serializer.save(criado_por=self.request.user)
+
+        # Se o usuario e CLIENTE, vincula automaticamente ao seu cliente
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            if cliente and cliente not in supervisor.clientes.all():
+                supervisor.clientes.add(cliente)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminUser])
     def resetar_senha(self, request, pk=None):

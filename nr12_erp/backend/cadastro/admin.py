@@ -33,7 +33,12 @@ def corrigir_acessos_clientes(modeladmin, request, queryset):
                 Profile.objects.create(
                     user=cliente.user,
                     role='CLIENTE',
-                    modules_enabled=["dashboard", "empreendimentos", "equipamentos", "relatorios"]
+                    modules_enabled=[
+                        'dashboard', 'clientes', 'empreendimentos', 'equipamentos',
+                        'nr12', 'manutencoes', 'abastecimentos', 'orcamentos',
+                        'os', 'ordens_servico', 'relatorios', 'compras',
+                        'financeiro', 'operadores', 'supervisores'
+                    ]
                 )
                 corrigidos += 1
             continue
@@ -64,7 +69,12 @@ def corrigir_acessos_clientes(modeladmin, request, queryset):
             Profile.objects.create(
                 user=user,
                 role='CLIENTE',
-                modules_enabled=["dashboard", "empreendimentos", "equipamentos", "relatorios"]
+                modules_enabled=[
+                    'dashboard', 'clientes', 'empreendimentos', 'equipamentos',
+                    'nr12', 'manutencoes', 'abastecimentos', 'orcamentos',
+                    'os', 'ordens_servico', 'relatorios', 'compras',
+                    'financeiro', 'operadores', 'supervisores'
+                ]
             )
         criados += 1
 

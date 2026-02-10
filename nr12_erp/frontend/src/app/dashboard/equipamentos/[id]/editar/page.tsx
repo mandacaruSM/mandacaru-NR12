@@ -76,7 +76,9 @@ export default function EditarEquipamentoPage() {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
               ['cliente', 'empreendimento', 'tipo', 'ano_fabricacao'].includes(name) ?
-              (value === '' ? null : Number(value)) : value
+              (value === '' ? null : Number(value)) :
+              ['consumo_nominal_L_h', 'consumo_nominal_km_L'].includes(name) ?
+              (value === '' ? null : value) : value
     }));
   };
 
@@ -279,6 +281,28 @@ export default function EditarEquipamentoPage() {
                 </label>
                 <input type="number" name="leitura_atual" value={formData.leitura_atual} onChange={handleChange} step="0.01"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Secao: Consumo de Combustível */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Consumo de Combustível</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Consumo Nominal (L/h)</label>
+                <input type="number" name="consumo_nominal_L_h" value={formData.consumo_nominal_L_h || ''} onChange={handleChange} step="0.01" min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                  placeholder="Litros por hora" />
+                <p className="text-xs text-gray-500 mt-1">Para equipamentos com horímetro (geradores, máquinas)</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Consumo Nominal (km/L)</label>
+                <input type="number" name="consumo_nominal_km_L" value={formData.consumo_nominal_km_L || ''} onChange={handleChange} step="0.01" min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                  placeholder="Quilômetros por litro" />
+                <p className="text-xs text-gray-500 mt-1">Para veículos com odômetro</p>
               </div>
             </div>
           </div>

@@ -29,6 +29,8 @@ CLIENTE_MODULES = [
     "relatorios",
     "compras",
     "financeiro",
+    "operadores",
+    "supervisores",
 ]
 
 
