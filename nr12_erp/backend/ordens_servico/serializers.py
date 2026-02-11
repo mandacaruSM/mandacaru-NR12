@@ -86,12 +86,15 @@ class OrdemServicoUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
+        # Guarda status original antes de atualizar
+        status_original = instance.status
+
         # Atualizar campos
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Se está concluindo, adicionar concluido_por
-        if validated_data.get('status') == 'CONCLUIDA' and instance.status != 'CONCLUIDA':
+        # Se está concluindo (status mudou de qualquer coisa para CONCLUIDA), adicionar concluido_por
+        if validated_data.get('status') == 'CONCLUIDA' and status_original != 'CONCLUIDA':
             instance.concluido_por = self.context['request'].user
 
         instance.save()

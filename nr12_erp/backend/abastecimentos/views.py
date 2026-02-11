@@ -1,5 +1,7 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 from .models import Abastecimento
 from .serializers import AbastecimentoSerializer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,3 +24,29 @@ class AbastecimentoViewSet(viewsets.ModelViewSet):
     search_fields = ["equipamento__codigo", "equipamento__descricao", "local", "numero_nota"]
     ordering_fields = ["data", "horimetro_km", "valor_total"]
     ordering = ["-data", "-horimetro_km"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override create para capturar ValidationError do signal pre_save
+        e retornar uma resposta amigável em vez de erro 500.
+        """
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            # Captura ValidationError do Django (levantado pelo signal)
+            return Response(
+                {'detail': str(e.message) if hasattr(e, 'message') else str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def update(self, request, *args, **kwargs):
+        """
+        Override update para capturar ValidationError do signal pre_save.
+        """
+        try:
+            return super().update(request, *args, **kwargs)
+        except ValidationError as e:
+            return Response(
+                {'detail': str(e.message) if hasattr(e, 'message') else str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
