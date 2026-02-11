@@ -17,6 +17,11 @@ class ItemOrdemServicoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['valor_total']
 
+    def update(self, instance, validated_data):
+        # Não permitir mudança de ordem_servico em update
+        validated_data.pop('ordem_servico', None)
+        return super().update(instance, validated_data)
+
 
 class OrdemServicoListSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)

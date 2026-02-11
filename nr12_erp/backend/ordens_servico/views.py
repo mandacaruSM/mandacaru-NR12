@@ -184,10 +184,38 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
 
 
 class ItemOrdemServicoViewSet(viewsets.ModelViewSet):
-    queryset = ItemOrdemServico.objects.all().select_related('ordem_servico', 'produto')
+    queryset = ItemOrdemServico.objects.all().select_related(
+        'ordem_servico', 'ordem_servico__cliente', 'produto'
+    )
     serializer_class = ItemOrdemServicoSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['ordem_servico', 'tipo', 'executado']
 
     def get_queryset(self):
         return filter_by_role(super().get_queryset(), self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """Override update para capturar erros e retornar mensagens claras."""
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao atualizar ItemOrdemServico: {e}", exc_info=True)
+            return Response(
+                {'detail': f'Erro ao atualizar item: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        """Override partial_update para capturar erros e retornar mensagens claras."""
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao atualizar parcialmente ItemOrdemServico: {e}", exc_info=True)
+            return Response(
+                {'detail': f'Erro ao atualizar item: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )

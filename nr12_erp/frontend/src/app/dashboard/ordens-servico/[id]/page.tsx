@@ -91,16 +91,32 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
 
   async function handleSalvarItem() {
     try {
-      const data = {
-        ...itemForm,
-        ordem_servico: Number(id),
+      // Montar dados removendo campos undefined/null
+      const data: Record<string, unknown> = {
+        tipo: itemForm.tipo,
+        descricao: itemForm.descricao,
+        quantidade: itemForm.quantidade,
+        valor_unitario: itemForm.valor_unitario,
+        executado: itemForm.executado,
       };
 
+      // Adicionar produto apenas se definido
+      if (itemForm.produto) {
+        data.produto = itemForm.produto;
+      }
+
+      // Adicionar observação apenas se definida
+      if (itemForm.observacao) {
+        data.observacao = itemForm.observacao;
+      }
+
       if (editingItem) {
-        await itensOrdemServicoApi.update(editingItem.id!, data);
+        await itensOrdemServicoApi.update(editingItem.id!, data as Partial<ItemOrdemServico>);
         alert('Item atualizado com sucesso!');
       } else {
-        await itensOrdemServicoApi.create(data);
+        // Para criação, ordem_servico é obrigatório
+        data.ordem_servico = Number(id);
+        await itensOrdemServicoApi.create(data as Partial<ItemOrdemServico>);
         alert('Item adicionado com sucesso!');
       }
 
