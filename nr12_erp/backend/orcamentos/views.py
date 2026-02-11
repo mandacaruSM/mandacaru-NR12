@@ -128,10 +128,38 @@ class OrcamentoViewSet(viewsets.ModelViewSet):
 
 
 class ItemOrcamentoViewSet(viewsets.ModelViewSet):
-    queryset = ItemOrcamento.objects.all().select_related('orcamento', 'produto')
+    queryset = ItemOrcamento.objects.all().select_related(
+        'orcamento', 'orcamento__cliente', 'produto'
+    )
     serializer_class = ItemOrcamentoSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['orcamento', 'tipo']
 
     def get_queryset(self):
         return filter_by_role(super().get_queryset(), self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """Override update para capturar erros e retornar mensagens claras."""
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao atualizar ItemOrcamento: {e}", exc_info=True)
+            return Response(
+                {'detail': f'Erro ao atualizar item: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        """Override partial_update para capturar erros e retornar mensagens claras."""
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao atualizar parcialmente ItemOrcamento: {e}", exc_info=True)
+            return Response(
+                {'detail': f'Erro ao atualizar item: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )

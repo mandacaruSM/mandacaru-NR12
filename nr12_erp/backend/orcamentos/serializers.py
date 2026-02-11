@@ -102,12 +102,15 @@ class OrcamentoCreateUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         itens_data = validated_data.pop('itens', None)
 
+        # Guarda status original ANTES de atualizar
+        status_original = instance.status
+
         # Atualizar campos do orçamento
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Se está aprovando, adicionar aprovado_por
-        if validated_data.get('status') == 'APROVADO' and instance.status != 'APROVADO':
+        # Se está aprovando (status mudou para APROVADO), adicionar aprovado_por
+        if validated_data.get('status') == 'APROVADO' and status_original != 'APROVADO':
             instance.aprovado_por = self.context['request'].user
             from django.utils import timezone
             instance.data_aprovacao = timezone.now().date()
