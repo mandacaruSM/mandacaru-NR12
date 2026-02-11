@@ -240,6 +240,9 @@ export default function EquipamentosPage() {
                     Leitura Atual
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Consumo Nominal
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -281,6 +284,24 @@ export default function EquipamentosPage() {
                       <div className="text-sm font-medium text-gray-900">
                         {Number(eq.leitura_atual).toLocaleString('pt-BR')} {eq.tipo_medicao === 'KM' ? 'km' : 'h'}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {eq.consumo_nominal_L_h || eq.consumo_nominal_km_L ? (
+                        <div className="text-sm text-gray-900">
+                          {eq.consumo_nominal_L_h && (
+                            <span className="text-orange-600 font-medium">
+                              {Number(eq.consumo_nominal_L_h).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L/h
+                            </span>
+                          )}
+                          {eq.consumo_nominal_km_L && (
+                            <span className="text-green-600 font-medium">
+                              {Number(eq.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/L
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

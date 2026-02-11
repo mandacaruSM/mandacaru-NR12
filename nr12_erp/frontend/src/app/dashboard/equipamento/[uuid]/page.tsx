@@ -192,6 +192,31 @@ export default function EquipamentoResumePage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Consumo de Combustível */}
+        {(equipamento.consumo_nominal_L_h || equipamento.consumo_nominal_km_L) && (
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <h3 className="font-semibold text-gray-900 mb-3">Consumo de Combustível</h3>
+            <div className="space-y-2">
+              {equipamento.consumo_nominal_L_h && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Consumo Nominal</span>
+                  <span className="font-medium text-gray-900">
+                    {Number(equipamento.consumo_nominal_L_h).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L/h
+                  </span>
+                </div>
+              )}
+              {equipamento.consumo_nominal_km_L && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Consumo Nominal</span>
+                  <span className="font-medium text-gray-900">
+                    {Number(equipamento.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/L
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Ultimas Manutencoes */}
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-3">

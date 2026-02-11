@@ -220,6 +220,29 @@ export default function VisualizarEquipamentoPage() {
             />
           </div>
         </div>
+
+        {/* Consumo de Combustível */}
+        {(equipamento.consumo_nominal_L_h || equipamento.consumo_nominal_km_L) && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Consumo de Combustível</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {equipamento.consumo_nominal_L_h && (
+                <InfoRow
+                  label="Consumo Nominal (L/h)"
+                  value={`${Number(equipamento.consumo_nominal_L_h).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} litros/hora`}
+                />
+              )}
+              {equipamento.consumo_nominal_km_L && (
+                <InfoRow
+                  label="Consumo Nominal (km/L)"
+                  value={`${Number(equipamento.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/litro`}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* QR Code Modal */}
