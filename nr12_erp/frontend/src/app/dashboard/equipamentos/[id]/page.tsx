@@ -222,7 +222,7 @@ export default function VisualizarEquipamentoPage() {
         </div>
 
         {/* Consumo de Combustível */}
-        {(equipamento.consumo_nominal_L_h || equipamento.consumo_nominal_km_L) && (
+        {(equipamento.consumo_nominal_L_h || equipamento.consumo_nominal_km_L || (equipamento as any).consumo_medio) && (
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Consumo de Combustível</h2>
@@ -239,6 +239,21 @@ export default function VisualizarEquipamentoPage() {
                   label="Consumo Nominal (km/L)"
                   value={`${Number(equipamento.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/litro`}
                 />
+              )}
+              {(equipamento as any).consumo_medio && (
+                <div className="pt-2 border-t border-gray-200">
+                  <InfoRow
+                    label={`Consumo Médio Real (${equipamento.tipo_medicao === 'HORIMETRO' ? 'L/h' : 'km/L'})`}
+                    value={
+                      <span className="text-blue-600 font-semibold">
+                        {Number((equipamento as any).consumo_medio).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {equipamento.tipo_medicao === 'HORIMETRO' ? 'litros/hora' : 'km/litro'}
+                      </span>
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Calculado automaticamente baseado nos abastecimentos
+                  </p>
+                </div>
               )}
             </div>
           </div>

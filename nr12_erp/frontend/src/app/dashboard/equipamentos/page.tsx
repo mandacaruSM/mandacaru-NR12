@@ -286,16 +286,24 @@ export default function EquipamentosPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {eq.consumo_nominal_L_h || eq.consumo_nominal_km_L ? (
+                      {eq.consumo_nominal_L_h || eq.consumo_nominal_km_L || (eq as any).consumo_medio ? (
                         <div className="text-sm text-gray-900">
+                          {/* Consumo Médio Real (calculado) */}
+                          {(eq as any).consumo_medio && (
+                            <div className="text-blue-600 font-semibold">
+                              {Number((eq as any).consumo_medio).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {eq.tipo_medicao === 'HORIMETRO' ? 'L/h' : 'km/L'}
+                              <span className="text-xs text-gray-400 ml-1">(real)</span>
+                            </div>
+                          )}
+                          {/* Consumo Nominal (manual) */}
                           {eq.consumo_nominal_L_h && (
-                            <span className="text-orange-600 font-medium">
-                              {Number(eq.consumo_nominal_L_h).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L/h
+                            <span className="text-orange-600 text-xs">
+                              Nominal: {Number(eq.consumo_nominal_L_h).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L/h
                             </span>
                           )}
                           {eq.consumo_nominal_km_L && (
-                            <span className="text-green-600 font-medium">
-                              {Number(eq.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/L
+                            <span className="text-green-600 text-xs">
+                              Nominal: {Number(eq.consumo_nominal_km_L).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/L
                             </span>
                           )}
                         </div>
