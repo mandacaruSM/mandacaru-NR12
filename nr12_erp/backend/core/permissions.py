@@ -28,16 +28,24 @@ def filter_by_role(queryset, user):
     - SUPERVISOR: vê dados dos empreendimentos que supervisiona
     - OPERADOR/TECNICO: veem tudo (controle feito por HasModuleAccess)
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     if not user.is_authenticated:
+        logger.warning(f"filter_by_role: usuário não autenticado")
         return queryset.none()
 
     role = get_user_role_safe(user)
+    model_name = queryset.model.__name__
+    logger.info(f"filter_by_role: user={user.username}, role={role}, model={model_name}")
 
     # Se não conseguiu determinar o role, bloqueia acesso por segurança
     if role is None:
+        logger.warning(f"filter_by_role: role é None para user={user.username}")
         return queryset.none()
 
     if role == 'ADMIN':
+        logger.info(f"filter_by_role: ADMIN - retornando queryset completo")
         return queryset
 
     if role == 'CLIENTE':
@@ -165,11 +173,13 @@ def filter_by_role(queryset, user):
             # Sub-recursos com FK indireto
             if hasattr(model, 'ordem_servico'):
                 return queryset.filter(
-                    ordem_servico__equipamento__cliente__in=operador.clientes.all()
+                    models.Q(ordem_servico__cliente__in=operador.clientes.all()) |
+                    models.Q(ordem_servico__equipamento__cliente__in=operador.clientes.all())
                 ).distinct()
             if hasattr(model, 'orcamento'):
                 return queryset.filter(
-                    orcamento__equipamento__cliente__in=operador.clientes.all()
+                    models.Q(orcamento__cliente__in=operador.clientes.all()) |
+                    models.Q(orcamento__equipamento__cliente__in=operador.clientes.all())
                 ).distinct()
             if hasattr(model, 'pedido'):
                 return queryset.filter(

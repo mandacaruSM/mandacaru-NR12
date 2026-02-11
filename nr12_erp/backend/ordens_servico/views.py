@@ -194,13 +194,35 @@ class ItemOrdemServicoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return filter_by_role(super().get_queryset(), self.request.user)
 
+    def get_object(self):
+        """Override para logging e melhor tratamento de erros."""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs.get(lookup_url_kwarg)
+
+        logger.info(f"ItemOrdemServico get_object: pk={pk}, user={self.request.user}, queryset_count={queryset.count()}")
+
+        # Verificar se o item existe no banco
+        try:
+            item_exists = ItemOrdemServico.objects.filter(pk=pk).exists()
+            logger.info(f"Item {pk} existe no banco: {item_exists}")
+        except Exception as e:
+            logger.error(f"Erro ao verificar existência: {e}")
+
+        return super().get_object()
+
     def update(self, request, *args, **kwargs):
         """Override update para capturar erros e retornar mensagens claras."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"ItemOrdemServico update: kwargs={kwargs}, data={request.data}")
+
         try:
             return super().update(request, *args, **kwargs)
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Erro ao atualizar ItemOrdemServico: {e}", exc_info=True)
             return Response(
                 {'detail': f'Erro ao atualizar item: {str(e)}'},
@@ -209,11 +231,13 @@ class ItemOrdemServicoViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         """Override partial_update para capturar erros e retornar mensagens claras."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"ItemOrdemServico partial_update: kwargs={kwargs}, data={request.data}")
+
         try:
             return super().partial_update(request, *args, **kwargs)
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Erro ao atualizar parcialmente ItemOrdemServico: {e}", exc_info=True)
             return Response(
                 {'detail': f'Erro ao atualizar item: {str(e)}'},
