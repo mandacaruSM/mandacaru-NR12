@@ -143,13 +143,15 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
 
   async function handleToggleExecutado(item: ItemOrdemServico) {
     try {
-      await itensOrdemServicoApi.update(item.id!, {
+      console.log('Alterando executado:', item.id, 'de', item.executado, 'para', !item.executado);
+      const resultado = await itensOrdemServicoApi.update(item.id!, {
         executado: !item.executado,
       });
-      loadOrdemServico();
+      console.log('Resultado do update:', resultado);
+      await loadOrdemServico();
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
-      alert('Erro ao atualizar item');
+      alert('Erro ao atualizar item: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   }
 

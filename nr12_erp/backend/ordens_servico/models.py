@@ -132,11 +132,10 @@ class ItemOrdemServico(models.Model):
         return f"{self.descricao} - {self.quantidade}"
 
     def save(self, *args, **kwargs):
-        # Calcular valor_total apenas se quantidade e valor_unitario estiverem definidos
+        # Calcular valor_total sempre que quantidade e valor_unitario estiverem definidos
+        # (os campos são NOT NULL no banco, então sempre terão valor após primeira criação)
         if self.quantidade is not None and self.valor_unitario is not None:
             self.valor_total = self.quantidade * self.valor_unitario
-        elif self.valor_total is None:
-            self.valor_total = 0
 
         super().save(*args, **kwargs)
 
