@@ -80,9 +80,16 @@
       "Bash(npx create-next-app:*)",
       "Bash(node:*)",
       "Bash(git status:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(railway version:*)",
+      "Bash(where:*)",
+      "Bash(d:)",
+      "Bash(git diff:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "d:\\mandacaru_nr12\\nr12_erp\\frontend\\src\\app\\dashboard\\fio-diamantado\\cortes\\[id]"
+    ]
   }
 }
