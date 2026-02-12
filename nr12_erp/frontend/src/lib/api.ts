@@ -1358,29 +1358,29 @@ export const ordensServicoApi = {
 export const itensOrdemServicoApi = {
   list: async (ordemServicoId?: number) => {
     const query = ordemServicoId ? `?ordem_servico=${ordemServicoId}` : '';
-    return apiFetch<ItemOrdemServico[]>(`/itens/${query}`);
+    return apiFetch<ItemOrdemServico[]>(`/itens-os/${query}`);
   },
 
   get: async (id: number) => {
-    return apiFetch<ItemOrdemServico>(`/itens/${id}/`);
+    return apiFetch<ItemOrdemServico>(`/itens-os/${id}/`);
   },
 
   create: async (data: Partial<ItemOrdemServico>) => {
-    return apiFetch<ItemOrdemServico>('/itens/', {
+    return apiFetch<ItemOrdemServico>('/itens-os/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: Partial<ItemOrdemServico>) => {
-    return apiFetch<ItemOrdemServico>(`/itens/${id}/`, {
+    return apiFetch<ItemOrdemServico>(`/itens-os/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number) => {
-    return apiFetch<void>(`/itens/${id}/`, {
+    return apiFetch<void>(`/itens-os/${id}/`, {
       method: 'DELETE',
     });
   },

@@ -31,6 +31,12 @@ def processar_os_concluida(sender, instance, created, **kwargs):
         data_vencimento = instance.data_conclusao or timezone.now().date()
         data_vencimento = data_vencimento + timedelta(days=30)
 
+        # Montar descrição de forma segura (descricao pode ser None ou vazia)
+        descricao_os = (instance.descricao or '')[:100]
+        descricao_conta = f"Ordem de Serviço {instance.numero}"
+        if descricao_os:
+            descricao_conta += f" - {descricao_os}"
+
         ContaReceber.objects.create(
             tipo='ORDEM_SERVICO',
             ordem_servico=instance,
@@ -38,7 +44,7 @@ def processar_os_concluida(sender, instance, created, **kwargs):
             cliente=instance.cliente,
             data_vencimento=data_vencimento,
             valor_original=instance.valor_final,  # Usa valor_final que inclui adicionais
-            descricao=f"Ordem de Serviço {instance.numero} - {instance.descricao[:100]}",
+            descricao=descricao_conta,
             criado_por=instance.concluido_por,
         )
 

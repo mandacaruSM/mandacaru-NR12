@@ -72,6 +72,9 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
         - horimetro_final: valor do horímetro/KM ao finalizar
         - observacoes_manutencao: observações sobre a manutenção realizada
         """
+        import logging
+        logger = logging.getLogger(__name__)
+
         from django.utils import timezone
         from django.db import transaction
         from manutencao.models import Manutencao
@@ -94,57 +97,65 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
         horimetro_final = request.data.get('horimetro_final')
         observacoes_manutencao = request.data.get('observacoes_manutencao', '')
 
-        with transaction.atomic():
-            # Atualizar OS
-            os.status = 'CONCLUIDA'
-            os.concluido_por = request.user
+        try:
+            with transaction.atomic():
+                # Atualizar OS
+                os.status = 'CONCLUIDA'
+                os.concluido_por = request.user
 
-            if not os.data_conclusao:
-                os.data_conclusao = timezone.now().date()
+                if not os.data_conclusao:
+                    os.data_conclusao = timezone.now().date()
 
-            # Atualizar horímetro final se informado
-            if horimetro_final:
-                os.horimetro_final = horimetro_final
+                # Atualizar horímetro final se informado
+                if horimetro_final:
+                    os.horimetro_final = horimetro_final
 
-            os.save()
+                os.save()
 
-            # Atualizar horímetro do equipamento (se houver equipamento e horímetro final)
-            if os.equipamento and os.horimetro_final:
-                os.equipamento.leitura_atual = os.horimetro_final
-                os.equipamento.save()
+                # Atualizar horímetro do equipamento (se houver equipamento e horímetro final)
+                if os.equipamento and os.horimetro_final:
+                    os.equipamento.leitura_atual = os.horimetro_final
+                    os.equipamento.save()
 
-            # Criar manutenção automaticamente (se houver equipamento)
-            manutencao = None
-            if os.equipamento:
-                # Determinar tipo de manutenção baseado no orçamento
-                tipo_manutencao = 'corretiva'
-                if os.orcamento and os.orcamento.tipo == 'MANUTENCAO_PREVENTIVA':
-                    tipo_manutencao = 'preventiva'
+                # Criar manutenção automaticamente (se houver equipamento)
+                manutencao = None
+                if os.equipamento:
+                    # Determinar tipo de manutenção baseado no orçamento
+                    tipo_manutencao = 'corretiva'
+                    if os.orcamento and os.orcamento.tipo == 'MANUTENCAO_PREVENTIVA':
+                        tipo_manutencao = 'preventiva'
 
-                # Usar horímetro final da OS, ou leitura atual do equipamento
-                horimetro = os.horimetro_final or os.equipamento.leitura_atual
+                    # Usar horímetro final da OS, ou leitura atual do equipamento
+                    horimetro = os.horimetro_final or os.equipamento.leitura_atual
 
-                manutencao = Manutencao.objects.create(
-                    equipamento=os.equipamento,
-                    ordem_servico=os,
-                    tipo=tipo_manutencao,
-                    data=os.data_conclusao,
-                    horimetro=horimetro,
-                    tecnico=os.tecnico_responsavel,
-                    descricao=os.descricao or f"Manutenção realizada via {os.numero}",
-                    observacoes=observacoes_manutencao or os.observacoes
-                )
+                    manutencao = Manutencao.objects.create(
+                        equipamento=os.equipamento,
+                        ordem_servico=os,
+                        tipo=tipo_manutencao,
+                        data=os.data_conclusao,
+                        horimetro=horimetro,
+                        tecnico=os.tecnico_responsavel,
+                        descricao=os.descricao or f"Manutenção realizada via {os.numero}",
+                        observacoes=observacoes_manutencao or os.observacoes
+                    )
 
-        serializer = self.get_serializer(os)
-        response_data = {
-            **serializer.data,
-            'manutencao_criada': manutencao is not None
-        }
+            serializer = self.get_serializer(os)
+            response_data = {
+                **serializer.data,
+                'manutencao_criada': manutencao is not None
+            }
 
-        if manutencao:
-            response_data['manutencao_id'] = manutencao.id
+            if manutencao:
+                response_data['manutencao_id'] = manutencao.id
 
-        return Response(response_data)
+            return Response(response_data)
+
+        except Exception as e:
+            logger.error(f"Erro ao concluir OS {pk}: {e}", exc_info=True)
+            return Response(
+                {'detail': f'Erro ao concluir OS: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=True, methods=['post'])
     def cancelar(self, request, pk=None):
