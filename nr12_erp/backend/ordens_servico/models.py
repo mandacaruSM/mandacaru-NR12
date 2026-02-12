@@ -96,7 +96,15 @@ class OrdemServico(models.Model):
             proximo_numero = 1 if not ultimo else ultimo.id + 1
             self.numero = f"OS-{proximo_numero:06d}"
 
-        # Calcular valor final
+        # Recalcular valor_total baseado nos componentes
+        self.valor_total = (
+            self.valor_servicos +
+            self.valor_produtos +
+            self.valor_deslocamento -
+            self.valor_desconto
+        )
+
+        # Calcular valor final (total + adicional)
         self.valor_final = self.valor_total + self.valor_adicional
 
         super().save(*args, **kwargs)
