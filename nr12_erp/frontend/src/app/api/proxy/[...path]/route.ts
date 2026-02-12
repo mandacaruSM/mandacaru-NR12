@@ -136,8 +136,32 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
 
   } catch (error: any) {
     console.error('❌ [Proxy] Erro:', error);
+    console.error('❌ [Proxy] Erro name:', error?.name);
+    console.error('❌ [Proxy] Erro cause:', error?.cause);
+
+    // Detalhar erro para debugging
+    let errorMessage = error.message || 'Erro no proxy';
+    let errorDetails = '';
+
+    if (error.cause) {
+      errorDetails = ` (${error.cause.code || error.cause.message || JSON.stringify(error.cause)})`;
+    }
+
+    // Erros comuns de conexão
+    if (error.message?.includes('fetch failed')) {
+      if (error.cause?.code === 'ECONNREFUSED') {
+        errorMessage = 'Backend não está respondendo (conexão recusada)';
+      } else if (error.cause?.code === 'ENOTFOUND') {
+        errorMessage = 'Backend não encontrado (DNS)';
+      } else if (error.cause?.code === 'ETIMEDOUT') {
+        errorMessage = 'Timeout ao conectar com o backend';
+      } else {
+        errorMessage = `Falha ao conectar com o backend${errorDetails}`;
+      }
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Erro no proxy' },
+      { error: errorMessage, details: errorDetails || undefined },
       { status: 500 }
     );
   }
