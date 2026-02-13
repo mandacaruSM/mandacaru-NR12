@@ -4,13 +4,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { operadoresApi, Operador } from '@/lib/api';
+import { operadoresApi, Operador, api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function EditarOperadorPage() {
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const id = Number(params?.id);
 
   const [nome, setNome] = useState('');
@@ -27,6 +29,15 @@ export default function EditarOperadorPage() {
   const [cidade, setCidade] = useState('');
   const [uf, setUf] = useState('');
   const [cep, setCep] = useState('');
+
+  // Estados para gerenciar acesso
+  const [username, setUsername] = useState('');
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [novaSenha, setNovaSenha] = useState('');
+  const [resetPasswordResult, setResetPasswordResult] = useState<{senha?: string, sucesso: boolean} | null>(null);
+
+  const isAdmin = user?.profile?.role === 'ADMIN';
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +57,7 @@ export default function EditarOperadorPage() {
         setCidade(data.cidade || '');
         setUf(data.uf || '');
         setCep(data.cep || '');
+        setUsername((data as any).user_username || '');
       } catch (e: any) {
         toast.error(e.message || 'Erro ao carregar operador');
         router.push('/dashboard/operadores');
@@ -54,6 +66,45 @@ export default function EditarOperadorPage() {
       }
     })();
   }, [id]);
+
+  const handleResetPassword = async () => {
+    setResetPasswordLoading(true);
+    setResetPasswordResult(null);
+
+    try {
+      const body = novaSenha ? { senha: novaSenha } : {};
+      const response = await fetch(`/api/proxy/operadores/${id}/resetar_senha/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResetPasswordResult({
+          senha: data.senha_gerada_automaticamente ? data.nova_senha : undefined,
+          sucesso: true
+        });
+        if (data.username) {
+          setUsername(data.username);
+        }
+        toast.success(data.detail || 'Senha resetada com sucesso!');
+        setNovaSenha('');
+      } else {
+        toast.error(data.detail || 'Erro ao resetar senha');
+        setResetPasswordResult({ sucesso: false });
+      }
+    } catch (err) {
+      toast.error('Erro ao conectar com o servidor');
+      setResetPasswordResult({ sucesso: false });
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,12 +204,139 @@ export default function EditarOperadorPage() {
             </div>
           </div>
         </div>
-        <div className="pt-2">
+
+        {/* Seção: Gerenciar Acesso */}
+        {isAdmin && (
+          <div className="pt-4 border-t mt-4">
+            <h2 className="text-md font-semibold text-gray-900 mb-3">Gerenciar Acesso</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Credenciais de Acesso</p>
+                  {username ? (
+                    <p className="text-xs text-gray-600 mt-1">
+                      Username: <span className="font-mono bg-white px-2 py-1 rounded border">{username}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-orange-600 mt-1">
+                      Nenhum usuário vinculado. Clique em &quot;Criar Acesso&quot; para gerar login.
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowResetPasswordModal(true)}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  {username ? 'Resetar Senha' : 'Criar Acesso'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-4">
           <button type="submit" disabled={saving || !nome.trim() || cpf.trim().length === 0} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:bg-blue-300">
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>
         </div>
       </form>
+
+      {/* Modal Resetar Senha */}
+      {showResetPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {username ? 'Resetar Senha do Operador' : 'Criar Acesso do Operador'}
+              </h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Operador: <strong>{nome}</strong>
+              </p>
+              {username && (
+                <p className="text-sm text-gray-600 mb-4">
+                  Username: <strong className="font-mono">{username}</strong>
+                </p>
+              )}
+              {!username && (
+                <p className="text-sm text-gray-600 mb-4">
+                  O username será o CPF do operador (apenas números).
+                </p>
+              )}
+
+              {/* Result Display */}
+              {resetPasswordResult?.sucesso && resetPasswordResult.senha && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm font-semibold text-green-900 mb-2">Senha gerada com sucesso!</p>
+                  <p className="text-xs text-green-800 mb-2">Copie e envie para o operador:</p>
+                  <div className="bg-white p-3 rounded border border-green-300">
+                    <code className="text-lg font-mono font-bold text-green-900">{resetPasswordResult.senha}</code>
+                  </div>
+                </div>
+              )}
+
+              {/* Input Nova Senha */}
+              {!resetPasswordResult && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nova Senha (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    placeholder="Deixe vazio para gerar senha aleatória"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900"
+                    disabled={resetPasswordLoading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Mínimo de 6 caracteres. Se deixar em branco, uma senha aleatória será gerada.
+                  </p>
+                </div>
+              )}
+
+              {/* Warning */}
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ <strong>Atenção:</strong> {username
+                    ? 'Esta ação irá alterar a senha do operador.'
+                    : 'Esta ação criará um usuário para o operador acessar o sistema.'}
+                  {' '}Certifique-se de comunicar as credenciais ao operador.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowResetPasswordModal(false);
+                  setNovaSenha('');
+                  setResetPasswordResult(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                disabled={resetPasswordLoading}
+              >
+                {resetPasswordResult?.sucesso ? 'Fechar' : 'Cancelar'}
+              </button>
+              {!resetPasswordResult?.sucesso && (
+                <button
+                  onClick={handleResetPassword}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={resetPasswordLoading}
+                >
+                  {resetPasswordLoading ? 'Processando...' : (username ? 'Resetar Senha' : 'Criar Acesso')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

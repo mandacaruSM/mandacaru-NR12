@@ -42,6 +42,7 @@ class OperadorSerializer(serializers.ModelSerializer):
     total_checklists = serializers.SerializerMethodField()
     taxa_aprovacao = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
+    user_username = serializers.CharField(source='user.username', read_only=True, allow_null=True)
     clientes_ids = serializers.PrimaryKeyRelatedField(
         queryset=__import__('cadastro.models', fromlist=['Cliente']).Cliente.objects.all(),
         many=True,
@@ -68,7 +69,8 @@ class OperadorSerializer(serializers.ModelSerializer):
             'cidade', 'uf', 'cep',
             'ativo', 'criado_em', 'atualizado_em',
             'clientes_nomes', 'empreendimentos_nomes', 'total_equipamentos',
-            'total_checklists', 'taxa_aprovacao', 'clientes_ids', 'empreendimentos_ids'
+            'total_checklists', 'taxa_aprovacao', 'clientes_ids', 'empreendimentos_ids',
+            'user_username'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
@@ -151,6 +153,7 @@ class OperadorDetailSerializer(serializers.ModelSerializer):
     equipamentos_autorizados_detalhes = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
     estatisticas = serializers.SerializerMethodField()
+    user_username = serializers.CharField(source='user.username', read_only=True, allow_null=True)
     
     class Meta:
         model = Operador
