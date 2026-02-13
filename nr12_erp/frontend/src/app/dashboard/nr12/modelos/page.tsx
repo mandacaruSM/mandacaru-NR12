@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { nr12Api, tiposEquipamentoApi } from '@/lib/api';
 import type { ModeloChecklist, TipoEquipamento } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 const PERIODICIDADE_LABELS = {
@@ -16,12 +17,18 @@ const PERIODICIDADE_LABELS = {
 
 export default function ModelosChecklistPage() {
   const toast = useToast();
+  const { user } = useAuth();
   const [modelos, setModelos] = useState<ModeloChecklist[]>([]);
   const [tipos, setTipos] = useState<TipoEquipamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('active');
+
+  // OPERADOR e TECNICO não podem criar/editar modelos
+  const isOperador = user?.profile?.role === 'OPERADOR';
+  const isTecnico = user?.profile?.role === 'TECNICO';
+  const canEdit = !isOperador && !isTecnico;
 
   useEffect(() => {
     loadTipos();
@@ -122,12 +129,14 @@ export default function ModelosChecklistPage() {
               {filteredModelos.length} de {modelos.length} modelo(s) cadastrado(s)
             </p>
           </div>
-          <Link
-            href="/dashboard/nr12/modelos/novo"
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-center"
-          >
-            + Novo Modelo
-          </Link>
+          {canEdit && (
+            <Link
+              href="/dashboard/nr12/modelos/novo"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-center"
+            >
+              + Novo Modelo
+            </Link>
+          )}
         </div>
 
         {/* Filtros */}
@@ -193,7 +202,7 @@ export default function ModelosChecklistPage() {
                 ? 'Nenhum modelo encontrado com os filtros aplicados'
                 : 'Nenhum modelo cadastrado'}
             </p>
-            {!searchTerm && !filterTipo && filterStatus === 'active' && (
+            {!searchTerm && !filterTipo && filterStatus === 'active' && canEdit && (
               <Link
                 href="/dashboard/nr12/modelos/novo"
                 className="inline-block mt-4 text-purple-600 hover:underline"
@@ -286,27 +295,31 @@ export default function ModelosChecklistPage() {
                         >
                           👁️
                         </Link>
-                        <Link
-                          href={`/dashboard/nr12/modelos/${modelo.id}/editar`}
-                          className="text-purple-600 hover:text-purple-900 transition-colors"
-                          title="Editar"
-                        >
-                          ✏️
-                        </Link>
-                        <button
-                          onClick={() => handleDuplicar(modelo.id, modelo.nome)}
-                          className="text-green-600 hover:text-green-900 transition-colors"
-                          title="Duplicar"
-                        >
-                          📋
-                        </button>
-                        <button
-                          onClick={() => handleDelete(modelo.id, modelo.nome)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                          title="Excluir"
-                        >
-                          🗑️
-                        </button>
+                        {canEdit && (
+                          <>
+                            <Link
+                              href={`/dashboard/nr12/modelos/${modelo.id}/editar`}
+                              className="text-purple-600 hover:text-purple-900 transition-colors"
+                              title="Editar"
+                            >
+                              ✏️
+                            </Link>
+                            <button
+                              onClick={() => handleDuplicar(modelo.id, modelo.nome)}
+                              className="text-green-600 hover:text-green-900 transition-colors"
+                              title="Duplicar"
+                            >
+                              📋
+                            </button>
+                            <button
+                              onClick={() => handleDelete(modelo.id, modelo.nome)}
+                              className="text-red-600 hover:text-red-900 transition-colors"
+                              title="Excluir"
+                            >
+                              🗑️
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

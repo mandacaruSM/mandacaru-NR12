@@ -15,6 +15,15 @@ class ModeloChecklist(models.Model):
         on_delete=models.PROTECT,
         related_name='modelos_checklist'
     )
+    # Cliente dono do modelo (null = modelo global/admin)
+    cliente = models.ForeignKey(
+        'cadastro.Cliente',
+        on_delete=models.CASCADE,
+        related_name='modelos_checklist',
+        null=True,
+        blank=True,
+        help_text="Cliente dono do modelo. Se vazio, é um modelo global (admin)."
+    )
     nome = models.CharField(max_length=150)
     descricao = models.TextField(blank=True, default="")
     periodicidade = models.CharField(

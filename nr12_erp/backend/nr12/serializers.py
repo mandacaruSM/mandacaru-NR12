@@ -160,10 +160,14 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Validação customizada para garantir que horímetro/km seja coerente.
+        Validação customizada para garantir que horímetro/km seja coerente
+        e que OPERADOR só pode criar checklist em equipamentos autorizados.
         """
+        from core.permissions import get_user_role_safe
+
         equipamento = data.get('equipamento')
         leitura_equipamento = data.get('leitura_equipamento')
+        request = self.context.get('request')
 
         if equipamento and leitura_equipamento is not None:
             # Verifica a leitura atual do equipamento (pode ser None)
@@ -176,6 +180,17 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
                         f"Tipo de medição: {equipamento.get_tipo_medicao_display()}"
                     )
                 })
+
+        # OPERADOR só pode criar checklist em equipamentos que opera
+        if request and request.user:
+            role = get_user_role_safe(request.user)
+            if role == 'OPERADOR':
+                operador = getattr(request.user, 'operador_profile', None)
+                if operador and equipamento:
+                    if not operador.equipamentos_autorizados.filter(id=equipamento.id).exists():
+                        raise serializers.ValidationError({
+                            'equipamento': 'Você não está autorizado a operar este equipamento.'
+                        })
 
         return data
 

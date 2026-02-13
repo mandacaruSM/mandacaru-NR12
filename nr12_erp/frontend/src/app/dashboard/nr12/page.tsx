@@ -4,12 +4,19 @@
 import { useState, useEffect } from 'react';
 import { nr12Api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function NR12DashboardPage() {
   const toast = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
+
+  // OPERADOR não pode criar/editar modelos, apenas realizar checklists
+  const isOperador = user?.profile?.role === 'OPERADOR';
+  const isTecnico = user?.profile?.role === 'TECNICO';
+  const canManageModels = !isOperador && !isTecnico;
 
   useEffect(() => {
     loadStats();
@@ -85,12 +92,14 @@ export default function NR12DashboardPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Link
-              href="/dashboard/nr12/modelos"
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              🏷️ Modelos
-            </Link>
+            {canManageModels && (
+              <Link
+                href="/dashboard/nr12/modelos"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                🏷️ Modelos
+              </Link>
+            )}
             <Link
               href="/dashboard/nr12/checklists"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -189,14 +198,16 @@ export default function NR12DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900">Ações Rápidas</h2>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link
-              href="/dashboard/nr12/modelos/novo"
-              className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
-            >
-              <span className="text-4xl mb-2">➕</span>
-              <span className="text-sm font-medium text-gray-700">Novo Modelo</span>
-            </Link>
+          <div className={`grid grid-cols-2 ${canManageModels ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
+            {canManageModels && (
+              <Link
+                href="/dashboard/nr12/modelos/novo"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+              >
+                <span className="text-4xl mb-2">➕</span>
+                <span className="text-sm font-medium text-gray-700">Novo Modelo</span>
+              </Link>
+            )}
 
             <Link
               href="/dashboard/nr12/checklists?status=EM_ANDAMENTO"

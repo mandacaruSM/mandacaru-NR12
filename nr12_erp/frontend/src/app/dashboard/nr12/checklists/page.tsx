@@ -14,9 +14,11 @@ import {
   Eye
 } from "lucide-react";
 import { nr12Api, ChecklistRealizado, cadastroApi, equipamentosApi } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ChecklistsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [checklists, setChecklists] = useState<ChecklistRealizado[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [empreendimentos, setEmpreendimentos] = useState<any[]>([]);
@@ -29,9 +31,13 @@ export default function ChecklistsPage() {
   const [statusFiltro, setStatusFiltro] = useState<string>("TODOS");
   const [resultadoFiltro, setResultadoFiltro] = useState<string>("TODOS");
 
+  // OPERADOR só vê equipamentos autorizados, não precisa filtrar por cliente
+  const isOperador = user?.profile?.role === 'OPERADOR';
+  const showClienteFilter = !isOperador;
+
   useEffect(() => {
     carregarDadosIniciais();
-  }, []);
+  }, [showClienteFilter]);
 
   useEffect(() => {
     carregarChecklists();
@@ -58,6 +64,18 @@ export default function ChecklistsPage() {
   }, [empreendimentoFiltro]);
 
   const carregarDadosIniciais = async () => {
+    // OPERADOR não precisa carregar clientes/empreendimentos - só vê seus equipamentos
+    if (!showClienteFilter) {
+      // Para OPERADOR, carrega equipamentos autorizados diretamente
+      try {
+        const response = await equipamentosApi.list();
+        setEquipamentos(response.results || []);
+      } catch (error) {
+        console.error("Erro ao carregar equipamentos:", error);
+      }
+      return;
+    }
+
     try {
       const clientesRes = await cadastroApi.clientes.list();
       setClientes(clientesRes.results || []);
@@ -196,48 +214,54 @@ export default function ChecklistsPage() {
       {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Filtro Cliente */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Cliente</label>
-            <select
-              value={clienteFiltro}
-              onChange={(e) => setClienteFiltro(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-            >
-              <option value="" className="text-gray-900">Todos os Clientes</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id} className="text-gray-900">
-                  {cliente.nome_razao}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Filtro Cliente - apenas para admin/supervisor/cliente */}
+          {showClienteFilter && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Cliente</label>
+              <select
+                value={clienteFiltro}
+                onChange={(e) => setClienteFiltro(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="" className="text-gray-900">Todos os Clientes</option>
+                {clientes.map((cliente) => (
+                  <option key={cliente.id} value={cliente.id} className="text-gray-900">
+                    {cliente.nome_razao}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          {/* Filtro Empreendimento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Empreendimento</label>
-            <select
-              value={empreendimentoFiltro}
-              onChange={(e) => setEmpreendimentoFiltro(e.target.value)}
-              disabled={!clienteFiltro}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="" className="text-gray-900">Todos os Empreendimentos</option>
-              {empreendimentos.map((emp) => (
-                <option key={emp.id} value={emp.id} className="text-gray-900">
-                  {emp.nome}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Filtro Empreendimento - apenas para admin/supervisor/cliente */}
+          {showClienteFilter && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Empreendimento</label>
+              <select
+                value={empreendimentoFiltro}
+                onChange={(e) => setEmpreendimentoFiltro(e.target.value)}
+                disabled={!clienteFiltro}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="" className="text-gray-900">Todos os Empreendimentos</option>
+                {empreendimentos.map((emp) => (
+                  <option key={emp.id} value={emp.id} className="text-gray-900">
+                    {emp.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Filtro Equipamento */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Equipamento</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              {isOperador ? "Meus Equipamentos" : "Equipamento"}
+            </label>
             <select
               value={equipamentoFiltro}
               onChange={(e) => setEquipamentoFiltro(e.target.value)}
-              disabled={!clienteFiltro && !empreendimentoFiltro}
+              disabled={showClienteFilter && !clienteFiltro && !empreendimentoFiltro}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="" className="text-gray-900">Todos os Equipamentos</option>

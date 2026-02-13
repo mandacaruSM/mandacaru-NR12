@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from core.permissions import HasModuleAccess, OperadorCanOnlyCreate, filter_by_role
+from core.permissions import HasModuleAccess, OperadorCanOnlyCreate, CanManageNR12Models, filter_by_role
 
 from .models import (
     ModeloChecklist, ItemChecklist,
@@ -52,8 +52,15 @@ class BaseAuthViewSet(viewsets.ModelViewSet):
 # ============================================
 
 class ModeloChecklistViewSet(BaseAuthViewSet):
-    queryset = ModeloChecklist.objects.select_related('tipo_equipamento').all()
+    """
+    ViewSet para Modelos de Checklist NR12.
+    ADMIN: pode criar/editar modelos globais ou de qualquer cliente
+    CLIENTE: pode criar/editar modelos do próprio cliente
+    SUPERVISOR/OPERADOR/TECNICO: apenas leitura
+    """
+    queryset = ModeloChecklist.objects.select_related('tipo_equipamento', 'cliente').all()
     serializer_class = ModeloChecklistSerializer
+    permission_classes = [IsAuthenticated, CanManageNR12Models]
     search_fields = ['nome', 'descricao', 'tipo_equipamento__nome']
     ordering = ['tipo_equipamento__nome', 'nome']
 
@@ -63,19 +70,61 @@ class ModeloChecklistViewSet(BaseAuthViewSet):
         return ModeloChecklistSerializer
 
     def get_queryset(self):
+        from core.permissions import get_user_role_safe
         qs = super().get_queryset()
-        
+        user = self.request.user
+        role = get_user_role_safe(user)
+
+        # ADMIN vê tudo
+        if role == 'ADMIN':
+            pass
+        # CLIENTE vê apenas seus próprios modelos
+        elif role == 'CLIENTE':
+            cliente = getattr(user, 'cliente_profile', None)
+            if cliente:
+                qs = qs.filter(cliente=cliente)
+            else:
+                qs = qs.none()
+        # OPERADOR vê modelos dos clientes vinculados a ele
+        elif role == 'OPERADOR':
+            operador = getattr(user, 'operador_profile', None)
+            if operador:
+                clientes_ids = operador.clientes.values_list('id', flat=True)
+                qs = qs.filter(Q(cliente__in=clientes_ids) | Q(cliente__isnull=True))
+            else:
+                qs = qs.none()
+        # SUPERVISOR vê modelos dos empreendimentos que supervisiona
+        elif role == 'SUPERVISOR':
+            supervisor = getattr(user, 'supervisor_profile', None)
+            if supervisor:
+                clientes_ids = supervisor.clientes.values_list('id', flat=True)
+                qs = qs.filter(Q(cliente__in=clientes_ids) | Q(cliente__isnull=True))
+            else:
+                qs = qs.none()
+
         # Filtro por tipo de equipamento
         tipo_eq = self.request.query_params.get('tipo_equipamento')
         if tipo_eq:
             qs = qs.filter(tipo_equipamento_id=tipo_eq)
-        
+
         # Filtro por status
         ativo = self.request.query_params.get('ativo')
         if ativo is not None:
             qs = qs.filter(ativo=ativo.lower() == 'true')
-        
+
         return qs
+
+    def perform_create(self, serializer):
+        """Define o cliente automaticamente baseado no role"""
+        from core.permissions import get_user_role_safe
+        role = get_user_role_safe(self.request.user)
+
+        if role == 'CLIENTE':
+            cliente = getattr(self.request.user, 'cliente_profile', None)
+            serializer.save(cliente=cliente)
+        else:
+            # ADMIN pode criar modelos globais ou para clientes específicos
+            serializer.save()
 
     @action(detail=True, methods=['post'])
     def duplicar(self, request, pk=None):
@@ -113,9 +162,11 @@ class ItemChecklistViewSet(BaseAuthViewSet):
     """
     ViewSet para itens de checklist
     Suporta rotas aninhadas: /modelos/{modelo_pk}/itens/
+    OPERADOR/TECNICO: apenas leitura
     """
     queryset = ItemChecklist.objects.select_related('modelo').all()
     serializer_class = ItemChecklistSerializer
+    permission_classes = [IsAuthenticated, CanManageNR12Models]
     search_fields = ['pergunta', 'descricao_ajuda']
     ordering = ['modelo', 'ordem']
 
@@ -175,6 +226,9 @@ class ItemChecklistViewSet(BaseAuthViewSet):
 class ChecklistRealizadoViewSet(BaseAuthViewSet):
     """
     ViewSet para Checklists NR12 Realizados com filtro seguro por role.
+    OPERADOR: só vê checklists de equipamentos que opera
+    SUPERVISOR: só vê checklists de empreendimentos vinculados
+    CLIENTE: só vê checklists de seus equipamentos
     """
     queryset = ChecklistRealizado.objects.select_related(
         'modelo', 'equipamento__cliente', 'equipamento__empreendimento', 'operador', 'usuario'
@@ -193,7 +247,47 @@ class ChecklistRealizadoViewSet(BaseAuthViewSet):
         return ChecklistRealizadoSerializer
 
     def get_queryset(self):
-        qs = filter_by_role(super().get_queryset(), self.request.user)
+        import logging
+        logger = logging.getLogger(__name__)
+        from core.permissions import get_user_role_safe
+        qs = super().get_queryset()
+        user = self.request.user
+        role = get_user_role_safe(user)
+
+        logger.info(f"[ChecklistRealizado] user={user.username}, role={role}")
+
+        # ADMIN vê tudo
+        if role == 'ADMIN':
+            pass
+        # OPERADOR só vê checklists de equipamentos que opera
+        elif role == 'OPERADOR':
+            operador = getattr(user, 'operador_profile', None)
+            if operador:
+                equipamentos_ids = operador.equipamentos_autorizados.values_list('id', flat=True)
+                qs = qs.filter(equipamento_id__in=equipamentos_ids)
+            else:
+                qs = qs.none()
+        # SUPERVISOR só vê checklists de empreendimentos vinculados
+        elif role == 'SUPERVISOR':
+            supervisor = getattr(user, 'supervisor_profile', None)
+            if supervisor:
+                empreendimentos_ids = supervisor.empreendimentos_vinculados.values_list('id', flat=True)
+                qs = qs.filter(equipamento__empreendimento_id__in=empreendimentos_ids)
+            else:
+                qs = qs.none()
+        # CLIENTE só vê checklists de seus equipamentos
+        elif role == 'CLIENTE':
+            cliente = getattr(user, 'cliente_profile', None)
+            logger.info(f"[ChecklistRealizado] CLIENTE: cliente_profile={cliente}")
+            if cliente:
+                qs = qs.filter(equipamento__cliente=cliente)
+                logger.info(f"[ChecklistRealizado] Filtrando por cliente={cliente.id}, total antes={qs.count()}")
+            else:
+                logger.warning(f"[ChecklistRealizado] CLIENTE sem cliente_profile vinculado!")
+                qs = qs.none()
+        else:
+            # Outros roles: usar filter_by_role padrão
+            qs = filter_by_role(qs, user)
 
         # Filtros
         equipamento = self.request.query_params.get('equipamento')
@@ -462,8 +556,15 @@ class BotChecklistViewSet(viewsets.ViewSet):
 # ============================================================
 
 class ModeloManutencaoPreventivaViewSet(BaseAuthViewSet):
+    """
+    ViewSet para Modelos de Manutenção Preventiva.
+    ADMIN: pode criar/editar modelos globais ou de qualquer cliente
+    CLIENTE: pode criar/editar modelos do próprio cliente
+    SUPERVISOR/OPERADOR/TECNICO: apenas leitura
+    """
     queryset = ModeloManutencaoPreventiva.objects.select_related('tipo_equipamento').all()
     serializer_class = ModeloManutencaoPreventivaSerializer
+    permission_classes = [IsAuthenticated, CanManageNR12Models]
     search_fields = ['nome', 'descricao', 'tipo_equipamento__nome']
     ordering = ['tipo_equipamento__nome', 'intervalo']
 
@@ -527,9 +628,12 @@ class ModeloManutencaoPreventivaViewSet(BaseAuthViewSet):
 
 
 class ItemManutencaoPreventivaViewSet(BaseAuthViewSet):
-    """ViewSet para itens de manutenção preventiva"""
+    """ViewSet para itens de manutenção preventiva
+    OPERADOR/TECNICO: apenas leitura
+    """
     queryset = ItemManutencaoPreventiva.objects.select_related('modelo').all()
     serializer_class = ItemManutencaoPreventivaSerializer
+    permission_classes = [IsAuthenticated, CanManageNR12Models]
     search_fields = ['descricao', 'instrucoes']
     ordering = ['modelo', 'ordem']
 

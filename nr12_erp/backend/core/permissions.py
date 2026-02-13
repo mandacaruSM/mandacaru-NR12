@@ -505,3 +505,60 @@ class CannotEditMasterData(permissions.BasePermission):
 
         # Outros perfis
         return True
+
+
+class CanManageNR12Models(permissions.BasePermission):
+    """
+    Permissão para gerenciar modelos de checklist/manutenção NR12.
+    - ADMIN: acesso total (criar/editar modelos globais ou de qualquer cliente)
+    - CLIENTE: pode criar/editar modelos vinculados ao seu cliente
+    - SUPERVISOR: pode visualizar modelos dos clientes vinculados
+    - OPERADOR/TECNICO: apenas leitura
+    """
+    message = "Você não tem permissão para gerenciar modelos de checklist."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        role = request.user.profile.role
+
+        # Admin tem acesso total
+        if role == 'ADMIN':
+            return True
+
+        # Cliente pode criar/editar seus próprios modelos
+        if role == 'CLIENTE':
+            return True
+
+        # Supervisor pode ler, mas não criar/editar
+        if role == 'SUPERVISOR':
+            return request.method in permissions.SAFE_METHODS
+
+        # Operador e Técnico podem apenas ler
+        if role in ['OPERADOR', 'TECNICO']:
+            return request.method in permissions.SAFE_METHODS
+
+        return request.method in permissions.SAFE_METHODS
+
+    def has_object_permission(self, request, view, obj):
+        if not (request.user and request.user.is_authenticated and hasattr(request.user, 'profile')):
+            return False
+
+        role = request.user.profile.role
+
+        # Admin pode tudo
+        if role == 'ADMIN':
+            return True
+
+        # Cliente só pode editar modelos do próprio cliente
+        if role == 'CLIENTE':
+            cliente = getattr(request.user, 'cliente_profile', None)
+            if cliente:
+                # Verifica se o modelo pertence ao cliente
+                if hasattr(obj, 'cliente') and obj.cliente:
+                    return obj.cliente.id == cliente.id
+            return request.method in permissions.SAFE_METHODS
+
+        # Supervisor e outros: apenas leitura
+        return request.method in permissions.SAFE_METHODS
