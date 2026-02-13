@@ -128,10 +128,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!module) return true;
     if (user?.profile?.role === 'ADMIN') return true;
 
-    // CLIENTE tem acesso automatico a fio_diamantado e orcamentos
+    // CLIENTE tem acesso automático a módulos específicos
     if (user?.profile?.role === 'CLIENTE') {
       const modulosClienteDefault = ['fio_diamantado', 'orcamentos', 'os', 'equipamentos', 'empreendimentos'];
       if (modulosClienteDefault.includes(module)) return true;
+    }
+
+    // OPERADOR tem acesso apenas a módulos específicos
+    if (user?.profile?.role === 'OPERADOR') {
+      const modulosOperadorDefault = ['dashboard', 'equipamentos', 'nr12', 'abastecimentos'];
+      return modulosOperadorDefault.includes(module);
+    }
+
+    // TECNICO tem acesso apenas a módulos específicos
+    if (user?.profile?.role === 'TECNICO') {
+      const modulosTecnicoDefault = ['dashboard', 'equipamentos', 'manutencoes', 'nr12', 'os'];
+      return modulosTecnicoDefault.includes(module);
+    }
+
+    // SUPERVISOR tem acesso a mais módulos
+    if (user?.profile?.role === 'SUPERVISOR') {
+      const modulosSupervisorDefault = ['dashboard', 'clientes', 'empreendimentos', 'equipamentos', 'operadores', 'nr12', 'abastecimentos', 'manutencoes'];
+      return modulosSupervisorDefault.includes(module);
     }
 
     return user?.profile?.modules_enabled?.includes(module) ?? false;
