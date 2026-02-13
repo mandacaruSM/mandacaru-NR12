@@ -247,6 +247,19 @@ class OperadorViewSet(viewsets.ModelViewSet):
                 user = User.objects.get(username=cpf_limpo)
                 operador.user = user
                 operador.save()
+                # Garantir que o Profile tenha role OPERADOR
+                profile, created = Profile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'role': 'OPERADOR',
+                        'modules_enabled': ['dashboard', 'equipamentos', 'nr12', 'abastecimentos']
+                    }
+                )
+                if not created and profile.role != 'OPERADOR':
+                    profile.role = 'OPERADOR'
+                    profile.modules_enabled = ['dashboard', 'equipamentos', 'nr12', 'abastecimentos']
+                    profile.save()
+                usuario_criado = False
             else:
                 user = User.objects.create_user(
                     username=cpf_limpo,
