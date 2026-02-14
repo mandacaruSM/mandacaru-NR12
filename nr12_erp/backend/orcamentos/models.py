@@ -28,6 +28,16 @@ class Orcamento(models.Model):
     empreendimento = models.ForeignKey('cadastro.Empreendimento', on_delete=models.PROTECT, related_name='orcamentos', null=True, blank=True)
     equipamento = models.ForeignKey('equipamentos.Equipamento', on_delete=models.PROTECT, related_name='orcamentos', null=True, blank=True)
 
+    # Modelo de manutenção preventiva (obrigatório quando tipo = MANUTENCAO_PREVENTIVA)
+    modelo_manutencao_preventiva = models.ForeignKey(
+        'nr12.ModeloManutencaoPreventiva',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orcamentos',
+        help_text='Modelo de manutenção preventiva. Obrigatório quando tipo = MANUTENCAO_PREVENTIVA'
+    )
+
     # Datas
     data_emissao = models.DateField(auto_now_add=True)
     data_validade = models.DateField()

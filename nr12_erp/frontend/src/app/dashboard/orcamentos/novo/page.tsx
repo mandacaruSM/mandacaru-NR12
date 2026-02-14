@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { orcamentosApi, cadastroApi, empreendimentosApi, equipamentosApi, almoxarifadoApi } from '@/lib/api';
+import { getModelosManutencaoPreventiva } from '@/services/manutencao-preventiva-service';
 import type { Cliente, Empreendimento, Equipamento, ItemOrcamento, Produto } from '@/lib/api';
+import type { ModeloManutencaoPreventiva } from '@/types/manutencao-preventiva';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function NovoOrcamentoPage() {
@@ -14,6 +16,7 @@ export default function NovoOrcamentoPage() {
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([]);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [modelosManutencao, setModelosManutencao] = useState<ModeloManutencaoPreventiva[]>([]);
 
   const [formData, setFormData] = useState({
     tipo: 'MANUTENCAO_CORRETIVA' as const,
@@ -21,6 +24,7 @@ export default function NovoOrcamentoPage() {
     cliente: undefined as number | undefined,
     empreendimento: undefined as number | undefined,
     equipamento: undefined as number | undefined,
+    modelo_manutencao_preventiva: undefined as number | undefined,
     data_validade: '',
     km_deslocado: 0,
     valor_km: 0,
@@ -56,6 +60,13 @@ export default function NovoOrcamentoPage() {
     }
   }, [formData.empreendimento]);
 
+  // Carregar modelos de manutenção preventiva quando equipamento for selecionado
+  useEffect(() => {
+    if (formData.equipamento && formData.tipo === 'MANUTENCAO_PREVENTIVA') {
+      loadModelosManutencao();
+    }
+  }, [formData.equipamento, formData.tipo]);
+
   async function loadOptions() {
     try {
       const [clientsData, prodsData] = await Promise.all([
@@ -84,6 +95,23 @@ export default function NovoOrcamentoPage() {
       setEquipamentos(data.results || []);
     } catch (error) {
       console.error('Erro ao carregar equipamentos:', error);
+    }
+  }
+
+  async function loadModelosManutencao() {
+    try {
+      // Buscar equipamento selecionado para pegar o tipo
+      const equipamento = equipamentos.find(e => e.id === formData.equipamento);
+      if (equipamento) {
+        const data = await getModelosManutencaoPreventiva({
+          tipo_equipamento: equipamento.tipo,
+          ativo: true,
+          page_size: 100,
+        });
+        setModelosManutencao(data.results || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar modelos de manutenção:', error);
     }
   }
 
@@ -250,6 +278,7 @@ export default function NovoOrcamentoPage() {
                 onChange={(e) => setFormData({
                   ...formData,
                   equipamento: e.target.value ? Number(e.target.value) : undefined,
+                  modelo_manutencao_preventiva: undefined,
                 })}
                 className="w-full px-3 py-2 border rounded text-black bg-white"
                 disabled={!formData.empreendimento}
@@ -262,6 +291,39 @@ export default function NovoOrcamentoPage() {
                 ))}
               </select>
             </div>
+
+            {/* Modelo de Manutenção Preventiva - aparece apenas quando tipo = MANUTENCAO_PREVENTIVA */}
+            {formData.tipo === 'MANUTENCAO_PREVENTIVA' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Modelo de Manutenção Preventiva *
+                </label>
+                <select
+                  value={formData.modelo_manutencao_preventiva || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    modelo_manutencao_preventiva: e.target.value ? Number(e.target.value) : undefined,
+                  })}
+                  className="w-full px-3 py-2 border rounded text-black bg-white"
+                  disabled={!formData.equipamento}
+                  required={formData.tipo === 'MANUTENCAO_PREVENTIVA'}
+                >
+                  <option value="" className="text-black bg-white">
+                    {!formData.equipamento ? 'Selecione primeiro o equipamento' : 'Selecione o modelo...'}
+                  </option>
+                  {modelosManutencao.map((modelo) => (
+                    <option key={modelo.id} value={modelo.id} className="text-black bg-white">
+                      {modelo.nome} (a cada {modelo.intervalo} {modelo.tipo_medicao === 'HORIMETRO' ? 'h' : 'km'})
+                    </option>
+                  ))}
+                </select>
+                {formData.equipamento && modelosManutencao.length === 0 && (
+                  <p className="text-sm text-red-600 mt-1">
+                    Nenhum modelo de manutenção preventiva cadastrado para este tipo de equipamento.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">

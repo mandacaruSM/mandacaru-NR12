@@ -24,6 +24,9 @@ class OrcamentoListSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.CharField(source='cliente.nome_razao', read_only=True)
     empreendimento_nome = serializers.CharField(source='empreendimento.nome', read_only=True)
     equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
+    modelo_manutencao_preventiva_nome = serializers.CharField(
+        source='modelo_manutencao_preventiva.nome', read_only=True
+    )
 
     class Meta:
         model = Orcamento
@@ -32,6 +35,7 @@ class OrcamentoListSerializer(serializers.ModelSerializer):
             'cliente', 'cliente_nome',
             'empreendimento', 'empreendimento_nome',
             'equipamento', 'equipamento_codigo',
+            'modelo_manutencao_preventiva', 'modelo_manutencao_preventiva_nome',
             'data_emissao', 'data_validade', 'data_aprovacao',
             'km_deslocado', 'valor_km', 'valor_deslocamento',
             'valor_total', 'prazo_execucao_dias',
@@ -46,6 +50,9 @@ class OrcamentoDetailSerializer(serializers.ModelSerializer):
     empreendimento_nome = serializers.CharField(source='empreendimento.nome', read_only=True)
     equipamento_codigo = serializers.CharField(source='equipamento.codigo', read_only=True)
     equipamento_descricao = serializers.CharField(source='equipamento.descricao', read_only=True)
+    modelo_manutencao_preventiva_nome = serializers.CharField(
+        source='modelo_manutencao_preventiva.nome', read_only=True
+    )
     criado_por_nome = serializers.CharField(source='criado_por.username', read_only=True)
     aprovado_por_nome = serializers.CharField(source='aprovado_por.username', read_only=True)
 
@@ -58,6 +65,7 @@ class OrcamentoDetailSerializer(serializers.ModelSerializer):
             'cliente', 'cliente_nome',
             'empreendimento', 'empreendimento_nome',
             'equipamento', 'equipamento_codigo', 'equipamento_descricao',
+            'modelo_manutencao_preventiva', 'modelo_manutencao_preventiva_nome',
             'data_emissao', 'data_validade', 'data_aprovacao',
             'valor_servicos', 'valor_produtos',
             'km_deslocado', 'valor_km', 'valor_deslocamento',
@@ -78,12 +86,29 @@ class OrcamentoCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'tipo', 'status',
             'cliente', 'empreendimento', 'equipamento',
+            'modelo_manutencao_preventiva',
             'data_validade',
             'km_deslocado', 'valor_km', 'valor_deslocamento',
             'valor_desconto',
             'descricao', 'observacoes', 'prazo_execucao_dias',
             'itens',
         ]
+
+    def validate(self, data):
+        """Valida que modelo_manutencao_preventiva é obrigatório quando tipo = MANUTENCAO_PREVENTIVA"""
+        tipo = data.get('tipo') or (self.instance.tipo if self.instance else None)
+        modelo = data.get('modelo_manutencao_preventiva')
+
+        if tipo == 'MANUTENCAO_PREVENTIVA' and not modelo:
+            # Se está atualizando e não foi passado modelo, verifica se já tem
+            if self.instance and self.instance.modelo_manutencao_preventiva:
+                pass  # OK, já tem modelo
+            else:
+                raise serializers.ValidationError({
+                    'modelo_manutencao_preventiva': 'Selecione um modelo de manutenção preventiva.'
+                })
+
+        return data
 
     def create(self, validated_data):
         itens_data = validated_data.pop('itens', [])
