@@ -280,7 +280,7 @@ export default function ProgramacoesManutencaoPage() {
                         Editar
                       </Link>
                       <Link
-                        href={`/dashboard/manutencao-preventiva/executar?programacao=${prog.id}`}
+                        href={`/dashboard/manutencao-preventiva/executar/${prog.id}`}
                         className="text-green-600 hover:text-green-900 mr-3"
                       >
                         Executar
