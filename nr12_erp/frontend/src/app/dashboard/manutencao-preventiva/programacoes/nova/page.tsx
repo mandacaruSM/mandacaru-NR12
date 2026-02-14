@@ -152,13 +152,29 @@ export default function NovaProgramacaoManutencao() {
         return
       }
 
+      if (!selectedModelo) {
+        setError('Modelo de manutenção inválido')
+        setLoading(false)
+        return
+      }
+
       if (Number(formData.leitura_inicial) < 0) {
         setError('Leitura inicial não pode ser negativa')
         setLoading(false)
         return
       }
 
-      const programacao = await createProgramacaoManutencao(formData)
+      // Calcular leitura_ultima_manutencao e leitura_proxima_manutencao
+      const leituraInicial = Number(formData.leitura_inicial)
+      const intervalo = Number(selectedModelo.intervalo)
+
+      const dadosParaEnviar = {
+        ...formData,
+        leitura_ultima_manutencao: leituraInicial,
+        leitura_proxima_manutencao: leituraInicial + intervalo,
+      }
+
+      const programacao = await createProgramacaoManutencao(dadosParaEnviar)
       alert('Programação criada com sucesso!')
       router.push('/dashboard/manutencao-preventiva/programacoes')
     } catch (err: any) {
