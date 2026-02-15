@@ -1705,6 +1705,25 @@ export const produtosApi = almoxarifadoApi.produtos;
 // COMPRAS API
 // ============================================
 
+export interface LocalEntrega {
+  id: number;
+  nome: string;
+  responsavel: string;
+  telefone: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  endereco_completo?: string;
+  observacoes: string;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Fornecedor {
   id: number;
   nome: string;
@@ -1768,6 +1787,9 @@ export interface PedidoCompra {
   data_entrega?: string | null;
   local_estoque?: number | null;
   local_estoque_nome?: string;
+  local_entrega?: number | null;
+  local_entrega_nome?: string;
+  local_entrega_endereco?: string;
   numero_nf?: string;
   nota_fiscal?: string | null;
   observacoes?: string;
@@ -1779,6 +1801,36 @@ export interface PedidoCompra {
   created_at?: string;
   updated_at?: string;
 }
+
+export const locaisEntregaApi = {
+  list: async (filters?: { search?: string; ativo?: boolean }) => {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch<{ results: LocalEntrega[]; count: number }>(`/compras/locais-entrega/${query}`);
+  },
+  get: async (id: number) => {
+    return apiFetch<LocalEntrega>(`/compras/locais-entrega/${id}/`);
+  },
+  create: async (data: Partial<LocalEntrega>) => {
+    return apiFetch<LocalEntrega>('/compras/locais-entrega/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: Partial<LocalEntrega>) => {
+    return apiFetch<LocalEntrega>(`/compras/locais-entrega/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return apiFetch<void>(`/compras/locais-entrega/${id}/`, {
+      method: 'DELETE',
+    });
+  },
+};
 
 export const fornecedoresApi = {
   list: async (filters?: { search?: string; ativo?: boolean }) => {
@@ -2495,6 +2547,7 @@ export default {
   orcamentos: orcamentosApi,
   ordensServico: ordensServicoApi,
   financeiro: financeiroApi,
+  locaisEntrega: locaisEntregaApi,
   fornecedores: fornecedoresApi,
   pedidosCompra: pedidosCompraApi,
   metricas: metricasApi,

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Fornecedor, PedidoCompra, ItemPedidoCompra
+from .models import Fornecedor, PedidoCompra, ItemPedidoCompra, LocalEntrega
 
 
 class FornecedorSerializer(serializers.ModelSerializer):
@@ -14,6 +14,20 @@ class FornecedorSerializer(serializers.ModelSerializer):
         if not value:
             return None
         return value
+
+
+class LocalEntregaSerializer(serializers.ModelSerializer):
+    endereco_completo = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = LocalEntrega
+        fields = [
+            'id', 'nome', 'responsavel', 'telefone',
+            'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'cep',
+            'endereco_completo', 'observacoes', 'ativo',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'endereco_completo', 'created_at', 'updated_at']
 
 
 class ItemPedidoCompraSerializer(serializers.ModelSerializer):
@@ -47,6 +61,8 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
     orcamento_numero = serializers.SerializerMethodField(read_only=True)
     ordem_servico_numero = serializers.SerializerMethodField(read_only=True)
     local_estoque_nome = serializers.SerializerMethodField(read_only=True)
+    local_entrega_nome = serializers.SerializerMethodField(read_only=True)
+    local_entrega_endereco = serializers.SerializerMethodField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     destino_display = serializers.CharField(source='get_destino_display', read_only=True)
     criado_por_nome = serializers.SerializerMethodField(read_only=True)
@@ -66,6 +82,7 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
             'status', 'status_display',
             'data_pedido', 'data_previsao', 'data_entrega',
             'local_estoque', 'local_estoque_nome',
+            'local_entrega', 'local_entrega_nome', 'local_entrega_endereco',
             'numero_nf', 'nota_fiscal',
             'observacoes', 'valor_total',
             'criado_por', 'criado_por_nome',
@@ -88,6 +105,12 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
 
     def get_local_estoque_nome(self, obj):
         return obj.local_estoque.nome if obj.local_estoque else None
+
+    def get_local_entrega_nome(self, obj):
+        return obj.local_entrega.nome if obj.local_entrega else None
+
+    def get_local_entrega_endereco(self, obj):
+        return obj.local_entrega.endereco_completo if obj.local_entrega else None
 
     def get_criado_por_nome(self, obj):
         return str(obj.criado_por) if obj.criado_por else None

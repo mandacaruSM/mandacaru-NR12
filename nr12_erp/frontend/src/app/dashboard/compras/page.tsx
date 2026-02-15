@@ -66,6 +66,12 @@ export default function ComprasPage() {
             Fornecedores
           </Link>
           <Link
+            href="/dashboard/compras/locais-entrega"
+            className="flex-1 sm:flex-none text-center bg-gray-500 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-gray-600 text-sm font-medium"
+          >
+            Locais de Entrega
+          </Link>
+          <Link
             href="/dashboard/compras/pedidos/novo"
             className="flex-1 sm:flex-none text-center bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
           >

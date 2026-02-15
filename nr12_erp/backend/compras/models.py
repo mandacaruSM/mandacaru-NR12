@@ -107,6 +107,13 @@ class PedidoCompra(models.Model):
         verbose_name="Local de Estoque"
     )
 
+    # Local de entrega (endereço de entrega)
+    local_entrega = models.ForeignKey(
+        'LocalEntrega', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='pedidos_compra',
+        verbose_name="Local de Entrega"
+    )
+
     # NF
     numero_nf = models.CharField(max_length=60, blank=True, default='', verbose_name="Número da NF")
     nota_fiscal = models.FileField(upload_to='compras/nf/%Y/%m/', null=True, blank=True, verbose_name="Nota Fiscal (PDF/Foto)")
@@ -140,6 +147,55 @@ class PedidoCompra(models.Model):
         total = self.itens.aggregate(total=models.Sum('valor_total'))['total'] or 0
         self.valor_total = total
         self.save(update_fields=['valor_total'])
+
+
+class LocalEntrega(models.Model):
+    """Cadastro de locais de entrega para pedidos de compra"""
+    nome = models.CharField(max_length=200, verbose_name="Nome do Local")
+    responsavel = models.CharField(max_length=150, blank=True, default='', verbose_name="Responsável")
+    telefone = models.CharField(max_length=30, blank=True, default='', verbose_name="Telefone")
+    # Endereço
+    logradouro = models.CharField(max_length=255, blank=True, default='', verbose_name="Logradouro")
+    numero = models.CharField(max_length=20, blank=True, default='', verbose_name="Número")
+    complemento = models.CharField(max_length=100, blank=True, default='', verbose_name="Complemento")
+    bairro = models.CharField(max_length=100, blank=True, default='', verbose_name="Bairro")
+    cidade = models.CharField(max_length=100, blank=True, default='', verbose_name="Cidade")
+    uf = models.CharField(max_length=2, blank=True, default='', verbose_name="UF")
+    cep = models.CharField(max_length=9, blank=True, default='', verbose_name="CEP")
+
+    observacoes = models.TextField(blank=True, default='', verbose_name="Observações")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = 'Local de Entrega'
+        verbose_name_plural = 'Locais de Entrega'
+
+    def __str__(self):
+        return self.nome
+
+    @property
+    def endereco_completo(self):
+        partes = []
+        if self.logradouro:
+            endereco = self.logradouro
+            if self.numero:
+                endereco += f", {self.numero}"
+            if self.complemento:
+                endereco += f" - {self.complemento}"
+            partes.append(endereco)
+        if self.bairro:
+            partes.append(self.bairro)
+        if self.cidade:
+            cidade = self.cidade
+            if self.uf:
+                cidade += f"/{self.uf}"
+            partes.append(cidade)
+        if self.cep:
+            partes.append(f"CEP: {self.cep}")
+        return " - ".join(partes) if partes else ""
 
 
 class ItemPedidoCompra(models.Model):

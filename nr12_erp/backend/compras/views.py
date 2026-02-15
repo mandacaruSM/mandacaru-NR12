@@ -3,9 +3,30 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Fornecedor, PedidoCompra, ItemPedidoCompra, StatusPedido
-from .serializers import FornecedorSerializer, PedidoCompraSerializer, ItemPedidoCompraSerializer
+from .models import Fornecedor, PedidoCompra, ItemPedidoCompra, StatusPedido, LocalEntrega
+from .serializers import FornecedorSerializer, PedidoCompraSerializer, ItemPedidoCompraSerializer, LocalEntregaSerializer
 from core.permissions import HasModuleAccess, filter_by_role
+
+
+class LocalEntregaViewSet(viewsets.ModelViewSet):
+    queryset = LocalEntrega.objects.all()
+    serializer_class = LocalEntregaSerializer
+    permission_classes = [IsAuthenticated, HasModuleAccess]
+    required_module = 'compras'
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['ativo']
+    search_fields = ['nome', 'responsavel', 'cidade', 'bairro']
+    ordering_fields = ['nome', 'created_at']
+    ordering = ['nome']
+
+    def get_queryset(self):
+        from core.permissions import get_user_role_safe
+        qs = super().get_queryset()
+        role = get_user_role_safe(self.request.user)
+        # CLIENTE e OPERADOR nao devem ver locais de entrega (dados internos)
+        if role in ('CLIENTE', 'OPERADOR'):
+            return qs.none()
+        return qs
 
 
 class FornecedorViewSet(viewsets.ModelViewSet):
@@ -31,7 +52,7 @@ class FornecedorViewSet(viewsets.ModelViewSet):
 
 class PedidoCompraViewSet(viewsets.ModelViewSet):
     queryset = PedidoCompra.objects.select_related(
-        'fornecedor', 'cliente', 'equipamento', 'orcamento', 'local_estoque', 'criado_por'
+        'fornecedor', 'cliente', 'equipamento', 'orcamento', 'local_estoque', 'local_entrega', 'criado_por'
     ).prefetch_related('itens', 'itens__produto').all()
     serializer_class = PedidoCompraSerializer
     permission_classes = [IsAuthenticated, HasModuleAccess]
