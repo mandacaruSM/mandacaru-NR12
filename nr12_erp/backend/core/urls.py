@@ -12,6 +12,8 @@ from .views import (
     bot_validar_operador,
     bot_equipamentos_operador,
     bot_verificar_acesso_equipamento,
+    geocodificar_coordenadas,
+    validar_geofence,
 )
 
 # ============================================
@@ -38,6 +40,14 @@ bot_patterns = [
 ]
 
 # ============================================
+# Endpoints de Geolocalização
+# ============================================
+geo_patterns = [
+    path('geocodificar/', geocodificar_coordenadas, name='geocodificar'),
+    path('validar-geofence/', validar_geofence, name='validar-geofence'),
+]
+
+# ============================================
 # URL Patterns
 # ============================================
 urlpatterns = [
@@ -47,6 +57,9 @@ urlpatterns = [
 
     # Bot endpoints
     path('bot/', include(bot_patterns)),
+
+    # Geolocalização
+    path('geolocalizacao/', include(geo_patterns)),
 
     # REST API endpoints (operadores, supervisores)
     path('', include(router.urls)),

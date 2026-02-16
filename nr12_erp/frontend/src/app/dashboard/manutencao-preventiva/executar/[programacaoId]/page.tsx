@@ -84,6 +84,14 @@ export default function ExecutarManutencaoPreventiva() {
   const [observacoesGerais, setObservacoesGerais] = useState('')
   const [itemAtualIndex, setItemAtualIndex] = useState(0)
 
+  // Geolocalização
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'denied'>('idle')
+  const [geoData, setGeoData] = useState<{
+    latitude: number | null
+    longitude: number | null
+    precisao_gps: number | null
+  }>({ latitude: null, longitude: null, precisao_gps: null })
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
@@ -110,6 +118,48 @@ export default function ExecutarManutencaoPreventiva() {
     void loadData()
   }, [loadData])
 
+  // Captura GPS quando a página carrega
+  useEffect(() => {
+    if (geoStatus === 'idle') {
+      captureGeolocation()
+    }
+  }, [])
+
+  const captureGeolocation = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error')
+      console.warn('Geolocalização não suportada pelo navegador')
+      return
+    }
+
+    setGeoStatus('loading')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeoData({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          precisao_gps: position.coords.accuracy,
+        })
+        setGeoStatus('success')
+        console.log('GPS capturado:', position.coords)
+      },
+      (error) => {
+        console.warn('Erro ao capturar GPS:', error.message)
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeoStatus('denied')
+        } else {
+          setGeoStatus('error')
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    )
+  }
+
   const iniciarManutencao = async () => {
     if (!programacao || !modelo) return
 
@@ -125,13 +175,23 @@ export default function ExecutarManutencaoPreventiva() {
         return
       }
 
-      const manutencao = await createManutencaoPreventiva({
+      const payload: any = {
         programacao: programacaoId,
         equipamento: programacao.equipamento,
         modelo: programacao.modelo,
-        leitura_equipamento: leituraNumero, // ✅ agora é number
+        leitura_equipamento: leituraNumero,
         origem: 'WEB',
-      })
+      }
+
+      // Adicionar geolocalização se disponível
+      if (geoData.latitude && geoData.longitude) {
+        payload.latitude = geoData.latitude
+        payload.longitude = geoData.longitude
+        payload.precisao_gps = geoData.precisao_gps
+        console.log('📍 GPS incluído no payload:', geoData)
+      }
+
+      const manutencao = await createManutencaoPreventiva(payload)
 
       setManutencaoId(manutencao.id)
       alert('Manutenção iniciada! Agora responda os itens do checklist.')
@@ -341,6 +401,29 @@ export default function ExecutarManutencaoPreventiva() {
                 </div>
                 <div>
                   <span className="font-medium">Modelo:</span> {modelo.nome}
+                </div>
+                {/* Indicador de GPS */}
+                <div className="mt-2 pt-2 border-t border-blue-200">
+                  {geoStatus === 'loading' && (
+                    <span className="flex items-center gap-1 text-blue-600">
+                      <span className="animate-pulse">📍</span> Capturando localização...
+                    </span>
+                  )}
+                  {geoStatus === 'success' && (
+                    <span className="flex items-center gap-1 text-green-600">
+                      ✓ GPS capturado (precisão: {geoData.precisao_gps?.toFixed(0)}m)
+                    </span>
+                  )}
+                  {geoStatus === 'denied' && (
+                    <span className="flex items-center gap-1 text-orange-600">
+                      ⚠ GPS não autorizado
+                    </span>
+                  )}
+                  {geoStatus === 'error' && (
+                    <span className="flex items-center gap-1 text-red-600">
+                      ⚠ Erro ao capturar GPS
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -71,12 +71,19 @@ class EmpreendimentoSerializer(serializers.ModelSerializer):
     # Mudança para tornar o nome do cliente seguro contra nulos também
     cliente_nome = serializers.SerializerMethodField(read_only=True)
     supervisor_nome = serializers.SerializerMethodField(read_only=True)
+    link_google_maps = serializers.SerializerMethodField(read_only=True)
 
     def get_cliente_nome(self, obj):
         return obj.cliente.nome_razao if obj.cliente else "Cliente não definido"
+
     def get_supervisor_nome(self, obj):
         if obj.supervisor:
             return obj.supervisor.nome_completo
+        return None
+
+    def get_link_google_maps(self, obj):
+        if obj.latitude and obj.longitude:
+            return f"https://www.google.com/maps?q={obj.latitude},{obj.longitude}"
         return None
     tecnicos_vinculados_ids = serializers.PrimaryKeyRelatedField(
         many=True,

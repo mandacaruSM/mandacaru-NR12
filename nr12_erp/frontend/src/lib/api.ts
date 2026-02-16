@@ -294,6 +294,9 @@ export interface Empreendimento {
   distancia_km: string;
   latitude: string | null;
   longitude: string | null;
+  raio_geofence?: number;
+  endereco_geocodificado?: string;
+  link_google_maps?: string;
   logradouro?: string;
   numero?: string;
   complemento?: string;
@@ -342,6 +345,69 @@ export const empreendimentosApi = {
   delete: async (id: number) => {
     return apiFetch<void>(`/cadastro/empreendimentos/${id}`, {
       method: 'DELETE',
+    });
+  },
+};
+
+// ============================================
+// GEOLOCALIZAÇÃO API
+// ============================================
+
+export interface GeocodificacaoResult {
+  endereco_completo: string;
+  logradouro?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  uf?: string;
+  cep?: string;
+  pais?: string;
+  latitude: number;
+  longitude: number;
+  coordenadas_formatadas?: string;
+  link_google_maps?: string;
+  erro?: string;
+}
+
+export interface GeofenceValidationResult {
+  validado: boolean;
+  dentro_do_raio: boolean | null;
+  distancia_metros: number | null;
+  raio_geofence: number;
+  empreendimento?: {
+    id: number;
+    nome: string;
+    latitude: number;
+    longitude: number;
+    link_google_maps: string;
+  };
+  checklist_location?: {
+    latitude: number;
+    longitude: number;
+    link_google_maps: string;
+  };
+  erro?: string;
+}
+
+export const geolocalizacaoApi = {
+  /**
+   * Converte coordenadas GPS em endereço (geocodificação reversa)
+   */
+  geocodificar: async (latitude: number, longitude: number) => {
+    return apiFetch<GeocodificacaoResult>('/core/geolocalizacao/geocodificar/', {
+      method: 'POST',
+      body: JSON.stringify({ latitude, longitude }),
+    });
+  },
+
+  /**
+   * Valida se uma localização está dentro do raio de geofence de um empreendimento
+   */
+  validarGeofence: async (latitude: number, longitude: number, empreendimento_id: number) => {
+    return apiFetch<GeofenceValidationResult>('/core/geolocalizacao/validar-geofence/', {
+      method: 'POST',
+      body: JSON.stringify({ latitude, longitude, empreendimento_id }),
     });
   },
 };

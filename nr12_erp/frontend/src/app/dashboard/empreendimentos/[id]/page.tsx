@@ -3,9 +3,10 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, api, Empreendimento, Cliente, Equipamento, Supervisor } from '@/lib/api';
+import { empreendimentosApi, clientesApi, equipamentosApi, supervisoresApi, api, Empreendimento, Cliente, Equipamento, Supervisor, GeocodificacaoResult } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import Link from 'next/link';
+import GeoCapture from '@/components/GeoCapture';
 
 const TIPO_OPTIONS = [
   { value: 'LAVRA', label: 'Lavra' },
@@ -272,7 +273,87 @@ export default function EditarEmpreendimentoPage() {
             </div>
           </div>
 
-          {/* Seção: Localização */}
+          {/* Seção: Geolocalização */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Geolocalização</h2>
+            <div className="space-y-4">
+              <GeoCapture
+                initialLatitude={formData.latitude}
+                initialLongitude={formData.longitude}
+                onCapture={(data) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    latitude: data.latitude.toString(),
+                    longitude: data.longitude.toString(),
+                    // Se tiver endereço geocodificado, preenche os campos
+                    ...(data.endereco ? {
+                      endereco_geocodificado: data.endereco.endereco_completo,
+                      logradouro: data.endereco.logradouro || prev.logradouro,
+                      bairro: data.endereco.bairro || prev.bairro,
+                      cidade: data.endereco.cidade || prev.cidade,
+                      uf: data.endereco.uf || prev.uf,
+                      cep: data.endereco.cep || prev.cep,
+                    } : {})
+                  }));
+                  toast.success('Localização capturada com sucesso!');
+                }}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                  <input
+                    type="text"
+                    name="latitude"
+                    value={formData.latitude || ''}
+                    onChange={handleChange}
+                    placeholder="-23.5505199"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 font-mono text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                  <input
+                    type="text"
+                    name="longitude"
+                    value={formData.longitude || ''}
+                    onChange={handleChange}
+                    placeholder="-46.6333094"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 font-mono text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Raio Geofence (metros)</label>
+                  <input
+                    type="number"
+                    name="raio_geofence"
+                    value={formData.raio_geofence || 500}
+                    onChange={handleChange}
+                    min="50"
+                    max="10000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Área válida para checklists NR12</p>
+                </div>
+              </div>
+
+              {formData.link_google_maps && (
+                <a
+                  href={formData.link_google_maps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  Ver no Google Maps
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Seção: Endereço */}
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Endereço</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

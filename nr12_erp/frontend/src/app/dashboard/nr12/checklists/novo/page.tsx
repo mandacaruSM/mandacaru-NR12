@@ -48,6 +48,56 @@ export default function NovoChecklistPage() {
   const [respostas, setRespostas] = useState<RespostaTemp[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
+  // Geolocalização
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'denied'>('idle');
+  const [geoData, setGeoData] = useState<{
+    latitude: number | null;
+    longitude: number | null;
+    precisao_gps: number | null;
+  }>({ latitude: null, longitude: null, precisao_gps: null });
+
+  // Captura GPS quando confirma a leitura e inicia o checklist
+  useEffect(() => {
+    if (leituraConfirmada && geoStatus === 'idle') {
+      captureGeolocation();
+    }
+  }, [leituraConfirmada]);
+
+  const captureGeolocation = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      console.warn('Geolocalização não suportada pelo navegador');
+      return;
+    }
+
+    setGeoStatus('loading');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeoData({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          precisao_gps: position.coords.accuracy,
+        });
+        setGeoStatus('success');
+        console.log('GPS capturado:', position.coords);
+      },
+      (error) => {
+        console.warn('Erro ao capturar GPS:', error.message);
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeoStatus('denied');
+        } else {
+          setGeoStatus('error');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000, // Cache de 1 minuto
+      }
+    );
+  };
+
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -217,6 +267,14 @@ export default function NovoChecklistPage() {
       // Adicionar operador apenas se selecionado
       if (operadorSelecionado) {
         payload.operador = operadorSelecionado;
+      }
+
+      // Adicionar geolocalização se disponível
+      if (geoData.latitude && geoData.longitude) {
+        payload.latitude = geoData.latitude;
+        payload.longitude = geoData.longitude;
+        payload.precisao_gps = geoData.precisao_gps;
+        console.log('📍 GPS incluído no payload:', geoData);
       }
 
       const checklist = await nr12Api.checklists.create(payload);
@@ -420,6 +478,30 @@ export default function NovoChecklistPage() {
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progresso}%` }}
                   />
+                </div>
+
+                {/* Indicador de GPS */}
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  {geoStatus === 'loading' && (
+                    <span className="flex items-center gap-1 text-blue-600">
+                      <span className="animate-pulse">📍</span> Capturando localização...
+                    </span>
+                  )}
+                  {geoStatus === 'success' && (
+                    <span className="flex items-center gap-1 text-green-600">
+                      ✓ GPS capturado (precisão: {geoData.precisao_gps?.toFixed(0)}m)
+                    </span>
+                  )}
+                  {geoStatus === 'denied' && (
+                    <span className="flex items-center gap-1 text-orange-600">
+                      ⚠ GPS não autorizado
+                    </span>
+                  )}
+                  {geoStatus === 'error' && (
+                    <span className="flex items-center gap-1 text-red-600">
+                      ⚠ Erro ao capturar GPS
+                    </span>
+                  )}
                 </div>
               </div>
 

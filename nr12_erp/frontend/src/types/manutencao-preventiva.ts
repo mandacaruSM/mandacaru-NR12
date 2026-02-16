@@ -182,6 +182,10 @@ export interface ManutencaoPreventivaRealizadaFormData {
   leitura_equipamento: number
   observacoes_gerais?: string
   respostas?: RespostaItemManutencaoFormData[]
+  // Geolocalização
+  latitude?: number
+  longitude?: number
+  precisao_gps?: number
 }
 
 // Dashboard Stats

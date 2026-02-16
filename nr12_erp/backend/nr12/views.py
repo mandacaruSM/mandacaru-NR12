@@ -497,6 +497,9 @@ class BotChecklistViewSet(viewsets.ViewSet):
             operador_id=serializer.validated_data['operador_id'],
             origem='BOT',
             leitura_equipamento=serializer.validated_data.get('leitura_equipamento'),
+            latitude=serializer.validated_data.get('latitude'),
+            longitude=serializer.validated_data.get('longitude'),
+            precisao_gps=serializer.validated_data.get('precisao_gps'),
             status='EM_ANDAMENTO'
         )
         

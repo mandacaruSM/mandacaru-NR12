@@ -111,8 +111,32 @@ class Empreendimento(models.Model):
     nome = models.CharField(max_length=150)
     tipo = models.CharField(max_length=10, choices=TIPO, default="LAVRA")
     distancia_km = models.DecimalField(max_digits=8, decimal_places=2, default=0)  # sem API Maps por enquanto
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    # Geolocalização do empreendimento
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Latitude do empreendimento"
+    )
+    longitude = models.DecimalField(
+        max_digits=11,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Longitude do empreendimento"
+    )
+    raio_geofence = models.PositiveIntegerField(
+        default=500,
+        help_text="Raio em metros para validação de geofence (área válida para checklists)"
+    )
+    endereco_geocodificado = models.CharField(
+        max_length=300,
+        blank=True,
+        default="",
+        help_text="Endereço obtido via geocodificação reversa"
+    )
     # Endereço completo (opcional)
     logradouro = models.CharField(max_length=150, blank=True, default="")
     numero = models.CharField(max_length=20, blank=True, default="")

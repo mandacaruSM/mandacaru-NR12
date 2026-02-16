@@ -155,6 +155,7 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
         fields = [
             'modelo', 'equipamento', 'operador', 'operador_nome', 'usuario',
             'origem', 'leitura_equipamento', 'observacoes_gerais',
+            'latitude', 'longitude', 'precisao_gps',
             'respostas'
         ]
 
@@ -196,6 +197,40 @@ class ChecklistRealizadoCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         respostas_data = validated_data.pop('respostas', [])
+
+        # Validar geofence se coordenadas foram fornecidas
+        latitude = validated_data.get('latitude')
+        longitude = validated_data.get('longitude')
+        equipamento = validated_data.get('equipamento')
+
+        geofence_validado = None
+        geofence_distancia = None
+
+        if latitude and longitude and equipamento and equipamento.empreendimento:
+            empreendimento = equipamento.empreendimento
+            if empreendimento.latitude and empreendimento.longitude:
+                from core.geolocation import validar_geofence
+                dentro_do_raio, distancia = validar_geofence(
+                    float(latitude), float(longitude),
+                    float(empreendimento.latitude), float(empreendimento.longitude),
+                    empreendimento.raio_geofence
+                )
+                geofence_validado = dentro_do_raio
+                geofence_distancia = distancia
+
+                # Salvar validação de geofence no checklist
+                validated_data['geofence_validado'] = geofence_validado
+                validated_data['geofence_distancia'] = geofence_distancia
+
+                if not dentro_do_raio:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        f"Checklist fora do geofence! Equipamento {equipamento.codigo} "
+                        f"no empreendimento {empreendimento.nome}. "
+                        f"Distância: {distancia:.0f}m, Raio permitido: {empreendimento.raio_geofence}m"
+                    )
+
         checklist = ChecklistRealizado.objects.create(**validated_data)
 
         # Criar respostas
@@ -271,6 +306,26 @@ class BotChecklistIniciarSerializer(serializers.Serializer):
         decimal_places=2,
         required=False,
         allow_null=True
+    )
+    # Geolocalização
+    latitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        required=False,
+        allow_null=True
+    )
+    longitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        required=False,
+        allow_null=True
+    )
+    precisao_gps = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Precisão do GPS em metros"
     )
 
     def validate_modelo_id(self, value):
@@ -583,6 +638,7 @@ class ManutencaoPreventivaRealizadaCreateSerializer(serializers.ModelSerializer)
         fields = [
             'programacao', 'equipamento', 'modelo', 'tecnico', 'tecnico_nome',
             'usuario', 'origem', 'leitura_equipamento', 'observacoes_gerais',
+            'latitude', 'longitude', 'precisao_gps',
             'respostas'
         ]
 

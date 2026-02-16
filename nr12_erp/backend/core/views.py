@@ -492,3 +492,153 @@ def bot_verificar_acesso_equipamento(request):
         return Response({'tem_acesso': False, 'motivo': 'Operador não encontrado'}, status=status.HTTP_200_OK)
     tem_acesso = operador.tem_acesso_equipamento(equipamento_id)
     return Response({'tem_acesso': tem_acesso, 'operador_id': operador.id, 'operador_nome': operador.nome_completo})
+
+
+# ============================================
+# GEOLOCALIZAÇÃO
+# ============================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def geocodificar_coordenadas(request):
+    """
+    Converte coordenadas GPS em endereço (geocodificação reversa).
+
+    POST /api/v1/geolocalizacao/geocodificar/
+    Body: { "latitude": -23.5505, "longitude": -46.6333 }
+
+    Returns: Endereço completo e componentes separados
+    """
+    from .geolocation import geocodificar_reverso, formatar_coordenadas, gerar_link_google_maps
+
+    latitude = request.data.get('latitude')
+    longitude = request.data.get('longitude')
+
+    if latitude is None or longitude is None:
+        return Response(
+            {'detail': 'latitude e longitude são obrigatórios'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        lat = float(latitude)
+        lon = float(longitude)
+    except (ValueError, TypeError):
+        return Response(
+            {'detail': 'latitude e longitude devem ser números válidos'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validar range de coordenadas
+    if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+        return Response(
+            {'detail': 'Coordenadas fora do range válido'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    resultado = geocodificar_reverso(lat, lon)
+
+    if resultado:
+        resultado['coordenadas_formatadas'] = formatar_coordenadas(lat, lon)
+        resultado['link_google_maps'] = gerar_link_google_maps(lat, lon)
+        return Response(resultado)
+    else:
+        # Retorna informações básicas mesmo sem geocodificação
+        return Response({
+            'endereco_completo': '',
+            'latitude': lat,
+            'longitude': lon,
+            'coordenadas_formatadas': formatar_coordenadas(lat, lon),
+            'link_google_maps': gerar_link_google_maps(lat, lon),
+            'erro': 'Não foi possível obter o endereço. Verifique se LOCATIONIQ_TOKEN está configurado.'
+        })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def validar_geofence(request):
+    """
+    Valida se uma localização está dentro do raio de geofence de um empreendimento.
+
+    POST /api/v1/geolocalizacao/validar-geofence/
+    Body: {
+        "latitude": -23.5505,
+        "longitude": -46.6333,
+        "empreendimento_id": 1
+    }
+
+    Returns: Se está dentro do raio e a distância
+    """
+    from .geolocation import validar_geofence as validar_geofence_func, gerar_link_google_maps
+    from cadastro.models import Empreendimento
+
+    latitude = request.data.get('latitude')
+    longitude = request.data.get('longitude')
+    empreendimento_id = request.data.get('empreendimento_id')
+
+    if latitude is None or longitude is None:
+        return Response(
+            {'detail': 'latitude e longitude são obrigatórios'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not empreendimento_id:
+        return Response(
+            {'detail': 'empreendimento_id é obrigatório'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        lat = float(latitude)
+        lon = float(longitude)
+    except (ValueError, TypeError):
+        return Response(
+            {'detail': 'latitude e longitude devem ser números válidos'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        empreendimento = Empreendimento.objects.get(id=empreendimento_id)
+    except Empreendimento.DoesNotExist:
+        return Response(
+            {'detail': 'Empreendimento não encontrado'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not empreendimento.latitude or not empreendimento.longitude:
+        return Response({
+            'validado': False,
+            'dentro_do_raio': None,
+            'distancia_metros': None,
+            'raio_geofence': empreendimento.raio_geofence,
+            'erro': 'Empreendimento não possui coordenadas cadastradas'
+        })
+
+    dentro_do_raio, distancia = validar_geofence_func(
+        lat, lon,
+        float(empreendimento.latitude),
+        float(empreendimento.longitude),
+        empreendimento.raio_geofence
+    )
+
+    return Response({
+        'validado': True,
+        'dentro_do_raio': dentro_do_raio,
+        'distancia_metros': round(distancia, 2),
+        'raio_geofence': empreendimento.raio_geofence,
+        'empreendimento': {
+            'id': empreendimento.id,
+            'nome': empreendimento.nome,
+            'latitude': float(empreendimento.latitude),
+            'longitude': float(empreendimento.longitude),
+            'link_google_maps': gerar_link_google_maps(
+                float(empreendimento.latitude),
+                float(empreendimento.longitude)
+            )
+        },
+        'checklist_location': {
+            'latitude': lat,
+            'longitude': lon,
+            'link_google_maps': gerar_link_google_maps(lat, lon)
+        }
+    })

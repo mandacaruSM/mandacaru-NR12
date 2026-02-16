@@ -300,3 +300,10 @@ LOGGING = {
         },
     },
 }
+
+# ============================================
+# GEOLOCALIZAÇÃO (LocationIQ)
+# ============================================
+# Token para geocodificação reversa (converter GPS em endereço)
+# Obtenha gratuitamente em: https://locationiq.com/ (10.000 req/dia grátis)
+LOCATIONIQ_TOKEN = os.environ.get("LOCATIONIQ_TOKEN", "")

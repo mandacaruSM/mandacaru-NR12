@@ -161,6 +161,44 @@ class ChecklistRealizado(models.Model):
         blank=True,
         help_text="Leitura do horímetro/odômetro no momento do checklist"
     )
+
+    # Geolocalização - prova que a inspeção foi feita no local
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Latitude onde o checklist foi realizado"
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Longitude onde o checklist foi realizado"
+    )
+    precisao_gps = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Precisão do GPS em metros"
+    )
+
+    # Validação de Geofence (ChecklistRealizado)
+    geofence_validado = models.BooleanField(
+        null=True,
+        blank=True,
+        help_text="Se o checklist foi realizado dentro do raio de geofence do empreendimento"
+    )
+    geofence_distancia = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Distância em metros do local do checklist até o empreendimento"
+    )
+
     status = models.CharField(
         max_length=20,
         choices=[
@@ -605,6 +643,29 @@ class ManutencaoPreventivaRealizada(models.Model):
         max_digits=12,
         decimal_places=2,
         help_text="Leitura do horímetro/odômetro no momento da manutenção"
+    )
+
+    # Geolocalização - prova que a manutenção foi feita no local
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Latitude onde a manutenção foi realizada"
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        help_text="Longitude onde a manutenção foi realizada"
+    )
+    precisao_gps = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Precisão do GPS em metros"
     )
 
     status = models.CharField(
