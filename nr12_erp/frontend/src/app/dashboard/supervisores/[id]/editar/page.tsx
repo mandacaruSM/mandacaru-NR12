@@ -4,9 +4,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supervisoresApi, Supervisor } from '@/lib/api';
+import { supervisoresApi, Supervisor, clientesApi } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+
+interface ClienteSimples {
+  id: number;
+  nome_razao: string;
+}
 
 export default function EditarSupervisorPage() {
   const params = useParams();
@@ -31,6 +36,10 @@ export default function EditarSupervisorPage() {
   const [uf, setUf] = useState('');
   const [cep, setCep] = useState('');
 
+  // Clientes vinculados
+  const [clientesDisponiveis, setClientesDisponiveis] = useState<ClienteSimples[]>([]);
+  const [clientesSelecionados, setClientesSelecionados] = useState<number[]>([]);
+
   // Estados para gerenciar acesso
   const [username, setUsername] = useState('');
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
@@ -45,21 +54,36 @@ export default function EditarSupervisorPage() {
     (async () => {
       try {
         setLoading(true);
-        const data = await supervisoresApi.retrieve(id);
-        setNome(data.nome_completo);
-        setCpf(data.cpf);
-        setTelefone(data.telefone || '');
-        setEmail((data as any).email || '');
-        setAtivo(!!data.ativo);
-        setDataNascimento((data as any).data_nascimento || '');
-        setLogradouro(data.logradouro || '');
-        setNumero(data.numero || '');
-        setComplemento(data.complemento || '');
-        setBairro(data.bairro || '');
-        setCidade(data.cidade || '');
-        setUf(data.uf || '');
-        setCep(data.cep || '');
-        setUsername((data as any).user_username || '');
+        // Carregar supervisor e clientes em paralelo
+        const [supervisorData, clientesData] = await Promise.all([
+          supervisoresApi.retrieve(id),
+          isAdmin ? clientesApi.list({ page_size: 1000 }) : Promise.resolve({ results: [] })
+        ]);
+
+        setNome(supervisorData.nome_completo);
+        setCpf(supervisorData.cpf);
+        setTelefone(supervisorData.telefone || '');
+        setEmail((supervisorData as any).email || '');
+        setAtivo(!!supervisorData.ativo);
+        setDataNascimento((supervisorData as any).data_nascimento || '');
+        setLogradouro(supervisorData.logradouro || '');
+        setNumero(supervisorData.numero || '');
+        setComplemento(supervisorData.complemento || '');
+        setBairro(supervisorData.bairro || '');
+        setCidade(supervisorData.cidade || '');
+        setUf(supervisorData.uf || '');
+        setCep(supervisorData.cep || '');
+        setUsername((supervisorData as any).user_username || '');
+
+        // Carregar clientes vinculados (IDs vem do serializer)
+        const clientesIds = (supervisorData as any).clientes_vinculados_ids || [];
+        setClientesSelecionados(clientesIds);
+
+        // Lista de clientes disponíveis
+        setClientesDisponiveis(clientesData.results.map((c: any) => ({
+          id: c.id,
+          nome_razao: c.nome_razao
+        })));
       } catch (e: any) {
         toast.error(e.message || 'Erro ao carregar supervisor');
         router.push('/dashboard/supervisores');
@@ -67,7 +91,7 @@ export default function EditarSupervisorPage() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, isAdmin]);
 
   const handleResetPassword = async () => {
     setResetPasswordLoading(true);
@@ -113,7 +137,7 @@ export default function EditarSupervisorPage() {
     try {
       setSaving(true);
       const onlyDigits = (s: string) => s.replace(/\D/g, '');
-      const payload: Partial<Supervisor> = {
+      const payload: any = {
         nome_completo: nome.trim(),
         cpf: onlyDigits(cpf),
         data_nascimento: dataNascimento || undefined,
@@ -126,7 +150,9 @@ export default function EditarSupervisorPage() {
         cidade: cidade.trim() || undefined,
         uf: uf.trim() || undefined,
         cep: cep.trim() || undefined,
-      } as any;
+        // Clientes vinculados (apenas admin pode alterar)
+        clientes_ids: isAdmin ? clientesSelecionados : undefined,
+      };
       await supervisoresApi.update(id, payload);
       toast.success('Supervisor atualizado');
       router.push(`/dashboard/supervisores/${id}`);
@@ -206,6 +232,41 @@ export default function EditarSupervisorPage() {
             </div>
           </div>
         </div>
+
+        {/* Seção: Clientes Vinculados (apenas Admin) */}
+        {isAdmin && clientesDisponiveis.length > 0 && (
+          <div className="pt-4 border-t mt-4">
+            <h2 className="text-md font-semibold text-gray-900 mb-3">Clientes Vinculados</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Selecione os clientes que este supervisor terá acesso. O supervisor poderá visualizar e gerenciar todos os dados dos clientes selecionados.
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+              {clientesDisponiveis.map((cliente) => (
+                <label key={cliente.id} className="flex items-center gap-3 py-2 hover:bg-gray-100 px-2 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={clientesSelecionados.includes(cliente.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setClientesSelecionados([...clientesSelecionados, cliente.id]);
+                      } else {
+                        setClientesSelecionados(clientesSelecionados.filter(id => id !== cliente.id));
+                      }
+                    }}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-900">{cliente.nome_razao}</span>
+                </label>
+              ))}
+            </div>
+            {clientesSelecionados.length > 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                {clientesSelecionados.length} cliente(s) selecionado(s)
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Seção: Gerenciar Acesso */}
         {isAdmin && (
           <div className="pt-4 border-t mt-4">

@@ -97,48 +97,71 @@ def filter_by_role(queryset, user):
             if not supervisor:
                 return queryset
             model = queryset.model
+
+            # Pega os clientes vinculados ao supervisor (acesso igual ao CLIENTE)
+            clientes_ids = list(supervisor.clientes.values_list('id', flat=True))
+            logger.info(f"filter_by_role SUPERVISOR: clientes_ids={clientes_ids}")
+
+            # Se não tem clientes vinculados, não vê nada
+            if not clientes_ids:
+                return queryset.none()
+
+            # Model é Cliente - vê apenas os clientes vinculados
+            if model.__name__ == 'Cliente':
+                return queryset.filter(id__in=clientes_ids)
+
+            # Model é Empreendimento - vê empreendimentos dos clientes vinculados
             if model.__name__ == 'Empreendimento':
-                return queryset.filter(supervisor=supervisor)
-            # Tecnico/Operador: supervisor vê os vinculados aos seus clientes
-            if model.__name__ in ('Tecnico', 'Operador'):
-                from cadastro.models import Empreendimento as EmpSup
-                clientes_ids_sup = EmpSup.objects.filter(
-                    supervisor=supervisor
-                ).values_list('cliente_id', flat=True)
-                return queryset.filter(clientes__id__in=clientes_ids_sup).distinct()
-            if hasattr(model, 'equipamento'):
-                return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
-            if hasattr(model, 'checklist'):
-                return queryset.filter(checklist__equipamento__empreendimento__supervisor=supervisor)
-            if hasattr(model, 'manutencao'):
-                return queryset.filter(manutencao__equipamento__empreendimento__supervisor=supervisor)
-            if hasattr(model, 'empreendimento'):
-                return queryset.filter(empreendimento__supervisor=supervisor)
-            # Sub-recursos com FK indireto via cliente
-            if hasattr(model, 'ordem_servico'):
-                return queryset.filter(ordem_servico__empreendimento__supervisor=supervisor)
-            if hasattr(model, 'orcamento'):
-                return queryset.filter(orcamento__empreendimento__supervisor=supervisor)
-            if hasattr(model, 'pedido'):
-                from cadastro.models import Empreendimento as Emp
-                clientes_sup = Emp.objects.filter(
-                    supervisor=supervisor
-                ).values_list('cliente_id', flat=True)
-                return queryset.filter(pedido__cliente_id__in=clientes_sup)
-            if hasattr(model, 'conta_receber'):
-                from cadastro.models import Empreendimento as Emp2
-                clientes_sup2 = Emp2.objects.filter(
-                    supervisor=supervisor
-                ).values_list('cliente_id', flat=True)
-                return queryset.filter(conta_receber__cliente_id__in=clientes_sup2)
-            if hasattr(model, 'cliente'):
-                from cadastro.models import Empreendimento
-                clientes_ids = Empreendimento.objects.filter(
-                    supervisor=supervisor
-                ).values_list('cliente_id', flat=True)
                 return queryset.filter(cliente_id__in=clientes_ids)
-        except Exception:
+
+            # Tecnico/Operador com M2M 'clientes'
+            if model.__name__ in ('Tecnico', 'Operador'):
+                return queryset.filter(clientes__id__in=clientes_ids).distinct()
+
+            # Supervisor - vê apenas ele mesmo
+            if model.__name__ == 'Supervisor':
+                return queryset.filter(id=supervisor.id)
+
+            # Model tem campo 'cliente' direto (Orcamento, OrdemServico, ContaReceber, PedidoCompra, Equipamento)
+            if hasattr(model, 'cliente'):
+                return queryset.filter(cliente_id__in=clientes_ids)
+
+            # Model tem campo 'equipamento' (Abastecimento, Manutencao, ChecklistRealizado)
+            if hasattr(model, 'equipamento'):
+                return queryset.filter(equipamento__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'checklist' (RespostaItemChecklist)
+            if hasattr(model, 'checklist'):
+                return queryset.filter(checklist__equipamento__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'manutencao' (RespostaItemManutencao)
+            if hasattr(model, 'manutencao'):
+                return queryset.filter(manutencao__equipamento__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'empreendimento'
+            if hasattr(model, 'empreendimento'):
+                return queryset.filter(empreendimento__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'ordem_servico' (ItemOrdemServico)
+            if hasattr(model, 'ordem_servico'):
+                return queryset.filter(ordem_servico__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'orcamento' (ItemOrcamento)
+            if hasattr(model, 'orcamento'):
+                return queryset.filter(orcamento__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'pedido' (ItemPedidoCompra)
+            if hasattr(model, 'pedido'):
+                return queryset.filter(pedido__cliente_id__in=clientes_ids)
+
+            # Model tem campo 'conta_receber' (Pagamento)
+            if hasattr(model, 'conta_receber'):
+                return queryset.filter(conta_receber__cliente_id__in=clientes_ids)
+
+        except Exception as e:
+            logger.error(f"filter_by_role SUPERVISOR error: {e}")
             pass
+        return queryset.none()
 
     if role == 'OPERADOR':
         try:
@@ -257,22 +280,25 @@ class ClienteFilterMixin:
                 pass
             return queryset.none()
 
-        # SUPERVISOR vê empreendimentos que supervisiona
+        # SUPERVISOR vê dados dos clientes vinculados (igual ao CLIENTE)
         if role == 'SUPERVISOR':
             try:
                 supervisor = getattr(user, 'supervisor_profile', None)
                 if supervisor:
-                    if hasattr(queryset.model, 'equipamento'):
-                        return queryset.filter(equipamento__empreendimento__supervisor=supervisor)
-                    if hasattr(queryset.model, 'empreendimento'):
-                        return queryset.filter(empreendimento__supervisor=supervisor)
+                    clientes_ids = list(supervisor.clientes.values_list('id', flat=True))
+                    if not clientes_ids:
+                        return queryset.none()
+                    if queryset.model.__name__ == 'Cliente':
+                        return queryset.filter(id__in=clientes_ids)
                     if queryset.model.__name__ == 'Empreendimento':
-                        return queryset.filter(supervisor=supervisor)
+                        return queryset.filter(cliente_id__in=clientes_ids)
                     if hasattr(queryset.model, 'cliente'):
-                        empreendimentos_ids = supervisor.empreendimentos.values_list('cliente_id', flat=True)
-                        return queryset.filter(cliente_id__in=empreendimentos_ids)
+                        return queryset.filter(cliente_id__in=clientes_ids)
+                    if hasattr(queryset.model, 'equipamento'):
+                        return queryset.filter(equipamento__cliente_id__in=clientes_ids)
             except Exception:
                 pass
+            return queryset.none()
 
         # OPERADOR, TECNICO e outros roles: retorna queryset sem filtro extra
         # (o HasModuleAccess já limita o acesso ao módulo)

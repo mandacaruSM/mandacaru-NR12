@@ -253,6 +253,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
         help_text="Nova senha para o usuário do supervisor (mínimo 6 caracteres). Apenas administradores podem definir."
     )
     clientes_nomes = serializers.SerializerMethodField()
+    clientes_vinculados_ids = serializers.SerializerMethodField()  # Read-only para ler IDs
     empreendimentos_nomes = serializers.SerializerMethodField()
     total_operadores = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
@@ -281,18 +282,23 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'logradouro', 'numero', 'complemento', 'bairro',
             'cidade', 'uf', 'cep',
             'ativo', 'criado_em', 'atualizado_em',
-            'clientes_nomes', 'empreendimentos_nomes', 'total_operadores', 'clientes_ids', 'empreendimentos_ids',
+            'clientes_nomes', 'clientes_vinculados_ids', 'empreendimentos_nomes', 'total_operadores', 'clientes_ids', 'empreendimentos_ids',
             'nova_senha', 'user_username'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
-            'codigo_vinculacao', 'codigo_valido_ate', 'telegram_vinculado'
+            'codigo_vinculacao', 'codigo_valido_ate', 'telegram_vinculado',
+            'clientes_vinculados_ids'
         ]
 
     user_username = serializers.CharField(source='user.username', read_only=True, allow_null=True)
 
     def get_clientes_nomes(self, obj):
         return [c.nome_razao for c in obj.clientes.all()]
+
+    def get_clientes_vinculados_ids(self, obj):
+        """Retorna lista de IDs dos clientes vinculados (para leitura)"""
+        return list(obj.clientes.values_list('id', flat=True))
 
     def get_empreendimentos_nomes(self, obj):
         return [e.nome for e in obj.empreendimentos_vinculados.all()]
