@@ -321,7 +321,7 @@ class BotChecklistIniciarSerializer(serializers.Serializer):
         allow_null=True
     )
     precisao_gps = serializers.DecimalField(
-        max_digits=8,
+        max_digits=10,
         decimal_places=2,
         required=False,
         allow_null=True,

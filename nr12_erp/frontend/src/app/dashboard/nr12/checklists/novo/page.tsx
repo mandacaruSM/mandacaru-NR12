@@ -77,13 +77,18 @@ export default function NovoChecklistPage() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        // Arredondar para 8 casas decimais para evitar erro de precisão no backend
+        const lat = Math.round(position.coords.latitude * 100000000) / 100000000;
+        const lng = Math.round(position.coords.longitude * 100000000) / 100000000;
+        const acc = Math.round(position.coords.accuracy * 100) / 100;
+
         setGeoData({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          precisao_gps: position.coords.accuracy,
+          latitude: lat,
+          longitude: lng,
+          precisao_gps: acc,
         });
         setGeoStatus('success');
-        console.log('GPS capturado:', position.coords);
+        console.log('GPS capturado:', { latitude: lat, longitude: lng, precisao: acc });
       },
       (error) => {
         console.warn('Erro ao capturar GPS:', error.message);

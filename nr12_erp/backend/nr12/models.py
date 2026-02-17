@@ -182,7 +182,7 @@ class ChecklistRealizado(models.Model):
         help_text="Longitude onde o checklist foi realizado"
     )
     precisao_gps = models.DecimalField(
-        max_digits=8,
+        max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
@@ -665,7 +665,7 @@ class ManutencaoPreventivaRealizada(models.Model):
         help_text="Longitude onde a manutenção foi realizada"
     )
     precisao_gps = models.DecimalField(
-        max_digits=8,
+        max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
