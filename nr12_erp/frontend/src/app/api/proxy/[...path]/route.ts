@@ -65,9 +65,14 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
     // Headers: não force JSON sempre (FormData/arquivos quebram)
     const headers: HeadersInit = {};
     const contentType = request.headers.get('content-type');
-    if (contentType) {
+
+    // Para multipart/form-data, NÃO definir Content-Type manualmente
+    // O fetch vai definir automaticamente com o boundary correto
+    const isMultipart = contentType?.includes('multipart/form-data');
+
+    if (contentType && !isMultipart) {
       headers['Content-Type'] = contentType;
-    } else if (method !== 'GET' && method !== 'DELETE') {
+    } else if (method !== 'GET' && method !== 'DELETE' && !isMultipart) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -78,9 +83,9 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
     // Prepara body (se houver)
     let body: BodyInit | undefined;
     if (method !== 'GET' && method !== 'DELETE') {
-      // Se for multipart/form-data, repassa como arrayBuffer
-      if (contentType?.includes('multipart/form-data')) {
-        body = await request.arrayBuffer();
+      // Se for multipart/form-data, repassa o formData original
+      if (isMultipart) {
+        body = await request.formData();
       } else {
         const text = await request.text();
         body = text || undefined;

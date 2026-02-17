@@ -20,10 +20,13 @@ interface RespostaTemp {
   pergunta: string;
   tipo_resposta: string;
   categoria: string;
+  foto_obrigatoria: boolean;
   resposta: 'CONFORME' | 'NAO_CONFORME' | 'SIM' | 'NAO' | 'NA' | null;
   valor_numerico: string;
   valor_texto: string;
   observacao: string;
+  foto: File | null;
+  foto_preview: string | null;
 }
 
 export default function NovoChecklistPage() {
@@ -181,10 +184,13 @@ export default function NovoChecklistPage() {
         pergunta: item.pergunta,
         tipo_resposta: item.tipo_resposta,
         categoria: item.categoria,
+        foto_obrigatoria: item.foto_obrigatoria || false,
         resposta: null,
         valor_numerico: '',
         valor_texto: '',
         observacao: '',
+        foto: null,
+        foto_preview: null,
       }));
       setRespostas(respostasVazias);
       setCurrentItemIndex(0);
@@ -198,6 +204,32 @@ export default function NovoChecklistPage() {
     novasRespostas[currentItemIndex] = {
       ...novasRespostas[currentItemIndex],
       [field]: value,
+    };
+    setRespostas(novasRespostas);
+  };
+
+  const handleFotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const novasRespostas = [...respostas];
+      novasRespostas[currentItemIndex] = {
+        ...novasRespostas[currentItemIndex],
+        foto: file,
+        foto_preview: URL.createObjectURL(file),
+      };
+      setRespostas(novasRespostas);
+    }
+  };
+
+  const handleRemoverFoto = () => {
+    const novasRespostas = [...respostas];
+    if (novasRespostas[currentItemIndex].foto_preview) {
+      URL.revokeObjectURL(novasRespostas[currentItemIndex].foto_preview!);
+    }
+    novasRespostas[currentItemIndex] = {
+      ...novasRespostas[currentItemIndex],
+      foto: null,
+      foto_preview: null,
     };
     setRespostas(novasRespostas);
   };
@@ -236,6 +268,17 @@ export default function NovoChecklistPage() {
 
     if (respostasObrigatorias.length < itensObrigatorios.length) {
       toast.error('Responda todos os itens obrigatórios antes de finalizar');
+      return;
+    }
+
+    // Verificar se todos os itens com foto obrigatória têm foto
+    const itensSemFotoObrigatoria = respostas.filter((resp, index) => {
+      const item = itensChecklist[index];
+      return item.foto_obrigatoria && !resp.foto;
+    });
+
+    if (itensSemFotoObrigatoria.length > 0) {
+      toast.error(`Adicione foto nos itens que exigem foto obrigatória (${itensSemFotoObrigatoria.length} pendente(s))`);
       return;
     }
 
@@ -279,6 +322,38 @@ export default function NovoChecklistPage() {
 
       const checklist = await nr12Api.checklists.create(payload);
       console.log('✅ Checklist criado:', checklist.id);
+
+      // Fazer upload das fotos para cada resposta que tem foto
+      const respostasComFoto = respostas.filter(resp => resp.foto);
+      if (respostasComFoto.length > 0) {
+        console.log(`📷 Fazendo upload de ${respostasComFoto.length} foto(s)...`);
+
+        // Buscar o checklist completo para obter os IDs das respostas
+        const checklistCompleto = await nr12Api.checklists.get(checklist.id);
+        const respostasDoChecklist = (checklistCompleto as any).respostas || [];
+
+        for (const resp of respostasComFoto) {
+          // Encontrar a resposta correspondente pelo item_id
+          const respostaDoChecklist = respostasDoChecklist.find(
+            (r: any) => r.item === resp.item_id
+          );
+
+          if (respostaDoChecklist && resp.foto) {
+            try {
+              const formData = new FormData();
+              formData.append('foto', resp.foto);
+
+              await fetch(`/api/proxy/nr12/respostas-checklist/${respostaDoChecklist.id}/`, {
+                method: 'PATCH',
+                body: formData,
+              });
+              console.log(`✅ Foto enviada para item ${resp.item_id}`);
+            } catch (fotoErr) {
+              console.warn(`⚠️ Erro ao enviar foto para item ${resp.item_id}:`, fotoErr);
+            }
+          }
+        }
+      }
 
       toast.success('Checklist realizado com sucesso!');
       // Força reload completo da página para garantir que a listagem seja atualizada
@@ -629,6 +704,67 @@ export default function NovoChecklistPage() {
                     rows={2}
                     placeholder="Adicione observações se necessário"
                   />
+                </div>
+
+                {/* Captura de Foto */}
+                <div className={`p-4 rounded-lg border-2 ${
+                  itemAtual.foto_obrigatoria
+                    ? 'border-orange-300 bg-orange-50'
+                    : 'border-gray-200 bg-gray-50'
+                }`}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Foto {itemAtual.foto_obrigatoria && <span className="text-orange-600">(Obrigatória)</span>}
+                  </label>
+
+                  {respostaAtual?.foto_preview ? (
+                    <div className="space-y-3">
+                      <div className="relative inline-block">
+                        <img
+                          src={respostaAtual.foto_preview}
+                          alt="Foto capturada"
+                          className="max-w-full max-h-48 rounded-lg border border-gray-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoverFoto}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                          title="Remover foto"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="text-xs text-green-600">Foto capturada com sucesso</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFotoCapture}
+                        className="hidden"
+                        id={`foto-input-${currentItemIndex}`}
+                      />
+                      <label
+                        htmlFor={`foto-input-${currentItemIndex}`}
+                        className={`flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                          itemAtual.foto_obrigatoria
+                            ? 'border-orange-400 hover:border-orange-500 hover:bg-orange-100'
+                            : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                        }`}
+                      >
+                        <span className="text-2xl">📷</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {itemAtual.foto_obrigatoria ? 'Tirar foto (obrigatório)' : 'Tirar foto (opcional)'}
+                        </span>
+                      </label>
+                      {itemAtual.foto_obrigatoria && !respostaAtual?.foto && (
+                        <p className="text-xs text-orange-600">
+                          Este item exige uma foto como evidência
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

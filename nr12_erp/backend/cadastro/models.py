@@ -114,15 +114,15 @@ class Empreendimento(models.Model):
 
     # Geolocalização do empreendimento
     latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Latitude do empreendimento"
     )
     longitude = models.DecimalField(
-        max_digits=11,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Longitude do empreendimento"
