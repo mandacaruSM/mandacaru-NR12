@@ -9,9 +9,31 @@ import TecnicoForm from '../../_Form';
 interface Tecnico {
   id: number;
   nome: string;
+  nome_completo?: string;
+  cpf?: string;
+  rg?: string;
+  data_nascimento?: string;
+  foto?: string;
   email?: string;
   telefone?: string;
+  telefone_emergencia?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
+  especialidade?: string;
+  nivel_experiencia?: string;
+  numero_cnh?: string;
+  categoria_cnh?: string;
+  validade_cnh?: string;
+  certificacoes?: string;
+  cursos_treinamentos?: string;
+  observacoes?: string;
   ativo: boolean;
+  user_username?: string;
 }
 
 export default function EditarTecnicoPage() {

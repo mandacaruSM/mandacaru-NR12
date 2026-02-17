@@ -530,6 +530,8 @@ export interface Supervisor {
   cidade?: string;
   uf?: string;
   cep?: string;
+  // acesso
+  user_username?: string;
 }
 
 export type ListParams = {
