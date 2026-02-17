@@ -50,6 +50,10 @@ class OperadorSerializer(serializers.ModelSerializer):
     taxa_aprovacao = serializers.SerializerMethodField()
     telegram_vinculado = serializers.SerializerMethodField()
     user_username = serializers.CharField(source='user.username', read_only=True, allow_null=True)
+    # Campos NR12 computados
+    nr12_status = serializers.ReadOnlyField()
+    nr12_dias_para_vencer = serializers.ReadOnlyField()
+    nr12_pode_operar = serializers.ReadOnlyField()
     clientes_ids = serializers.PrimaryKeyRelatedField(
         queryset=__import__('cadastro.models', fromlist=['Cliente']).Cliente.objects.all(),
         many=True,
@@ -70,10 +74,17 @@ class OperadorSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nome_completo', 'cpf', 'data_nascimento',
             'email', 'telefone', 'foto',
+            'funcao', 'matricula',  # Dados profissionais
             'telegram_chat_id', 'telegram_username', 'telegram_vinculado_em',
             'telegram_vinculado', 'codigo_vinculacao', 'codigo_valido_ate',
             'logradouro', 'numero', 'complemento', 'bairro',
             'cidade', 'uf', 'cep',
+            # Conformidade NR12
+            'nr12_curso_data_conclusao', 'nr12_curso_carga_horaria',
+            'nr12_entidade_formadora', 'nr12_certificado',
+            'nr12_reciclagem_vencimento', 'nr12_reciclagem_certificado',
+            'nr12_status', 'nr12_dias_para_vencer', 'nr12_pode_operar',
+            # Status e relacionamentos
             'ativo', 'criado_em', 'atualizado_em',
             'clientes_nomes', 'empreendimentos_nomes', 'total_equipamentos',
             'total_checklists', 'taxa_aprovacao', 'clientes_ids', 'empreendimentos_ids',
@@ -81,9 +92,10 @@ class OperadorSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
-            'codigo_vinculacao', 'codigo_valido_ate', 'telegram_vinculado'
+            'codigo_vinculacao', 'codigo_valido_ate', 'telegram_vinculado',
+            'nr12_status', 'nr12_dias_para_vencer', 'nr12_pode_operar'
         ]
-    
+
     def get_clientes_nomes(self, obj):
         return [c.nome_razao for c in obj.clientes.all()]
 
@@ -134,11 +146,37 @@ class OperadorSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
-        if nova_senha and hasattr(instance, 'user') and instance.user:
-            instance.user.set_password(nova_senha)
-            instance.user.save()
-            print(f"[SENHA ALTERADA] Operador: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+        # Se nova_senha foi fornecida, atualiza ou cria o usuário
+        if nova_senha:
+            if instance.user:
+                # Usuário já existe, apenas atualiza a senha
+                instance.user.set_password(nova_senha)
+                instance.user.save()
+                print(f"[SENHA ALTERADA] Operador: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+            else:
+                # Usuário não existe, criar automaticamente
+                cpf_limpo = ''.join(c for c in (instance.cpf or '') if c.isdigit())
+                if cpf_limpo:
+                    from .models import Profile
+                    if User.objects.filter(username=cpf_limpo).exists():
+                        user = User.objects.get(username=cpf_limpo)
+                    else:
+                        user = User.objects.create_user(
+                            username=cpf_limpo,
+                            password=nova_senha,
+                            email=instance.email or '',
+                            first_name=instance.nome_completo[:30] if instance.nome_completo else '',
+                        )
+                        Profile.objects.create(
+                            user=user,
+                            role='OPERADOR',
+                            modules_enabled=['dashboard', 'equipamentos', 'nr12', 'abastecimentos']
+                        )
+                    instance.user = user
+                    instance.user.set_password(nova_senha)
+                    instance.user.save()
+                    instance.save()
+                    print(f"[USUÁRIO CRIADO] Operador: {instance.nome_completo} | Username: {instance.user.username}")
 
         # Atualizar clientes se fornecido
         if clientes_data is not None:
@@ -293,11 +331,37 @@ class SupervisorSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
-        if nova_senha and hasattr(instance, 'user') and instance.user:
-            instance.user.set_password(nova_senha)
-            instance.user.save()
-            print(f"[SENHA ALTERADA] Supervisor: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+        # Se nova_senha foi fornecida, atualiza ou cria o usuário
+        if nova_senha:
+            if instance.user:
+                # Usuário já existe, apenas atualiza a senha
+                instance.user.set_password(nova_senha)
+                instance.user.save()
+                print(f"[SENHA ALTERADA] Supervisor: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+            else:
+                # Usuário não existe, criar automaticamente
+                cpf_limpo = ''.join(c for c in (instance.cpf or '') if c.isdigit())
+                if cpf_limpo:
+                    from .models import Profile
+                    if User.objects.filter(username=cpf_limpo).exists():
+                        user = User.objects.get(username=cpf_limpo)
+                    else:
+                        user = User.objects.create_user(
+                            username=cpf_limpo,
+                            password=nova_senha,
+                            email=instance.email or '',
+                            first_name=instance.nome_completo[:30] if instance.nome_completo else '',
+                        )
+                        Profile.objects.create(
+                            user=user,
+                            role='SUPERVISOR',
+                            modules_enabled=['dashboard', 'clientes', 'empreendimentos', 'equipamentos', 'operadores', 'nr12', 'abastecimentos', 'manutencoes']
+                        )
+                    instance.user = user
+                    instance.user.set_password(nova_senha)
+                    instance.user.save()
+                    instance.save()
+                    print(f"[USUÁRIO CRIADO] Supervisor: {instance.nome_completo} | Username: {instance.user.username}")
 
         # Atualizar clientes se fornecido
         if clientes_data is not None:

@@ -19,6 +19,9 @@ export default function EditarOperadorPage() {
   const [cpf, setCpf] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [telefone, setTelefone] = useState('');
+  const [email, setEmail] = useState('');
+  const [funcao, setFuncao] = useState('');
+  const [matricula, setMatricula] = useState('');
   const [ativo, setAtivo] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,6 +32,14 @@ export default function EditarOperadorPage() {
   const [cidade, setCidade] = useState('');
   const [uf, setUf] = useState('');
   const [cep, setCep] = useState('');
+
+  // Conformidade NR12
+  const [nr12CursoDataConclusao, setNr12CursoDataConclusao] = useState('');
+  const [nr12CursoCargaHoraria, setNr12CursoCargaHoraria] = useState<number | ''>('');
+  const [nr12EntidadeFormadora, setNr12EntidadeFormadora] = useState('');
+  const [nr12ReciclagemVencimento, setNr12ReciclagemVencimento] = useState('');
+  const [nr12Status, setNr12Status] = useState<'VERDE' | 'AMARELO' | 'VERMELHO' | ''>('');
+  const [nr12DiasParaVencer, setNr12DiasParaVencer] = useState<number | null>(null);
 
   // Estados para gerenciar acesso
   const [username, setUsername] = useState('');
@@ -48,6 +59,9 @@ export default function EditarOperadorPage() {
         setNome(data.nome_completo);
         setCpf(data.cpf);
         setTelefone(data.telefone || '');
+        setEmail(data.email || '');
+        setFuncao(data.funcao || '');
+        setMatricula(data.matricula || '');
         setAtivo(!!data.ativo);
         setDataNascimento((data as any).data_nascimento || '');
         setLogradouro(data.logradouro || '');
@@ -58,6 +72,13 @@ export default function EditarOperadorPage() {
         setUf(data.uf || '');
         setCep(data.cep || '');
         setUsername((data as any).user_username || '');
+        // Conformidade NR12
+        setNr12CursoDataConclusao(data.nr12_curso_data_conclusao || '');
+        setNr12CursoCargaHoraria(data.nr12_curso_carga_horaria || '');
+        setNr12EntidadeFormadora(data.nr12_entidade_formadora || '');
+        setNr12ReciclagemVencimento(data.nr12_reciclagem_vencimento || '');
+        setNr12Status(data.nr12_status || '');
+        setNr12DiasParaVencer(data.nr12_dias_para_vencer ?? null);
       } catch (e: any) {
         toast.error(e.message || 'Erro ao carregar operador');
         router.push('/dashboard/operadores');
@@ -116,6 +137,9 @@ export default function EditarOperadorPage() {
         cpf: onlyDigits(cpf),
         data_nascimento: dataNascimento || undefined,
         telefone: telefone.trim() || undefined,
+        email: email.trim() || undefined,
+        funcao: funcao.trim() || undefined,
+        matricula: matricula.trim() || undefined,
         ativo,
         logradouro: logradouro.trim() || undefined,
         numero: numero.trim() || undefined,
@@ -124,6 +148,11 @@ export default function EditarOperadorPage() {
         cidade: cidade.trim() || undefined,
         uf: uf.trim() || undefined,
         cep: cep.trim() || undefined,
+        // Conformidade NR12
+        nr12_curso_data_conclusao: nr12CursoDataConclusao || undefined,
+        nr12_curso_carga_horaria: nr12CursoCargaHoraria || undefined,
+        nr12_entidade_formadora: nr12EntidadeFormadora.trim() || undefined,
+        nr12_reciclagem_vencimento: nr12ReciclagemVencimento || undefined,
       } as any;
       await operadoresApi.update(id, payload);
       toast.success('Operador atualizado');
@@ -162,13 +191,95 @@ export default function EditarOperadorPage() {
           <label className="block text-sm font-medium text-gray-900">Data de Nascimento</label>
           <input type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" required />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Telefone</label>
-          <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Telefone</label>
+            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900">E-mail</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
+          </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Função</label>
+            <input value={funcao} onChange={(e) => setFuncao(e.target.value)} placeholder="Ex: Operador de Escavadeira" className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900">Matrícula</label>
+            <input value={matricula} onChange={(e) => setMatricula(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900" />
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
           <input id="ativo" type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
           <label htmlFor="ativo" className="text-sm text-gray-900">Ativo</label>
+        </div>
+
+        {/* Seção: Painel de Conformidade NR12 */}
+        <div className="pt-4 border-t mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-md font-semibold text-gray-900">Conformidade NR12</h2>
+            {nr12Status && (
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                nr12Status === 'VERDE' ? 'bg-green-100 text-green-800' :
+                nr12Status === 'AMARELO' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {nr12Status === 'VERDE' ? 'Em dia' :
+                 nr12Status === 'AMARELO' ? `Vence em ${nr12DiasParaVencer} dias` :
+                 'Vencido/Pendente'}
+              </span>
+            )}
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-medium text-gray-700">Curso de Formação NR12</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-900">Data de Conclusão</label>
+                <input
+                  type="date"
+                  value={nr12CursoDataConclusao}
+                  onChange={(e) => setNr12CursoDataConclusao(e.target.value)}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-900">Carga Horária (horas)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={nr12CursoCargaHoraria}
+                  onChange={(e) => setNr12CursoCargaHoraria(e.target.value ? Number(e.target.value) : '')}
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-900">Entidade Formadora</label>
+              <input
+                value={nr12EntidadeFormadora}
+                onChange={(e) => setNr12EntidadeFormadora(e.target.value)}
+                placeholder="Nome da entidade que ministrou o curso"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900"
+              />
+            </div>
+
+            <h3 className="text-sm font-medium text-gray-700 pt-3">Reciclagem NR12</h3>
+            <div>
+              <label className="block text-sm text-gray-900">Data de Vencimento</label>
+              <input
+                type="date"
+                value={nr12ReciclagemVencimento}
+                onChange={(e) => setNr12ReciclagemVencimento(e.target.value)}
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-gray-900"
+              />
+              <p className="text-xs text-gray-500 mt-1">O sistema enviará alerta 30 dias antes do vencimento</p>
+            </div>
+          </div>
         </div>
 
         <div className="pt-2 border-t mt-4">

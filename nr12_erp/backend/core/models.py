@@ -151,6 +151,62 @@ class Operador(models.Model):
         blank=True
     )
     
+    # ==================== CONFORMIDADE NR12 ====================
+    funcao = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Função",
+        help_text="Ex: Operador de Escavadeira, Operador de Pá Carregadeira"
+    )
+    matricula = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Matrícula",
+        help_text="Número de matrícula do funcionário"
+    )
+
+    # Curso de Formação NR12
+    nr12_curso_data_conclusao = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data Conclusão Curso NR12",
+        help_text="Data de conclusão do curso de formação NR12"
+    )
+    nr12_curso_carga_horaria = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Carga Horária (horas)",
+        help_text="Carga horária do curso de formação"
+    )
+    nr12_entidade_formadora = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Entidade Formadora",
+        help_text="Nome da entidade que ministrou o curso"
+    )
+    nr12_certificado = models.FileField(
+        upload_to='operadores/certificados/%Y/%m/',
+        null=True,
+        blank=True,
+        verbose_name="Certificado NR12",
+        help_text="Upload do certificado em PDF ou imagem"
+    )
+
+    # Reciclagem NR12
+    nr12_reciclagem_vencimento = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Vencimento da Reciclagem",
+        help_text="Data de vencimento da reciclagem NR12"
+    )
+    nr12_reciclagem_certificado = models.FileField(
+        upload_to='operadores/reciclagens/%Y/%m/',
+        null=True,
+        blank=True,
+        verbose_name="Certificado Reciclagem",
+        help_text="Upload do certificado de reciclagem"
+    )
+
     # ==================== STATUS E DATAS ====================
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
@@ -163,7 +219,7 @@ class Operador(models.Model):
         related_name='operadores_criados',
         verbose_name="Criado por"
     )
-    
+
     class Meta:
         ordering = ['nome_completo']
         verbose_name = 'Operador'
@@ -251,6 +307,59 @@ class Operador(models.Model):
             return 0
         aprovados = self.checklists.filter(resultado_geral='APROVADO').count()
         return round((aprovados / total) * 100, 2)
+
+    # ==================== PROPRIEDADES NR12 ====================
+    @property
+    def nr12_status(self):
+        """
+        Retorna status da conformidade NR12:
+        - VERDE: Tudo em dia
+        - AMARELO: Reciclagem vence em menos de 30 dias
+        - VERMELHO: Reciclagem vencida ou sem curso
+        """
+        from datetime import date, timedelta
+        hoje = date.today()
+
+        # Sem curso = VERMELHO
+        if not self.nr12_curso_data_conclusao:
+            return 'VERMELHO'
+
+        # Sem data de reciclagem = considerar só o curso
+        if not self.nr12_reciclagem_vencimento:
+            # Se curso foi há mais de 2 anos sem reciclagem = VERMELHO
+            if self.nr12_curso_data_conclusao < (hoje - timedelta(days=730)):
+                return 'VERMELHO'
+            return 'VERDE'
+
+        # Reciclagem vencida = VERMELHO
+        if self.nr12_reciclagem_vencimento < hoje:
+            return 'VERMELHO'
+
+        # Reciclagem vence em menos de 30 dias = AMARELO
+        if self.nr12_reciclagem_vencimento < (hoje + timedelta(days=30)):
+            return 'AMARELO'
+
+        return 'VERDE'
+
+    @property
+    def nr12_dias_para_vencer(self):
+        """Dias até vencimento da reciclagem (negativo se já venceu)"""
+        from datetime import date
+        if not self.nr12_reciclagem_vencimento:
+            return None
+        return (self.nr12_reciclagem_vencimento - date.today()).days
+
+    @property
+    def nr12_pode_operar(self):
+        """Retorna True se operador está apto a operar conforme NR12"""
+        return self.nr12_status != 'VERMELHO'
+
+    def tem_autorizacao_equipamento_especifico(self, equipamento):
+        """
+        Verifica se operador tem treinamento específico para o modelo do equipamento.
+        O MTE exige treinamento na máquina específica.
+        """
+        return self.equipamentos_autorizados.filter(id=equipamento.id, ativo=True).exists()
 
 
 class Supervisor(models.Model):

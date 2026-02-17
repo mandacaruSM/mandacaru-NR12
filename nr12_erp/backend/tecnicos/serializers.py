@@ -122,11 +122,40 @@ class TecnicoSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
-        if nova_senha and hasattr(instance, 'user') and instance.user:
-            instance.user.set_password(nova_senha)
-            instance.user.save()
-            print(f"[SENHA ALTERADA] Técnico: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+        # Se nova_senha foi fornecida, atualiza ou cria o usuário
+        if nova_senha:
+            if instance.user:
+                # Usuário já existe, apenas atualiza a senha
+                instance.user.set_password(nova_senha)
+                instance.user.save()
+                print(f"[SENHA ALTERADA] Técnico: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
+            else:
+                # Usuário não existe, criar automaticamente
+                from django.contrib.auth import get_user_model
+                from core.models import Profile
+                User = get_user_model()
+
+                cpf_limpo = ''.join(c for c in (instance.cpf or '') if c.isdigit())
+                if cpf_limpo:
+                    if User.objects.filter(username=cpf_limpo).exists():
+                        user = User.objects.get(username=cpf_limpo)
+                    else:
+                        user = User.objects.create_user(
+                            username=cpf_limpo,
+                            password=nova_senha,
+                            email=instance.email or '',
+                            first_name=(instance.nome_completo or instance.nome or '')[:30],
+                        )
+                        Profile.objects.create(
+                            user=user,
+                            role='TECNICO',
+                            modules_enabled=['dashboard', 'equipamentos', 'nr12', 'manutencoes']
+                        )
+                    instance.user = user
+                    instance.user.set_password(nova_senha)
+                    instance.user.save()
+                    instance.save()
+                    print(f"[USUÁRIO CRIADO] Técnico: {instance.nome_completo} | Username: {instance.user.username}")
 
         # Atualizar clientes se fornecido
         if clientes_data is not None:

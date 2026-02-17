@@ -477,9 +477,22 @@ export interface Operador {
   cpf: string;
   data_nascimento?: string;
   telefone?: string;
+  email?: string;
+  foto?: string;
+  funcao?: string;
+  matricula?: string;
   ativo: boolean;
   // relacionais resumidos
   clientes?: number[];
+  clientes_nomes?: string[];
+  empreendimentos_nomes?: string[];
+  total_equipamentos?: number;
+  total_checklists?: number;
+  taxa_aprovacao?: number;
+  // Telegram
+  telegram_chat_id?: string;
+  telegram_username?: string;
+  telegram_vinculado?: boolean;
   // endereço
   logradouro?: string;
   numero?: string;
@@ -488,6 +501,18 @@ export interface Operador {
   cidade?: string;
   uf?: string;
   cep?: string;
+  // Conformidade NR12
+  nr12_curso_data_conclusao?: string;
+  nr12_curso_carga_horaria?: number;
+  nr12_entidade_formadora?: string;
+  nr12_certificado?: string;
+  nr12_reciclagem_vencimento?: string;
+  nr12_reciclagem_certificado?: string;
+  nr12_status?: 'VERDE' | 'AMARELO' | 'VERMELHO';
+  nr12_dias_para_vencer?: number;
+  nr12_pode_operar?: boolean;
+  // Usuário
+  user_username?: string;
 }
 
 export interface Supervisor {
