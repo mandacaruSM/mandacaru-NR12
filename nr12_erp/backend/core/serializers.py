@@ -36,6 +36,13 @@ class OnboardingSerializer(serializers.Serializer):
 
 class OperadorSerializer(serializers.ModelSerializer):
     """Serializer básico para lista e criação"""
+    # Campo write-only para permitir que admin defina nova senha
+    nova_senha = serializers.CharField(
+        write_only=True,
+        required=False,
+        min_length=6,
+        help_text="Nova senha para o usuário do operador (mínimo 6 caracteres). Apenas administradores podem definir."
+    )
     clientes_nomes = serializers.SerializerMethodField()
     empreendimentos_nomes = serializers.SerializerMethodField()
     total_equipamentos = serializers.SerializerMethodField()
@@ -70,7 +77,7 @@ class OperadorSerializer(serializers.ModelSerializer):
             'ativo', 'criado_em', 'atualizado_em',
             'clientes_nomes', 'empreendimentos_nomes', 'total_equipamentos',
             'total_checklists', 'taxa_aprovacao', 'clientes_ids', 'empreendimentos_ids',
-            'user_username'
+            'user_username', 'nova_senha'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
@@ -117,6 +124,8 @@ class OperadorSerializer(serializers.ModelSerializer):
         return operador
 
     def update(self, instance, validated_data):
+        # Extrai nova_senha dos dados validados
+        nova_senha = validated_data.pop('nova_senha', None)
         clientes_data = validated_data.pop('clientes', None)
         empreendimentos_data = validated_data.pop('empreendimentos_vinculados', None)
 
@@ -124,6 +133,12 @@ class OperadorSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
+        if nova_senha and hasattr(instance, 'user') and instance.user:
+            instance.user.set_password(nova_senha)
+            instance.user.save()
+            print(f"[SENHA ALTERADA] Operador: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
 
         # Atualizar clientes se fornecido
         if clientes_data is not None:
@@ -192,6 +207,13 @@ class OperadorDetailSerializer(serializers.ModelSerializer):
 
 class SupervisorSerializer(serializers.ModelSerializer):
     """Serializer básico para lista e criação"""
+    # Campo write-only para permitir que admin defina nova senha
+    nova_senha = serializers.CharField(
+        write_only=True,
+        required=False,
+        min_length=6,
+        help_text="Nova senha para o usuário do supervisor (mínimo 6 caracteres). Apenas administradores podem definir."
+    )
     clientes_nomes = serializers.SerializerMethodField()
     empreendimentos_nomes = serializers.SerializerMethodField()
     total_operadores = serializers.SerializerMethodField()
@@ -221,13 +243,16 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'logradouro', 'numero', 'complemento', 'bairro',
             'cidade', 'uf', 'cep',
             'ativo', 'criado_em', 'atualizado_em',
-            'clientes_nomes', 'empreendimentos_nomes', 'total_operadores', 'clientes_ids', 'empreendimentos_ids'
+            'clientes_nomes', 'empreendimentos_nomes', 'total_operadores', 'clientes_ids', 'empreendimentos_ids',
+            'nova_senha', 'user_username'
         ]
         read_only_fields = [
             'criado_em', 'atualizado_em', 'telegram_vinculado_em',
             'codigo_vinculacao', 'codigo_valido_ate', 'telegram_vinculado'
         ]
-    
+
+    user_username = serializers.CharField(source='user.username', read_only=True, allow_null=True)
+
     def get_clientes_nomes(self, obj):
         return [c.nome_razao for c in obj.clientes.all()]
 
@@ -258,6 +283,8 @@ class SupervisorSerializer(serializers.ModelSerializer):
         return supervisor
 
     def update(self, instance, validated_data):
+        # Extrai nova_senha dos dados validados
+        nova_senha = validated_data.pop('nova_senha', None)
         clientes_data = validated_data.pop('clientes', None)
         empreendimentos_data = validated_data.pop('empreendimentos_vinculados', None)
 
@@ -265,6 +292,12 @@ class SupervisorSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        # Se nova_senha foi fornecida e o usuário existe, atualiza a senha
+        if nova_senha and hasattr(instance, 'user') and instance.user:
+            instance.user.set_password(nova_senha)
+            instance.user.save()
+            print(f"[SENHA ALTERADA] Supervisor: {instance.nome_completo} | Username: {instance.user.username} | Nova senha definida pelo admin")
 
         # Atualizar clientes se fornecido
         if clientes_data is not None:
