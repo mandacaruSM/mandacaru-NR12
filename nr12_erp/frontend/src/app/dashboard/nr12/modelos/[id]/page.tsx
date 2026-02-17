@@ -43,6 +43,7 @@ export default function DetalhesModeloPage() {
     tipo_resposta: 'CONFORME',
     obrigatorio: true,
     requer_observacao_nao_conforme: true,
+    foto_obrigatoria: false,
     ativo: true,
   });
 
@@ -103,6 +104,7 @@ export default function DetalhesModeloPage() {
         tipo_resposta: 'CONFORME',
         obrigatorio: true,
         requer_observacao_nao_conforme: true,
+        foto_obrigatoria: false,
         ativo: true,
       });
       loadModelo();
@@ -284,7 +286,7 @@ export default function DetalhesModeloPage() {
                 />
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
@@ -305,6 +307,17 @@ export default function DetalhesModeloPage() {
                     className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                   />
                   <span className="ml-2 text-sm text-gray-700">Requer observação se não conforme</span>
+                </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="foto_obrigatoria"
+                    checked={itemForm.foto_obrigatoria || false}
+                    onChange={handleItemFormChange}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Foto obrigatória</span>
                 </label>
 
                 <label className="flex items-center">
@@ -365,6 +378,11 @@ export default function DetalhesModeloPage() {
                         {item.obrigatorio && (
                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
                             Obrigatório
+                          </span>
+                        )}
+                        {item.foto_obrigatoria && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+                            Foto obrigatória
                           </span>
                         )}
                         {!item.ativo && (

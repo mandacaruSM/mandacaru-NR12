@@ -722,6 +722,7 @@ export interface ItemChecklist {
   tipo_resposta: 'SIM_NAO' | 'CONFORME' | 'NUMERO' | 'TEXTO';
   obrigatorio: boolean;
   requer_observacao_nao_conforme: boolean;
+  foto_obrigatoria: boolean;
   ativo: boolean;
   criado_em: string;
   atualizado_em: string;

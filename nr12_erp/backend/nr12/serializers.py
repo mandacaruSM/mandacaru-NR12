@@ -22,7 +22,7 @@ class ItemChecklistListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem"""
     class Meta:
         model = ItemChecklist
-        fields = ['id', 'ordem', 'categoria', 'pergunta', 'tipo_resposta', 'obrigatorio']
+        fields = ['id', 'ordem', 'categoria', 'pergunta', 'tipo_resposta', 'obrigatorio', 'foto_obrigatoria']
 
 
 class ModeloChecklistSerializer(serializers.ModelSerializer):
@@ -292,7 +292,7 @@ class BotItemChecklistSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'ordem', 'categoria', 'pergunta',
             'descricao_ajuda', 'tipo_resposta',
-            'obrigatorio', 'requer_observacao_nao_conforme'
+            'obrigatorio', 'requer_observacao_nao_conforme', 'foto_obrigatoria'
         ]
 
 
@@ -309,14 +309,14 @@ class BotChecklistIniciarSerializer(serializers.Serializer):
     )
     # Geolocalização
     latitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         required=False,
         allow_null=True
     )
     longitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         required=False,
         allow_null=True
     )

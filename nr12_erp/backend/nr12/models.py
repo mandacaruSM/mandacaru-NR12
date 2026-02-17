@@ -95,6 +95,10 @@ class ItemChecklist(models.Model):
         default=True,
         help_text="Exige observação quando resposta for não conforme"
     )
+    foto_obrigatoria = models.BooleanField(
+        default=False,
+        help_text="Exige foto como evidência ao responder este item"
+    )
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -164,15 +168,15 @@ class ChecklistRealizado(models.Model):
 
     # Geolocalização - prova que a inspeção foi feita no local
     latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Latitude onde o checklist foi realizado"
     )
     longitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Longitude onde o checklist foi realizado"
@@ -647,15 +651,15 @@ class ManutencaoPreventivaRealizada(models.Model):
 
     # Geolocalização - prova que a manutenção foi feita no local
     latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Latitude onde a manutenção foi realizada"
     )
     longitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
+        max_digits=12,
+        decimal_places=8,
         null=True,
         blank=True,
         help_text="Longitude onde a manutenção foi realizada"
