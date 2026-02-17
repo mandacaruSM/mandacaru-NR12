@@ -266,24 +266,29 @@ export default function NovoChecklistPage() {
 
     // Verificar se todos os itens obrigatórios foram respondidos
     const itensObrigatorios = itensChecklist.filter(item => item.obrigatorio);
-    const respostasObrigatorias = respostas.filter((resp, index) => {
-      const item = itensChecklist[index];
-      return item.obrigatorio && (resp.resposta || resp.valor_numerico || resp.valor_texto);
+    const itensObrigatoriosSemResposta = itensObrigatorios.filter(item => {
+      const resposta = respostas.find(r => r.item_id === item.id);
+      // Item está respondido se tem resposta, valor numérico ou valor texto
+      const respondido = resposta && (resposta.resposta || resposta.valor_numerico || resposta.valor_texto);
+      return !respondido;
     });
 
-    if (respostasObrigatorias.length < itensObrigatorios.length) {
-      toast.error('Responda todos os itens obrigatórios antes de finalizar');
+    if (itensObrigatoriosSemResposta.length > 0) {
+      console.log('Itens obrigatórios sem resposta:', itensObrigatoriosSemResposta.map(i => i.pergunta));
+      toast.error(`Responda todos os itens obrigatórios antes de finalizar (${itensObrigatoriosSemResposta.length} pendente(s))`);
       return;
     }
 
     // Verificar se todos os itens com foto obrigatória têm foto
-    const itensSemFotoObrigatoria = respostas.filter((resp, index) => {
-      const item = itensChecklist[index];
-      return item.foto_obrigatoria && !resp.foto;
+    const itensComFotoObrigatoria = itensChecklist.filter(item => item.foto_obrigatoria);
+    const itensFotoObrigatoriaSemFoto = itensComFotoObrigatoria.filter(item => {
+      const resposta = respostas.find(r => r.item_id === item.id);
+      return !resposta?.foto;
     });
 
-    if (itensSemFotoObrigatoria.length > 0) {
-      toast.error(`Adicione foto nos itens que exigem foto obrigatória (${itensSemFotoObrigatoria.length} pendente(s))`);
+    if (itensFotoObrigatoriaSemFoto.length > 0) {
+      console.log('Itens com foto obrigatória sem foto:', itensFotoObrigatoriaSemFoto.map(i => i.pergunta));
+      toast.error(`Adicione foto nos itens que exigem foto obrigatória (${itensFotoObrigatoriaSemFoto.length} pendente(s))`);
       return;
     }
 
