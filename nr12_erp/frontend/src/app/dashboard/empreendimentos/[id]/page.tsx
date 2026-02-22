@@ -281,10 +281,14 @@ export default function EditarEmpreendimentoPage() {
                 initialLatitude={formData.latitude}
                 initialLongitude={formData.longitude}
                 onCapture={(data) => {
+                  // Arredondar para 8 casas decimais (máximo do DecimalField no Django)
+                  const lat = Math.round(data.latitude * 100000000) / 100000000;
+                  const lng = Math.round(data.longitude * 100000000) / 100000000;
+
                   setFormData(prev => ({
                     ...prev,
-                    latitude: data.latitude.toString(),
-                    longitude: data.longitude.toString(),
+                    latitude: lat.toString(),
+                    longitude: lng.toString(),
                     // Se tiver endereço geocodificado, preenche os campos
                     ...(data.endereco ? {
                       endereco_geocodificado: data.endereco.endereco_completo,
