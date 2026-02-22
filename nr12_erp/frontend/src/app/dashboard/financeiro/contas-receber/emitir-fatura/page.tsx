@@ -102,23 +102,36 @@ export default function EmitirFaturaPage() {
     return conta.tipo_display || conta.tipo || '-';
   }
 
-  function handleGerarPDF() {
+  async function handleGerarPDF() {
     if (!clienteInfo || contasFatura.length === 0) return;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
+    let y = 15;
 
-    // Header
+    // Logo no canto esquerdo
+    try {
+      const logoImg = new Image();
+      logoImg.src = '/logo.png';
+      await new Promise((resolve, reject) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = reject;
+      });
+      doc.addImage(logoImg, 'PNG', 14, 10, 30, 15);
+    } catch (e) {
+      console.warn('Erro ao carregar logo:', e);
+    }
+
+    // Header (alinhado à direita por causa do logo)
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('FATURA', pageWidth / 2, y, { align: 'center' });
+    doc.text('FATURA', pageWidth - 14, y, { align: 'right' });
     y += 10;
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     const dataEmissao = new Date().toLocaleDateString('pt-BR');
-    doc.text(`Data de Emissao: ${dataEmissao}`, pageWidth / 2, y, { align: 'center' });
+    doc.text(`Data de Emissao: ${dataEmissao}`, pageWidth - 14, y, { align: 'right' });
     y += 12;
 
     // Linha separadora
