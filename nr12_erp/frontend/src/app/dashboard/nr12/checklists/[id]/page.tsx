@@ -13,6 +13,9 @@ import {
   Calendar,
   FileText,
   Wrench,
+  MapPin,
+  Camera,
+  ExternalLink,
 } from "lucide-react";
 import { nr12Api, ChecklistRealizado } from "@/lib/api";
 
@@ -23,6 +26,7 @@ export default function ChecklistDetailPage() {
 
   const [checklist, setChecklist] = useState<ChecklistRealizado | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fotoAmpliada, setFotoAmpliada] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -224,6 +228,67 @@ export default function ChecklistDetailPage() {
         </div>
       </div>
 
+      {/* Localização GPS */}
+      {checklist.latitude && checklist.longitude && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <MapPin className="w-6 h-6 text-teal-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Localização GPS</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-500">Latitude</p>
+              <p className="font-mono font-medium text-gray-900">{checklist.latitude}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-500">Longitude</p>
+              <p className="font-mono font-medium text-gray-900">{checklist.longitude}</p>
+            </div>
+            {checklist.precisao_gps && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-500">Precisão</p>
+                <p className="font-medium text-gray-900">{checklist.precisao_gps} metros</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href={`https://www.google.com/maps?q=${checklist.latitude},${checklist.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Ver no Google Maps
+            </a>
+            {checklist.geofence_validado !== null && (
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+                checklist.geofence_validado
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {checklist.geofence_validado ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Dentro da área permitida
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4" />
+                    Fora da área permitida
+                  </>
+                )}
+                {checklist.geofence_distancia && (
+                  <span className="ml-1">({checklist.geofence_distancia}m do local)</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Resultado */}
       {checklist.resultado_geral && (
         <div>{getResultadoBadge(checklist.resultado_geral)}</div>
@@ -276,11 +341,35 @@ export default function ChecklistDetailPage() {
                         </p>
                       </div>
                     )}
+                    {/* Foto da resposta */}
+                    {resposta.foto && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                          <Camera className="w-4 h-4" />
+                          <span>Foto anexada</span>
+                        </div>
+                        <button
+                          onClick={() => setFotoAmpliada(resposta.foto)}
+                          className="relative group"
+                        >
+                          <img
+                            src={resposta.foto}
+                            alt="Foto de evidência"
+                            className="w-32 h-32 object-cover rounded-lg border border-gray-200 hover:border-blue-400 transition-colors"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 text-sm font-medium">
+                              Ampliar
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {getRespostaIcon(resposta.resposta)}
                     <span className="font-medium text-sm">
-                      {resposta.resposta.replace("_", " ")}
+                      {resposta.resposta?.replace("_", " ") || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -295,6 +384,29 @@ export default function ChecklistDetailPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Observações Gerais</h2>
           <p className="text-gray-700 whitespace-pre-wrap">{checklist.observacoes_gerais}</p>
+        </div>
+      )}
+
+      {/* Modal de foto ampliada */}
+      {fotoAmpliada && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={() => setFotoAmpliada(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button
+              onClick={() => setFotoAmpliada(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+            <img
+              src={fotoAmpliada}
+              alt="Foto ampliada"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
     </div>

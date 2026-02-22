@@ -202,10 +202,79 @@ export default function DetalhePedidoPage() {
     doc.setFont('helvetica', 'normal');
     if (pedido.destino === 'PROPRIO') {
       doc.text('Uso Proprio', 14, y);
+      y += 5;
     } else {
       doc.text(`Cliente: ${pedido.cliente_nome || '-'}`, 14, y);
+      y += 5;
+      if (pedido.cliente_cnpj) {
+        doc.text(`CNPJ: ${pedido.cliente_cnpj}`, 14, y);
+        y += 5;
+      }
     }
-    y += 8;
+    y += 4;
+
+    // Equipamento (se houver)
+    if (pedido.equipamento_codigo) {
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, y, pageWidth - 14, y);
+      y += 6;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EQUIPAMENTO', 14, y);
+      y += 6;
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Codigo: ${pedido.equipamento_codigo}`, 14, y);
+      y += 5;
+      if (pedido.equipamento_descricao) {
+        doc.text(`Descricao: ${pedido.equipamento_descricao}`, 14, y);
+        y += 5;
+      }
+      if (pedido.equipamento_tipo) {
+        doc.text(`Tipo: ${pedido.equipamento_tipo}`, 14, y);
+        y += 5;
+      }
+      y += 4;
+    }
+
+    // Orcamento e Ordem de Servico (se houver)
+    if (pedido.orcamento_numero || pedido.ordem_servico_numero) {
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, y, pageWidth - 14, y);
+      y += 6;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('REFERENCIAS', 14, y);
+      y += 6;
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+
+      if (pedido.orcamento_numero) {
+        doc.text(`Orcamento: #${pedido.orcamento_numero}`, 14, y);
+        if (pedido.orcamento_valor) {
+          doc.text(`(Valor: ${formatCurrency(Number(pedido.orcamento_valor))})`, 60, y);
+        }
+        y += 5;
+      }
+
+      if (pedido.ordem_servico_numero) {
+        const osText = `Ordem de Servico: OS-${pedido.ordem_servico_numero}`;
+        doc.text(osText, 14, y);
+        y += 5;
+        if (pedido.ordem_servico_tipo || pedido.ordem_servico_status) {
+          const osDetails = [];
+          if (pedido.ordem_servico_tipo) osDetails.push(`Tipo: ${pedido.ordem_servico_tipo}`);
+          if (pedido.ordem_servico_status) osDetails.push(`Status: ${pedido.ordem_servico_status}`);
+          doc.text(osDetails.join(' | '), 14, y);
+          y += 5;
+        }
+      }
+      y += 4;
+    }
 
     // Items table
     const itens = pedido.itens || [];
@@ -544,10 +613,44 @@ export default function DetalhePedidoPage() {
                 {pedido.destino_display}
               </span>
             </InfoItem>
-            {pedido.cliente_nome && <InfoItem label="Cliente" value={pedido.cliente_nome} />}
-            {pedido.equipamento_codigo && <InfoItem label="Equipamento" value={pedido.equipamento_codigo} />}
-            {pedido.orcamento_numero && <InfoItem label="Orcamento" value={`#${pedido.orcamento_numero}`} />}
-            {pedido.ordem_servico_numero && <InfoItem label="Ordem de Servico" value={`OS-${pedido.ordem_servico_numero}`} />}
+            {pedido.cliente_nome && (
+              <InfoItem label="Cliente">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{pedido.cliente_nome}</p>
+                  {pedido.cliente_cnpj && <p className="text-xs text-gray-500">{pedido.cliente_cnpj}</p>}
+                </div>
+              </InfoItem>
+            )}
+            {pedido.equipamento_codigo && (
+              <InfoItem label="Equipamento">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{pedido.equipamento_codigo}</p>
+                  {pedido.equipamento_descricao && <p className="text-xs text-gray-500">{pedido.equipamento_descricao}</p>}
+                  {pedido.equipamento_tipo && <p className="text-xs text-gray-400">{pedido.equipamento_tipo}</p>}
+                </div>
+              </InfoItem>
+            )}
+            {pedido.orcamento_numero && (
+              <InfoItem label="Orcamento">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">#{pedido.orcamento_numero}</p>
+                  {pedido.orcamento_valor && <p className="text-xs text-gray-500">Valor: {formatCurrency(Number(pedido.orcamento_valor))}</p>}
+                </div>
+              </InfoItem>
+            )}
+            {pedido.ordem_servico_numero && (
+              <InfoItem label="Ordem de Servico">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">OS-{pedido.ordem_servico_numero}</p>
+                  {pedido.ordem_servico_tipo && <p className="text-xs text-gray-500">{pedido.ordem_servico_tipo}</p>}
+                  {pedido.ordem_servico_status && (
+                    <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-800 mt-0.5">
+                      {pedido.ordem_servico_status}
+                    </span>
+                  )}
+                </div>
+              </InfoItem>
+            )}
             {pedido.local_estoque_nome && <InfoItem label="Local de Estoque" value={pedido.local_estoque_nome} />}
             <InfoItem
               label="Data do Pedido"

@@ -748,6 +748,11 @@ export interface ChecklistRealizado {
   observacoes_gerais: string;
   total_respostas: number;
   total_nao_conformidades: number;
+  latitude: string | null;
+  longitude: string | null;
+  precisao_gps: string | null;
+  geofence_validado: boolean | null;
+  geofence_distancia: string | null;
   criado_em: string;
   atualizado_em: string;
 }
@@ -1868,12 +1873,18 @@ export interface PedidoCompra {
   destino_display?: string;
   orcamento?: number | null;
   orcamento_numero?: string;
+  orcamento_valor?: string;
   ordem_servico?: number | null;
   ordem_servico_numero?: string;
+  ordem_servico_status?: string;
+  ordem_servico_tipo?: string;
   cliente?: number | null;
   cliente_nome?: string;
+  cliente_cnpj?: string;
   equipamento?: number | null;
   equipamento_codigo?: string;
+  equipamento_descricao?: string;
+  equipamento_tipo?: string;
   status: 'RASCUNHO' | 'ENVIADO' | 'APROVADO' | 'PARCIAL' | 'ENTREGUE' | 'CANCELADO';
   status_display?: string;
   data_pedido?: string;

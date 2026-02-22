@@ -57,9 +57,15 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
     fornecedor_telefone = serializers.CharField(source='fornecedor.telefone', read_only=True)
     fornecedor_email = serializers.EmailField(source='fornecedor.email', read_only=True)
     cliente_nome = serializers.SerializerMethodField(read_only=True)
+    cliente_cnpj = serializers.SerializerMethodField(read_only=True)
     equipamento_codigo = serializers.SerializerMethodField(read_only=True)
+    equipamento_descricao = serializers.SerializerMethodField(read_only=True)
+    equipamento_tipo = serializers.SerializerMethodField(read_only=True)
     orcamento_numero = serializers.SerializerMethodField(read_only=True)
+    orcamento_valor = serializers.SerializerMethodField(read_only=True)
     ordem_servico_numero = serializers.SerializerMethodField(read_only=True)
+    ordem_servico_status = serializers.SerializerMethodField(read_only=True)
+    ordem_servico_tipo = serializers.SerializerMethodField(read_only=True)
     local_estoque_nome = serializers.SerializerMethodField(read_only=True)
     local_entrega_nome = serializers.SerializerMethodField(read_only=True)
     local_entrega_endereco = serializers.SerializerMethodField(read_only=True)
@@ -75,10 +81,10 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
             'id', 'numero', 'fornecedor', 'fornecedor_nome',
             'fornecedor_cnpj', 'fornecedor_contato', 'fornecedor_telefone', 'fornecedor_email',
             'destino', 'destino_display',
-            'orcamento', 'orcamento_numero',
-            'ordem_servico', 'ordem_servico_numero',
-            'cliente', 'cliente_nome',
-            'equipamento', 'equipamento_codigo',
+            'orcamento', 'orcamento_numero', 'orcamento_valor',
+            'ordem_servico', 'ordem_servico_numero', 'ordem_servico_status', 'ordem_servico_tipo',
+            'cliente', 'cliente_nome', 'cliente_cnpj',
+            'equipamento', 'equipamento_codigo', 'equipamento_descricao', 'equipamento_tipo',
             'status', 'status_display',
             'data_pedido', 'data_previsao', 'data_entrega',
             'local_estoque', 'local_estoque_nome',
@@ -94,14 +100,34 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
     def get_cliente_nome(self, obj):
         return obj.cliente.nome_razao if obj.cliente else None
 
+    def get_cliente_cnpj(self, obj):
+        return obj.cliente.cnpj_cpf if obj.cliente else None
+
     def get_equipamento_codigo(self, obj):
         return obj.equipamento.codigo if obj.equipamento else None
+
+    def get_equipamento_descricao(self, obj):
+        return obj.equipamento.descricao if obj.equipamento else None
+
+    def get_equipamento_tipo(self, obj):
+        if obj.equipamento and obj.equipamento.tipo_equipamento:
+            return obj.equipamento.tipo_equipamento.nome
+        return None
 
     def get_orcamento_numero(self, obj):
         return obj.orcamento.numero if obj.orcamento else None
 
+    def get_orcamento_valor(self, obj):
+        return str(obj.orcamento.valor_total) if obj.orcamento else None
+
     def get_ordem_servico_numero(self, obj):
         return obj.ordem_servico.numero if obj.ordem_servico else None
+
+    def get_ordem_servico_status(self, obj):
+        return obj.ordem_servico.get_status_display() if obj.ordem_servico else None
+
+    def get_ordem_servico_tipo(self, obj):
+        return obj.ordem_servico.get_tipo_display() if obj.ordem_servico else None
 
     def get_local_estoque_nome(self, obj):
         return obj.local_estoque.nome if obj.local_estoque else None
