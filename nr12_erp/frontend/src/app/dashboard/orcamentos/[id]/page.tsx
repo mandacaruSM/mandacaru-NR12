@@ -63,43 +63,72 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
   }
 
   function handleImprimir() {
-    window.print();
+    abrirJanelaImpressao();
   }
 
-  async function handleGerarPDF() {
+  function handleGerarPDF() {
+    abrirJanelaImpressao();
+  }
+
+  function abrirJanelaImpressao() {
     try {
-      // Usar a funcionalidade nativa do navegador para salvar como PDF
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        alert('Bloqueador de pop-ups ativo. Permita pop-ups para gerar PDF.');
+        alert('Bloqueador de pop-ups ativo. Permita pop-ups para imprimir/gerar PDF.');
         return;
       }
 
-      // Copiar o conteúdo atual com estilos
+      const conteudo = document.querySelector('.orcamento-print')?.innerHTML || '';
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
           <head>
             <title>Orçamento ${orcamento?.numero}</title>
-            <style>
-              ${getImpressaoStyles()}
-            </style>
+            <style>${getImpressaoStyles()}</style>
           </head>
           <body>
-            ${document.querySelector('.orcamento-print')?.innerHTML || ''}
+            ${conteudo}
           </body>
         </html>
       `);
       printWindow.document.close();
 
-      // Aguardar um momento para o conteúdo carregar
-      setTimeout(() => {
-        printWindow.print();
-        setTimeout(() => printWindow.close(), 500);
-      }, 250);
+      // Aguardar imagens carregarem
+      const images = printWindow.document.querySelectorAll('img');
+      let loadedImages = 0;
+      const totalImages = images.length;
+
+      if (totalImages === 0) {
+        setTimeout(() => {
+          printWindow.print();
+        }, 300);
+      } else {
+        images.forEach((img) => {
+          if (img.complete) {
+            loadedImages++;
+            if (loadedImages === totalImages) {
+              setTimeout(() => printWindow.print(), 300);
+            }
+          } else {
+            img.onload = () => {
+              loadedImages++;
+              if (loadedImages === totalImages) {
+                setTimeout(() => printWindow.print(), 300);
+              }
+            };
+            img.onerror = () => {
+              loadedImages++;
+              if (loadedImages === totalImages) {
+                setTimeout(() => printWindow.print(), 300);
+              }
+            };
+          }
+        });
+      }
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF. Use o botão Imprimir e selecione "Salvar como PDF".');
+      console.error('Erro ao imprimir:', error);
+      alert('Erro ao imprimir. Tente novamente.');
     }
   }
 
@@ -112,61 +141,73 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
       }
       body {
         font-family: Arial, sans-serif;
-        padding: 10mm;
+        padding: 15mm;
         color: #000;
-        font-size: 10px;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      img {
+        max-height: 40px;
+        width: auto;
+        object-fit: contain;
       }
       h1 {
-        font-size: 16px;
+        font-size: 18px;
         margin-bottom: 5px;
       }
       h2 {
-        font-size: 12px;
-        margin-top: 10px;
+        font-size: 13px;
+        margin-top: 12px;
         margin-bottom: 8px;
-        border-bottom: 1px solid #000;
-        padding-bottom: 3px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 4px;
       }
       table {
         width: 100%;
         border-collapse: collapse;
-        margin: 8px 0;
+        margin: 10px 0;
       }
       th, td {
-        border: 1px solid #000;
-        padding: 4px;
+        border: 1px solid #333;
+        padding: 6px 8px;
         text-align: left;
-        font-size: 9px;
+        font-size: 10px;
       }
       th {
-        background-color: #f0f0f0;
+        background-color: #f5f5f5;
         font-weight: bold;
       }
       .bg-white {
         background: white;
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
         border: 1px solid #ddd;
+        border-radius: 4px;
       }
-      .shadow {
+      .shadow, .rounded-lg {
         box-shadow: none !important;
-      }
-      .rounded-lg {
-        border-radius: 0;
       }
       .grid {
         display: grid;
       }
       .grid-cols-2 {
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        gap: 12px;
+      }
+      .space-y-1 > * + * {
+        margin-top: 4px;
       }
       .space-y-2 > * + * {
         margin-top: 6px;
       }
-      .space-y-1 > * + * {
-        margin-top: 3px;
+      .space-y-3 > * + * {
+        margin-top: 8px;
       }
+      .mb-3 { margin-bottom: 10px; }
+      .mb-4 { margin-bottom: 12px; }
+      .mb-6 { margin-bottom: 16px; }
+      .p-4 { padding: 12px; }
+      .p-6 { padding: 16px; }
       .text-xs {
         font-size: 9px;
       }
@@ -175,6 +216,12 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
       }
       .text-base {
         font-size: 12px;
+      }
+      .text-lg {
+        font-size: 14px;
+      }
+      .font-medium {
+        font-weight: 500;
       }
       .font-semibold {
         font-weight: 600;
@@ -186,19 +233,20 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
         display: none !important;
       }
       .text-blue-600 {
-        color: #2563eb !important;
+        color: #2563eb;
       }
-      .text-gray-900 {
-        color: #4b5563;
+      .text-gray-500 {
+        color: #6b7280;
       }
       .text-gray-900 {
         color: #111827;
       }
       .border-t {
         border-top: 1px solid #d1d5db;
-        padding-top: 8px;
-        margin-top: 8px;
+        padding-top: 10px;
+        margin-top: 10px;
       }
+      .pt-2 { padding-top: 8px; }
       .text-center {
         text-align: center;
       }
@@ -208,18 +256,33 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
       .flex {
         display: flex;
       }
+      .flex-1 {
+        flex: 1;
+      }
+      .items-start {
+        align-items: flex-start;
+      }
       .justify-between {
         justify-content: space-between;
       }
+      .gap-4 {
+        gap: 12px;
+      }
+      .bg-gray-50 {
+        background-color: #f9fafb;
+      }
+      .divide-y > * + * {
+        border-top: 1px solid #e5e7eb;
+      }
       @media print {
         body {
-          padding: 8mm;
+          padding: 10mm;
         }
         .no-print {
           display: none !important;
         }
         @page {
-          margin: 12mm;
+          margin: 10mm;
           size: A4;
         }
       }
