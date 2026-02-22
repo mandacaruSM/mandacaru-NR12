@@ -320,7 +320,7 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
               <img
                 src="/logo.png"
                 alt="Logo da Empresa"
-                className="w-48 h-auto max-h-24 object-contain"
+                className="h-12 w-auto object-contain print:h-10"
               />
             </div>
             <div className="text-gray-900">
@@ -545,14 +545,18 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
 
       <style jsx global>{`
         @media print {
-          /* Esconder elementos específicos de navegação */
+          /* Esconder sidebar, header e navegação */
           nav,
           aside,
+          header,
           .sidebar,
           [class*="sidebar"],
+          [class*="Sidebar"],
           [class*="navigation"],
-          [role="navigation"]:not(.print-keep),
-          [role="complementary"] {
+          [class*="Header"],
+          [role="navigation"],
+          [role="complementary"],
+          main > div:first-child:not(.orcamento-print) {
             display: none !important;
           }
 
@@ -567,6 +571,8 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
+            width: 100%;
+            height: auto;
           }
 
           /* Garantir cores precisas */
@@ -586,6 +592,15 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
             font-size: 10pt;
           }
 
+          body > div,
+          body > div > div,
+          body > div > div > div {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
           /* Container do orçamento */
           .p-6 {
             padding: 0 !important;
@@ -595,6 +610,10 @@ export default function OrcamentoDetalhesPage({ params }: { params: Promise<{ id
             padding: 0 !important;
             max-width: 100%;
             margin: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
           }
 
           /* Cards e seções */

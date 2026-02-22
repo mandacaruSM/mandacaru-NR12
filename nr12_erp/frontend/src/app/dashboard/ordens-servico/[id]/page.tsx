@@ -452,7 +452,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
               <img
                 src="/logo.png"
                 alt="Logo da Empresa"
-                className="w-48 h-auto max-h-24 object-contain"
+                className="h-12 w-auto object-contain print:h-10"
               />
             </div>
             <div className="text-gray-900">
@@ -948,6 +948,21 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
 
       <style jsx global>{`
         @media print {
+          /* Esconder sidebar, header e navegação */
+          nav,
+          aside,
+          header,
+          .sidebar,
+          [class*="sidebar"],
+          [class*="navigation"],
+          [role="navigation"],
+          [role="complementary"],
+          [class*="Sidebar"],
+          [class*="Header"],
+          main > div:first-child:not(.os-print) {
+            display: none !important;
+          }
+
           * {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
@@ -956,18 +971,31 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
             margin: 0 !important;
             padding: 0 !important;
             width: 100%;
-            height: 100%;
+            height: auto;
+            background: white !important;
           }
-          body > div {
+          body > div,
+          body > div > div,
+          body > div > div > div {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .p-6 {
             padding: 0 !important;
           }
           .no-print {
             display: none !important;
           }
           .os-print {
-            padding: 10mm !important;
+            padding: 0 !important;
             max-width: 100%;
-            margin: 0 auto;
+            margin: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
           }
           .bg-white {
             box-shadow: none !important;
@@ -994,10 +1022,10 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
             box-shadow: none !important;
           }
           .rounded-lg {
-            border-radius: 0 !important;
+            border-radius: 4px !important;
           }
           @page {
-            margin: 12mm;
+            margin: 15mm;
             size: A4;
           }
         }
