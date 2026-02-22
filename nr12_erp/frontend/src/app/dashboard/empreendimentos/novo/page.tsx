@@ -179,12 +179,32 @@ export default function NovoEmpreendimentoPage() {
     setError('');
 
     try {
+      // Formatar latitude/longitude para 8 casas decimais (máximo do DecimalField no Django)
+      let latitudeFormatada: string | null = null;
+      let longitudeFormatada: string | null = null;
+
+      if (formData.latitude) {
+        const latNum = parseFloat(String(formData.latitude).replace(',', '.'));
+        if (!isNaN(latNum)) {
+          latitudeFormatada = (Math.round(latNum * 100000000) / 100000000).toString();
+        }
+      }
+
+      if (formData.longitude) {
+        const lngNum = parseFloat(String(formData.longitude).replace(',', '.'));
+        if (!isNaN(lngNum)) {
+          longitudeFormatada = (Math.round(lngNum * 100000000) / 100000000).toString();
+        }
+      }
+
       // payload tipado sem any
       const payload: Partial<Empreendimento> & {
         supervisor: number | null;
         tecnicos_ids: number[];
       } = {
         ...formData,
+        latitude: latitudeFormatada,
+        longitude: longitudeFormatada,
         supervisor: supervisorSelecionado === '' ? null : supervisorSelecionado,
         tecnicos_ids: tecnicosSelecionados,
       };
