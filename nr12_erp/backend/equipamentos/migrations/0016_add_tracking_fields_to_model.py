@@ -6,10 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('equipamentos', '0015_equipamento_enhanced_tracking'),
+        ('equipamentos', '0007_historicalequipamento_consumo_nominal_l_h_and_more'),
     ]
 
     operations = [
+        # Adicionar campos ao modelo Equipamento
+        migrations.AddField(
+            model_name='equipamento',
+            name='data_ultima_leitura',
+            field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
+        ),
+        migrations.AddField(
+            model_name='equipamento',
+            name='status_operacional',
+            field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
+        ),
+        migrations.AddField(
+            model_name='equipamento',
+            name='data_ultima_manutencao',
+            field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
+        ),
+        migrations.AddField(
+            model_name='equipamento',
+            name='leitura_ultima_manutencao',
+            field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
+        ),
+        migrations.AddField(
+            model_name='equipamento',
+            name='proxima_manutencao_leitura',
+            field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
+        ),
+        migrations.AddField(
+            model_name='equipamento',
+            name='proxima_manutencao_data',
+            field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
+        ),
+
+        # Adicionar campos ao histórico
         migrations.AddField(
             model_name='historicalequipamento',
             name='data_ultima_leitura',
