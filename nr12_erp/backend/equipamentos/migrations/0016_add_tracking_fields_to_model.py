@@ -3,6 +3,63 @@
 from django.db import migrations, models
 
 
+def add_field_if_not_exists(apps, schema_editor):
+    """
+    Adiciona campos apenas se não existirem.
+    Necessário porque a migration 0015 foi aplicada em produção antes de ser removida.
+    """
+    from django.db import connection
+
+    with connection.cursor() as cursor:
+        # Verifica quais colunas já existem
+        cursor.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='equipamentos_equipamento'
+        """)
+        existing_columns = {row[0] for row in cursor.fetchall()}
+
+        # Lista de campos a adicionar
+        fields_to_add = [
+            ('data_ultima_leitura', 'TIMESTAMP', 'NULL'),
+            ('status_operacional', "VARCHAR(20) DEFAULT 'OPERACIONAL'", 'NOT NULL'),
+            ('data_ultima_manutencao', 'DATE', 'NULL'),
+            ('leitura_ultima_manutencao', 'NUMERIC(12, 2)', 'NULL'),
+            ('proxima_manutencao_leitura', 'NUMERIC(12, 2)', 'NULL'),
+            ('proxima_manutencao_data', 'DATE', 'NULL'),
+        ]
+
+        # Adicionar campos que não existem em equipamentos_equipamento
+        for field_name, field_type, nullable in fields_to_add:
+            if field_name not in existing_columns:
+                cursor.execute(f"""
+                    ALTER TABLE equipamentos_equipamento
+                    ADD COLUMN {field_name} {field_type} {nullable}
+                """)
+                print(f"✓ Adicionado campo {field_name} em equipamentos_equipamento")
+            else:
+                print(f"→ Campo {field_name} já existe em equipamentos_equipamento")
+
+        # Verificar histórico
+        cursor.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='equipamentos_equipamento_history'
+        """)
+        existing_history_columns = {row[0] for row in cursor.fetchall()}
+
+        # Adicionar campos que não existem em equipamentos_equipamento_history
+        for field_name, field_type, nullable in fields_to_add:
+            if field_name not in existing_history_columns:
+                cursor.execute(f"""
+                    ALTER TABLE equipamentos_equipamento_history
+                    ADD COLUMN {field_name} {field_type} {nullable}
+                """)
+                print(f"✓ Adicionado campo {field_name} em equipamentos_equipamento_history")
+            else:
+                print(f"→ Campo {field_name} já existe em equipamentos_equipamento_history")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,67 +67,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Adicionar campos ao modelo Equipamento
-        migrations.AddField(
-            model_name='equipamento',
-            name='data_ultima_leitura',
-            field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='status_operacional',
-            field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='data_ultima_manutencao',
-            field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='leitura_ultima_manutencao',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='proxima_manutencao_leitura',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='proxima_manutencao_data',
-            field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
-        ),
-
-        # Adicionar campos ao histórico
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='data_ultima_leitura',
-            field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='data_ultima_manutencao',
-            field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='leitura_ultima_manutencao',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='proxima_manutencao_data',
-            field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='proxima_manutencao_leitura',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='status_operacional',
-            field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
-        ),
+        migrations.RunPython(add_field_if_not_exists, migrations.RunPython.noop),
     ]
