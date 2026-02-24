@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { financeiroApi, type ContaReceber, type Pagamento } from '@/lib/api';
 import PagamentoModal from '@/components/PagamentoModal';
+import { gerarImpressaoProfissional } from '@/components/ImpressaoProfissional';
 
 export default function ContaReceberDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -85,6 +86,52 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
     return colors[status] || 'bg-gray-100 text-gray-800';
   }
 
+  function handleImprimirFatura() {
+    if (!conta) return;
+
+    // Preparar dados para impressão da fatura
+    const dadosFatura = {
+      numero: conta.numero,
+      tipo: conta.tipo,
+      tipo_display: conta.tipo_display,
+      status: conta.status,
+      status_display: conta.status_display,
+
+      // Cliente
+      cliente_nome: conta.cliente_nome,
+      cliente_cpf_cnpj: conta.cliente_cpf_cnpj,
+
+      // Datas
+      data_emissao: conta.data_emissao,
+      data_vencimento: conta.data_vencimento,
+      data_pagamento: conta.data_pagamento,
+
+      // Valores
+      valor_original: conta.valor_original,
+      valor_juros: conta.valor_juros,
+      valor_desconto: conta.valor_desconto,
+      valor_final: conta.valor_final,
+      valor_pago: conta.valor_pago,
+
+      // Documentos vinculados
+      orcamento_numero: conta.orcamento_numero,
+      orcamento_data: conta.orcamento_data,
+      orcamento_valor: conta.valor_original, // Valor original vem do orçamento/OS
+      ordem_servico_numero: conta.ordem_servico_numero,
+      ordem_servico_data: conta.ordem_servico_data,
+      ordem_servico_valor: conta.valor_original,
+
+      // Informações adicionais
+      descricao: conta.descricao,
+      observacoes: conta.observacoes,
+      forma_pagamento: conta.forma_pagamento,
+
+      created_at: conta.created_at,
+    };
+
+    gerarImpressaoProfissional('fatura', dadosFatura);
+  }
+
   if (loading) {
     return <div className="p-6 text-gray-900">Carregando...</div>;
   }
@@ -105,6 +152,13 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleImprimirFatura}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+          >
+            <span>🖨️</span>
+            Imprimir Fatura
+          </button>
           {(conta.status === 'ABERTA' || conta.status === 'VENCIDA') && (
             <button
               onClick={() => setShowPagamentoModal(true)}

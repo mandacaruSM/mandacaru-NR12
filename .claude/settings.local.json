@@ -84,7 +84,10 @@
       "Bash(railway version:*)",
       "Bash(where:*)",
       "Bash(d:)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(Get-ChildItem -Path \"d:/mandacaru_nr12/nr12_erp/backend\" -Recurse -Filter \"*.py\")",
+      "Bash(Where-Object { $_FullName -like \"*empreendimento*\" })",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ],
     "deny": [],
     "ask": [],

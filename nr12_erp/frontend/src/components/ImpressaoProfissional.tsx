@@ -1,10 +1,12 @@
 /**
- * Componente para impressão profissional de documentos (Orçamentos e OS)
+ * Componente para impressão profissional de documentos (Orçamentos, OS e Faturas)
  * Layout limpo, moderno e profissional para impressão em A4
  */
 
+import { DADOS_EMPRESA, LOGO_PATH } from '@/config/empresa';
+
 export function gerarImpressaoProfissional(
-  tipo: 'orcamento' | 'ordem_servico',
+  tipo: 'orcamento' | 'ordem_servico' | 'fatura',
   dados: any
 ) {
   const printWindow = window.open('', '_blank');
@@ -45,8 +47,13 @@ export function gerarImpressaoProfissional(
   return printWindow;
 }
 
-function gerarHTMLImpressao(tipo: 'orcamento' | 'ordem_servico', dados: any) {
-  const titulo = tipo === 'orcamento' ? 'ORÇAMENTO' : 'ORDEM DE SERVIÇO';
+function gerarHTMLImpressao(tipo: 'orcamento' | 'ordem_servico' | 'fatura', dados: any) {
+  const titulos = {
+    orcamento: 'ORÇAMENTO',
+    ordem_servico: 'ORDEM DE SERVIÇO',
+    fatura: 'FATURA / NOTA DE COBRANÇA'
+  };
+  const titulo = titulos[tipo];
   const numero = dados.numero;
 
   return `
@@ -61,10 +68,11 @@ function gerarHTMLImpressao(tipo: 'orcamento' | 'ordem_servico', dados: any) {
 <body>
   ${gerarCabecalho(titulo, dados)}
   ${gerarInformacoesCliente(dados)}
-  ${gerarInformacoesDocumento(tipo, dados)}
+  ${tipo === 'fatura' ? gerarInformacoesFatura(dados) : gerarInformacoesDocumento(tipo, dados)}
   ${dados.descricao ? gerarDescricao(dados.descricao) : ''}
-  ${gerarTabelaItens(dados.itens || [])}
+  ${tipo === 'fatura' ? gerarTabelaDocumentosVinculados(dados) : gerarTabelaItens(dados.itens || [])}
   ${gerarResumoValores(dados)}
+  ${tipo === 'fatura' ? gerarInformacoesPagamento() : ''}
   ${dados.observacoes ? gerarObservacoes(dados.observacoes) : ''}
   ${gerarRodape(tipo, dados)}
 </body>
@@ -384,6 +392,23 @@ function getEstilosProfissionais() {
       background: #d1fae5;
       color: #065f46;
     }
+
+    .status-badge.pendente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-badge.pago,
+    .status-badge.recebido {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.vencido,
+    .status-badge.atrasado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
   `;
 }
 
@@ -391,14 +416,14 @@ function gerarCabecalho(titulo: string, dados: any) {
   return `
     <div class="cabecalho">
       <div>
-        <img src="/logo.png" alt="Logo" class="logo-empresa" onerror="this.style.display='none'" />
+        <img src="${LOGO_PATH}" alt="Logo" class="logo-empresa" onerror="this.style.display='none'" />
       </div>
       <div class="info-empresa">
-        <strong>MANDACARU S M</strong><br>
-        CNPJ: XX.XXX.XXX/XXXX-XX<br>
-        Endereço: Sua Rua, 123<br>
-        Telefone: (XX) XXXXX-XXXX<br>
-        Email: contato@mandacaru.com
+        <strong>${DADOS_EMPRESA.nome}</strong><br>
+        CNPJ: ${DADOS_EMPRESA.cnpj}<br>
+        ${DADOS_EMPRESA.endereco}<br>
+        ${DADOS_EMPRESA.cidade} - CEP: ${DADOS_EMPRESA.cep}<br>
+        ${DADOS_EMPRESA.celular} | ${DADOS_EMPRESA.email}
       </div>
     </div>
 
@@ -599,12 +624,129 @@ function gerarObservacoes(observacoes: string) {
   `;
 }
 
+function gerarInformacoesFatura(dados: any) {
+  const dataEmissao = dados.data_emissao || dados.created_at;
+  const dataVencimento = dados.data_vencimento;
+
+  return `
+    <div class="secao">
+      <h2 class="secao-titulo">💳 Informações da Fatura</h2>
+      <div class="info-grid">
+        <div class="info-box">
+          <div class="info-item">
+            <div class="info-label">Tipo da Cobrança</div>
+            <div class="info-value">${dados.tipo_display || '-'}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Status</div>
+            <div class="info-value">
+              <span class="status-badge ${dados.status?.toLowerCase() || 'pendente'}">${dados.status_display || 'Pendente'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <div class="info-item">
+            <div class="info-label">Data de Emissão</div>
+            <div class="info-value">${new Date(dataEmissao).toLocaleDateString('pt-BR')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Data de Vencimento</div>
+            <div class="info-value" style="color: #dc2626; font-weight: 700;">${new Date(dataVencimento).toLocaleDateString('pt-BR')}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function gerarTabelaDocumentosVinculados(dados: any) {
+  return `
+    <div class="secao no-break">
+      <h2 class="secao-titulo">📑 Documentos Vinculados</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo de Documento</th>
+            <th>Número</th>
+            <th>Data</th>
+            <th class="text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dados.orcamento_numero ? `
+          <tr>
+            <td><span class="item-tipo servico">ORÇAMENTO</span></td>
+            <td><strong>${dados.orcamento_numero}</strong></td>
+            <td>${dados.orcamento_data ? new Date(dados.orcamento_data).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="text-right">R$ ${Number(dados.orcamento_valor || 0).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${dados.ordem_servico_numero ? `
+          <tr>
+            <td><span class="item-tipo produto">ORDEM DE SERVIÇO</span></td>
+            <td><strong>${dados.ordem_servico_numero}</strong></td>
+            <td>${dados.ordem_servico_data ? new Date(dados.ordem_servico_data).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="text-right">R$ ${Number(dados.ordem_servico_valor || 0).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          <tr style="background: #eff6ff; font-weight: 700;">
+            <td colspan="3"><span style="color: #2563eb;">CONTA A RECEBER</span></td>
+            <td class="text-right" style="color: #2563eb;">${dados.numero}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function gerarInformacoesPagamento() {
+  return `
+    <div class="secao">
+      <h2 class="secao-titulo">💰 Formas de Pagamento</h2>
+      <div class="info-grid">
+        <div class="info-box">
+          <div class="info-item">
+            <div class="info-label">Banco</div>
+            <div class="info-value">${DADOS_EMPRESA.banco}</div>
+          </div>
+          ${DADOS_EMPRESA.agencia ? `
+          <div class="info-item">
+            <div class="info-label">Agência</div>
+            <div class="info-value">${DADOS_EMPRESA.agencia}</div>
+          </div>
+          ` : ''}
+          ${DADOS_EMPRESA.conta ? `
+          <div class="info-item">
+            <div class="info-label">Conta</div>
+            <div class="info-value">${DADOS_EMPRESA.conta}</div>
+          </div>
+          ` : ''}
+        </div>
+        <div class="info-box">
+          <div class="info-item">
+            <div class="info-label">PIX (CNPJ)</div>
+            <div class="info-value" style="font-family: monospace; font-size: 10pt; color: #2563eb; font-weight: 700;">
+              ${DADOS_EMPRESA.pix}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function gerarRodape(tipo: string, dados: any) {
+  const mensagens = {
+    orcamento: 'Proposta válida conforme prazo especificado acima',
+    ordem_servico: 'Documento vinculado ao orçamento aprovado',
+    fatura: 'Pagamento até a data de vencimento. Após o vencimento, sujeito a multa e juros.'
+  };
+
   return `
     <div class="rodape">
       <p>
         Este documento foi gerado eletronicamente em ${new Date().toLocaleString('pt-BR')}<br>
-        ${tipo === 'orcamento' ? 'Proposta válida conforme prazo especificado acima' : 'Documento vinculado ao orçamento aprovado'}
+        ${mensagens[tipo as keyof typeof mensagens] || ''}
       </p>
 
       ${tipo === 'ordem_servico' && dados.status === 'CONCLUIDA' ? `
