@@ -82,13 +82,13 @@ function getEstilosProfissionais() {
 
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 12mm;
     }
 
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 11pt;
-      line-height: 1.5;
+      font-size: 9pt;
+      line-height: 1.3;
       color: #1a1a1a;
       background: white;
     }
@@ -98,89 +98,89 @@ function getEstilosProfissionais() {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding-bottom: 15px;
-      border-bottom: 3px solid #2563eb;
-      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #2563eb;
+      margin-bottom: 12px;
     }
 
     .logo-empresa {
-      max-width: 200px;
-      max-height: 60px;
+      max-width: 140px;
+      max-height: 45px;
       object-fit: contain;
     }
 
     .info-empresa {
       text-align: right;
-      font-size: 9pt;
-      line-height: 1.4;
+      font-size: 7.5pt;
+      line-height: 1.3;
       color: #4b5563;
     }
 
     .info-empresa strong {
       color: #1a1a1a;
-      font-size: 14pt;
+      font-size: 10pt;
     }
 
     /* Título do documento */
     .titulo-documento {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
-      padding: 12px 20px;
-      margin: 20px 0;
-      border-radius: 6px;
+      padding: 8px 15px;
+      margin: 12px 0;
+      border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .titulo-documento h1 {
-      font-size: 18pt;
+      font-size: 13pt;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .titulo-documento .numero {
-      font-size: 16pt;
+      font-size: 12pt;
       font-weight: 700;
       background: rgba(255, 255, 255, 0.2);
-      padding: 6px 15px;
-      border-radius: 4px;
+      padding: 4px 12px;
+      border-radius: 3px;
     }
 
     /* Seções */
     .secao {
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       page-break-inside: avoid;
     }
 
     .secao-titulo {
-      font-size: 11pt;
+      font-size: 9pt;
       font-weight: 600;
       color: #2563eb;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 6px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e5e7eb;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     /* Grid de informações */
     .info-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      margin-bottom: 15px;
+      gap: 10px;
+      margin-bottom: 8px;
     }
 
     .info-box {
       background: #f9fafb;
       border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 12px;
+      border-radius: 4px;
+      padding: 8px;
     }
 
     .info-item {
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .info-item:last-child {
@@ -188,16 +188,16 @@ function getEstilosProfissionais() {
     }
 
     .info-label {
-      font-size: 9pt;
+      font-size: 7pt;
       color: #6b7280;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
       text-transform: uppercase;
       font-weight: 500;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
     }
 
     .info-value {
-      font-size: 11pt;
+      font-size: 8.5pt;
       color: #1a1a1a;
       font-weight: 500;
     }
@@ -206,8 +206,8 @@ function getEstilosProfissionais() {
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 10px 0;
-      font-size: 10pt;
+      margin: 6px 0;
+      font-size: 8pt;
     }
 
     thead {
@@ -216,12 +216,12 @@ function getEstilosProfissionais() {
     }
 
     th {
-      padding: 10px 8px;
+      padding: 6px 5px;
       text-align: left;
       font-weight: 600;
-      font-size: 9pt;
+      font-size: 7.5pt;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     th.text-right {
@@ -241,7 +241,7 @@ function getEstilosProfissionais() {
     }
 
     td {
-      padding: 10px 8px;
+      padding: 6px 5px;
       color: #1a1a1a;
     }
 
@@ -255,9 +255,9 @@ function getEstilosProfissionais() {
 
     .item-tipo {
       display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 8pt;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 6.5pt;
       font-weight: 600;
       text-transform: uppercase;
     }
@@ -274,16 +274,16 @@ function getEstilosProfissionais() {
 
     /* Resumo de valores */
     .resumo-valores {
-      margin-top: 20px;
-      border-top: 2px solid #e5e7eb;
-      padding-top: 15px;
+      margin-top: 12px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 8px;
     }
 
     .valor-linha {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
-      font-size: 11pt;
+      padding: 4px 0;
+      font-size: 9pt;
     }
 
     .valor-linha.subtotal {
@@ -292,13 +292,13 @@ function getEstilosProfissionais() {
     }
 
     .valor-linha.total {
-      font-size: 14pt;
+      font-size: 11pt;
       font-weight: 700;
       color: #2563eb;
       background: #eff6ff;
-      padding: 12px 15px;
-      margin-top: 10px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 6px;
+      border-radius: 4px;
       border: 2px solid #2563eb;
     }
 
@@ -309,31 +309,31 @@ function getEstilosProfissionais() {
     /* Descrição e Observações */
     .descricao, .observacoes {
       background: #fffbeb;
-      border-left: 4px solid #f59e0b;
-      padding: 12px 15px;
-      margin: 15px 0;
-      border-radius: 4px;
-      font-size: 10pt;
-      line-height: 1.6;
+      border-left: 3px solid #f59e0b;
+      padding: 8px 10px;
+      margin: 10px 0;
+      border-radius: 3px;
+      font-size: 8pt;
+      line-height: 1.4;
       color: #78350f;
     }
 
     /* Rodapé */
     .rodape {
-      margin-top: 30px;
-      padding-top: 15px;
-      border-top: 2px solid #e5e7eb;
-      font-size: 9pt;
+      margin-top: 15px;
+      padding-top: 8px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 7pt;
       color: #6b7280;
       text-align: center;
     }
 
     .assinatura-box {
-      margin-top: 40px;
-      padding-top: 60px;
+      margin-top: 25px;
+      padding-top: 40px;
       text-align: center;
       border-top: 1px solid #1a1a1a;
-      max-width: 400px;
+      max-width: 350px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -357,12 +357,12 @@ function getEstilosProfissionais() {
     /* Badge de status */
     .status-badge {
       display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 9pt;
+      padding: 3px 10px;
+      border-radius: 15px;
+      font-size: 7.5pt;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .status-badge.aprovado {
