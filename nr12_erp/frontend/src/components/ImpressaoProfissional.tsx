@@ -660,6 +660,40 @@ function gerarInformacoesFatura(dados: any) {
 }
 
 function gerarTabelaDocumentosVinculados(dados: any) {
+  // Se for fatura consolidada com múltiplas contas
+  if (dados.contas_incluidas && dados.contas_incluidas.length > 0) {
+    const linhasContas = dados.contas_incluidas.map((conta: any) => `
+      <tr>
+        <td><span class="item-tipo ${conta.status === 'VENCIDA' ? 'produto' : 'servico'}">${conta.numero}</span></td>
+        <td>${conta.tipo}</td>
+        <td>${conta.descricao}</td>
+        <td class="text-center">${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}</td>
+        <td class="text-right"><strong>R$ ${Number(conta.valor || 0).toFixed(2)}</strong></td>
+      </tr>
+    `).join('');
+
+    return `
+      <div class="secao no-break">
+        <h2 class="secao-titulo">📑 Contas Incluídas nesta Fatura</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 100px">Nº Conta</th>
+              <th style="width: 120px">Origem</th>
+              <th>Descrição</th>
+              <th class="text-center" style="width: 90px">Vencimento</th>
+              <th class="text-right" style="width: 100px">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${linhasContas}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Se for fatura individual com documentos vinculados
   return `
     <div class="secao no-break">
       <h2 class="secao-titulo">📑 Documentos Vinculados</h2>

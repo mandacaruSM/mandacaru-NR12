@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { financeiroApi, clientesApi, type ContaReceber, type Cliente } from '@/lib/api';
+import { gerarImpressaoProfissional } from '@/components/ImpressaoProfissional';
 
 function formatCurrency(value: number): string {
   return 'R$ ' + Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -102,154 +101,62 @@ export default function EmitirFaturaPage() {
     return conta.tipo_display || conta.tipo || '-';
   }
 
-  async function handleGerarPDF() {
+  function handleGerarPDF() {
     if (!clienteInfo || contasFatura.length === 0) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 15;
+    // Gerar número único para a fatura
+    const dataAtual = new Date();
+    const numeroFatura = `FAT-${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;
 
-    // Logo no canto esquerdo
-    try {
-      const logoImg = new Image();
-      logoImg.src = '/logo.png';
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-      });
-      doc.addImage(logoImg, 'PNG', 14, 10, 30, 15);
-    } catch (e) {
-      console.warn('Erro ao carregar logo:', e);
-    }
+    // Calcular vencimento mais próximo das contas
+    const vencimentoMaisProximo = contasFatura.reduce((closest, conta) => {
+      const venc = new Date(conta.data_vencimento);
+      return venc < closest ? venc : closest;
+    }, new Date(contasFatura[0].data_vencimento));
 
-    // Header (alinhado à direita por causa do logo)
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FATURA', pageWidth - 14, y, { align: 'right' });
-    y += 10;
+    // Preparar dados para impressão da fatura consolidada
+    const dadosFatura = {
+      numero: numeroFatura,
+      tipo: 'FATURA_CONSOLIDADA',
+      tipo_display: 'Fatura Consolidada',
+      status: contasFatura.some(c => c.status === 'VENCIDA') ? 'VENCIDA' : 'ABERTA',
+      status_display: contasFatura.some(c => c.status === 'VENCIDA') ? 'Vencida' : 'Aberta',
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const dataEmissao = new Date().toLocaleDateString('pt-BR');
-    doc.text(`Data de Emissao: ${dataEmissao}`, pageWidth - 14, y, { align: 'right' });
-    y += 12;
+      // Cliente
+      cliente_nome: clienteInfo.nome_razao,
+      cliente_cpf_cnpj: clienteInfo.cnpj_cpf,
 
-    // Linha separadora
-    doc.setDrawColor(200, 200, 200);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 8;
+      // Datas
+      data_emissao: dataAtual.toISOString(),
+      data_vencimento: vencimentoMaisProximo.toISOString(),
 
-    // Dados do Cliente
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CLIENTE', 14, y);
-    y += 6;
+      // Valores consolidados
+      valor_original: totalFatura,
+      valor_juros: 0,
+      valor_desconto: 0,
+      valor_final: totalFatura,
+      valor_pago: 0,
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Nome: ${clienteInfo.nome_razao}`, 14, y);
-    y += 5;
-    if (clienteInfo.cnpj_cpf) {
-      doc.text(`CPF/CNPJ: ${clienteInfo.cnpj_cpf}`, 14, y);
-      y += 5;
-    }
-    if (clienteInfo.email) {
-      doc.text(`Email: ${clienteInfo.email}`, 14, y);
-      y += 5;
-    }
-    if (clienteInfo.telefone) {
-      doc.text(`Telefone: ${clienteInfo.telefone}`, 14, y);
-      y += 5;
-    }
-    // Endereco
-    const endereco = [
-      clienteInfo.logradouro,
-      clienteInfo.numero ? `nº ${clienteInfo.numero}` : '',
-      clienteInfo.complemento,
-      clienteInfo.bairro,
-      clienteInfo.cidade,
-      clienteInfo.uf,
-    ].filter(Boolean).join(', ');
-    if (endereco) {
-      doc.text(`Endereco: ${endereco}`, 14, y);
-      y += 5;
-    }
-    y += 6;
+      // Contas incluídas (para a tabela de documentos vinculados)
+      contas_incluidas: contasFatura.map(conta => ({
+        numero: conta.numero,
+        tipo: getOrigemDisplay(conta),
+        descricao: conta.descricao || '-',
+        data_vencimento: conta.data_vencimento,
+        valor: Number(conta.valor_final || conta.valor_original || 0),
+        orcamento_numero: conta.orcamento_numero,
+        ordem_servico_numero: conta.ordem_servico_numero,
+        status: conta.status,
+        status_display: conta.status_display,
+      })),
 
-    // Linha separadora
-    doc.setDrawColor(200, 200, 200);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 8;
+      // Informações adicionais
+      descricao: `Fatura consolidada contendo ${contasFatura.length} conta(s) a receber`,
+      observacoes: 'Favor efetuar o pagamento até a data de vencimento. Em caso de dúvidas, entre em contato conosco.',
+      created_at: dataAtual.toISOString(),
+    };
 
-    // Titulo da tabela
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CONTAS A RECEBER', 14, y);
-    y += 6;
-
-    // Tabela de contas
-    const tableBody = contasFatura.map((conta) => [
-      conta.numero || '-',
-      getOrigemDisplay(conta),
-      conta.descricao || '-',
-      formatDate(conta.data_vencimento),
-      formatCurrency(Number(conta.valor_final || conta.valor_original || 0)),
-    ]);
-
-    autoTable(doc, {
-      startY: y,
-      head: [['Numero', 'Origem', 'Descricao', 'Vencimento', 'Valor']],
-      body: tableBody,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 60 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 30, halign: 'right' },
-      },
-      theme: 'striped',
-    });
-
-    // Total
-    const finalY = (doc as any).lastAutoTable?.finalY || y + 20;
-    let ty = finalY + 10;
-
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 80, ty - 2, pageWidth - 14, ty - 2);
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`TOTAL: ${formatCurrency(totalFatura)}`, pageWidth - 14, ty + 4, { align: 'right' });
-    ty += 20;
-
-    // Informacoes de pagamento
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('INFORMACOES PARA PAGAMENTO', 14, ty);
-    ty += 6;
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Favor efetuar o pagamento ate a data de vencimento.', 14, ty);
-    ty += 5;
-    doc.text('Em caso de duvidas, entre em contato conosco.', 14, ty);
-    ty += 10;
-
-    // Footer
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(128, 128, 128);
-    const emitido = `Emitido em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`;
-    doc.text(emitido, 14, pageHeight - 10);
-    doc.text('Mandacaru NR12 ERP', pageWidth - 14, pageHeight - 10, { align: 'right' });
-
-    // Salvar PDF
-    const nomeCliente = clienteInfo.nome_razao.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
-    doc.save(`Fatura_${nomeCliente}_${dataEmissao.replace(/\//g, '-')}.pdf`);
+    gerarImpressaoProfissional('fatura', dadosFatura);
   }
 
   const clientesFiltrados = clientes.filter((c) =>
