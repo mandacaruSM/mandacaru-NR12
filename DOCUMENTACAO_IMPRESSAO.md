@@ -116,7 +116,57 @@ function handleImprimir() {
 
 ## Uso em Faturas (Contas a Receber)
 
-Página: `frontend/src/app/dashboard/financeiro/contas-receber/[id]/page.tsx`
+### Emissão de Fatura Consolidada
+
+Página principal: `frontend/src/app/dashboard/financeiro/contas-receber/emitir-fatura/page.tsx`
+
+Este é o fluxo principal de emissão de faturas:
+
+1. **Selecionar Cliente** - Busca e escolha do cliente
+2. **Selecionar Contas** - Marca as contas abertas/vencidas
+3. **Gerar Fatura** - Cria fatura consolidada com todas as contas
+
+```typescript
+import { gerarImpressaoProfissional } from '@/components/ImpressaoProfissional';
+
+function handleGerarPDF() {
+  // Gera número único da fatura
+  const numeroFatura = `FAT-${ano}${mes}${dia}-${random}`;
+
+  // Prepara dados da fatura consolidada
+  const dadosFatura = {
+    numero: numeroFatura,
+    tipo_display: 'Fatura Consolidada',
+    status: 'ABERTA',
+
+    cliente_nome: clienteInfo.nome_razao,
+    cliente_cpf_cnpj: clienteInfo.cnpj_cpf,
+
+    data_emissao: new Date(),
+    data_vencimento: vencimentoMaisProximo,
+
+    valor_final: totalFatura,
+
+    // Lista de contas incluídas
+    contas_incluidas: contasFatura.map(conta => ({
+      numero: conta.numero,
+      tipo: getOrigemDisplay(conta),
+      descricao: conta.descricao,
+      data_vencimento: conta.data_vencimento,
+      valor: conta.valor_final,
+      status: conta.status,
+    })),
+  };
+
+  gerarImpressaoProfissional('fatura', dadosFatura);
+}
+```
+
+### Impressão de Conta Individual
+
+Página de detalhes: `frontend/src/app/dashboard/financeiro/contas-receber/[id]/page.tsx`
+
+Para imprimir uma única conta a receber:
 
 ```typescript
 import { gerarImpressaoProfissional } from '@/components/ImpressaoProfissional';
@@ -164,19 +214,28 @@ function handleImprimirFatura() {
 
 ### Recursos especiais da fatura:
 
-1. **Tabela de Documentos Vinculados**
+1. **Fatura Consolidada** (múltiplas contas)
+   - Tabela mostra todas as contas incluídas
+   - Campos: Nº Conta, Origem, Descrição, Vencimento, Valor
+   - Badges coloridos por status (vencida = vermelho, aberta = azul)
+   - Total consolidado no resumo de valores
+
+2. **Fatura Individual** (uma conta)
+   - Tabela de Documentos Vinculados
    - Mostra orçamento (se houver)
    - Mostra ordem de serviço (se houver)
    - Destaca o número da conta a receber
 
-2. **Informações de Pagamento**
+3. **Informações de Pagamento**
    - Banco, agência, conta (do arquivo `empresa.ts`)
-   - Chave PIX destacada
+   - Chave PIX destacada em fonte monoespaçada
+   - Facilita cópia do PIX pelo cliente
 
-3. **Data de Vencimento Destacada**
+4. **Data de Vencimento Destacada**
    - Aparece em vermelho e negrito
+   - Chama atenção para o prazo de pagamento
 
-4. **Mensagem no rodapé**
+5. **Mensagem no rodapé**
    - "Pagamento até a data de vencimento. Após o vencimento, sujeito a multa e juros."
 
 ---
@@ -226,12 +285,29 @@ function handleImprimirFatura() {
 
 ## Fluxo de Impressão
 
+### Fluxo Padrão (Orçamento/OS/Conta Individual)
+
 1. Usuário clica no botão "Imprimir"
 2. Função `gerarImpressaoProfissional()` é chamada
 3. Nova janela é aberta com o documento formatado
 4. Sistema aguarda carregamento das imagens (logo)
 5. Janela de impressão do navegador é aberta automaticamente
 6. Usuário pode escolher imprimir ou salvar como PDF
+
+### Fluxo de Emissão de Fatura Consolidada
+
+1. Acesse: `/dashboard/financeiro/contas-receber/emitir-fatura`
+2. **Passo 1**: Selecione o cliente
+   - Busca por nome ou CPF/CNPJ
+   - Clique no cliente desejado
+3. **Passo 2**: Selecione as contas
+   - Sistema mostra contas abertas e vencidas do cliente
+   - Marque as contas que deseja incluir na fatura
+   - Ou use "Selecionar todas"
+4. **Passo 3**: Gerar fatura
+   - Revise o resumo (cliente, quantidade de contas, total)
+   - Clique em "Gerar PDF da Fatura"
+   - Impressão profissional abre automaticamente
 
 ---
 
