@@ -1071,6 +1071,17 @@ export const abastecimentosApi = {
 // ALMOXARIFADO API
 // ============================================
 
+export interface UnidadeMedida {
+  id: number;
+  sigla: string;
+  descricao: string;
+}
+
+export interface CategoriaProduto {
+  id: number;
+  nome: string;
+}
+
 export interface Produto {
   id: number;
   nome: string;
@@ -1123,6 +1134,18 @@ export interface MovimentoEstoque {
 }
 
 export const almoxarifadoApi = {
+  unidades: {
+    list: async () => {
+      return apiFetch<{ results: UnidadeMedida[] }>('/almoxarifado/unidades/');
+    },
+  },
+
+  categorias: {
+    list: async () => {
+      return apiFetch<{ results: CategoriaProduto[] }>('/almoxarifado/categorias/');
+    },
+  },
+
   produtos: {
     list: async (filters?: { tipo?: string; categoria?: number; ativo?: boolean; search?: string }) => {
       const params = new URLSearchParams();
@@ -1137,6 +1160,13 @@ export const almoxarifadoApi = {
 
     get: async (id: number) => {
       return apiFetch<Produto>(`/almoxarifado/produtos/${id}`);
+    },
+
+    create: async (data: Partial<Produto>) => {
+      return apiFetch<Produto>('/almoxarifado/produtos/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     },
 
     combustiveis: async () => {
