@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 def processar_os_concluida(sender, instance, created, **kwargs):
     """
     Quando uma Ordem de Serviço é concluída:
-    1. Cria automaticamente uma Conta a Receber
-    2. Se for manutenção preventiva, cria/atualiza ProgramacaoManutencao
+    1. Atualiza dados do equipamento (horímetro, status, datas de manutenção)
+    2. Cria automaticamente uma Conta a Receber
+    3. Se for manutenção preventiva, cria/atualiza ProgramacaoManutencao
     """
     if created:
         return
@@ -26,7 +27,10 @@ def processar_os_concluida(sender, instance, created, **kwargs):
         return
 
     with transaction.atomic():
-        # 1. Criar Conta a Receber (se ainda não existe)
+        # 1. Atualizar dados do equipamento
+        atualizar_equipamento_apos_conclusao(instance)
+
+        # 2. Criar Conta a Receber (se ainda não existe)
         if not instance.contas_receber.exists():
             from django.utils import timezone
             data_vencimento = instance.data_conclusao or timezone.now().date()
@@ -48,7 +52,7 @@ def processar_os_concluida(sender, instance, created, **kwargs):
                 criado_por=instance.concluido_por,
             )
 
-        # 2. Se for manutenção preventiva, criar/atualizar ProgramacaoManutencao
+        # 3. Se for manutenção preventiva, criar/atualizar ProgramacaoManutencao
         criar_programacao_manutencao_preventiva(instance)
 
 
@@ -76,6 +80,68 @@ def validar_mudanca_status_os(sender, instance, **kwargs):
         if not instance.data_inicio:
             from django.utils import timezone
             instance.data_inicio = timezone.now().date()
+
+
+def atualizar_equipamento_apos_conclusao(os_instance):
+    """
+    Atualiza o equipamento após conclusão da OS:
+    - Atualiza horímetro/leitura atual
+    - Registra data da última manutenção
+    - Calcula e agenda próxima manutenção preventiva
+    """
+    if not os_instance.equipamento:
+        logger.info(f"[AtualizarEquipamento] OS {os_instance.numero} sem equipamento vinculado")
+        return
+
+    equipamento = os_instance.equipamento
+    from django.utils import timezone
+
+    # Atualizar horímetro/leitura atual
+    if os_instance.horimetro_final:
+        equipamento.leitura_atual = os_instance.horimetro_final
+        equipamento.data_ultima_leitura = timezone.now()
+        logger.info(f"[AtualizarEquipamento] Horímetro atualizado: {os_instance.horimetro_final}")
+
+    # Atualizar data e leitura da última manutenção
+    equipamento.data_ultima_manutencao = os_instance.data_conclusao
+    equipamento.leitura_ultima_manutencao = os_instance.horimetro_final or equipamento.leitura_atual
+
+    # Calcular próxima manutenção se for manutenção preventiva
+    if os_instance.orcamento and os_instance.orcamento.tipo == 'MANUTENCAO_PREVENTIVA':
+        if os_instance.orcamento.modelo_manutencao_preventiva:
+            modelo = os_instance.orcamento.modelo_manutencao_preventiva
+            leitura_atual = equipamento.leitura_atual or 0
+
+            # Próxima manutenção por leitura (horímetro/km)
+            equipamento.proxima_manutencao_leitura = leitura_atual + modelo.intervalo
+
+            # Próxima manutenção por data (estimar com base no intervalo)
+            # Assumindo uso médio, calcular data aproximada
+            if equipamento.data_conclusao and modelo.intervalo:
+                # Estimar dias até próxima manutenção (assumir 8h/dia de operação ou 100km/dia)
+                dias_estimados = 30  # Default de 1 mês
+                if equipamento.tipo_medicao == 'HORA':
+                    # Se usa horímetro, estimar com base em 8h/dia de operação
+                    dias_estimados = int(modelo.intervalo / 8)
+                elif equipamento.tipo_medicao == 'KM':
+                    # Se usa KM, estimar com base em 100km/dia
+                    dias_estimados = int(modelo.intervalo / 100)
+
+                # Limitar entre 7 e 180 dias
+                dias_estimados = max(7, min(180, dias_estimados))
+                equipamento.proxima_manutencao_data = os_instance.data_conclusao + timedelta(days=dias_estimados)
+
+            logger.info(
+                f"[AtualizarEquipamento] Próxima manutenção programada - "
+                f"Leitura: {equipamento.proxima_manutencao_leitura}, "
+                f"Data: {equipamento.proxima_manutencao_data}"
+            )
+
+    # Atualizar status operacional
+    equipamento.status_operacional = 'OPERACIONAL'
+
+    equipamento.save()
+    logger.info(f"[AtualizarEquipamento] Equipamento {equipamento.codigo} atualizado com sucesso")
 
 
 def criar_programacao_manutencao_preventiva(os_instance):

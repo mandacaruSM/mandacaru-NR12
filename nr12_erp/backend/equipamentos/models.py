@@ -52,6 +52,58 @@ class Equipamento(models.Model):
         help_text="Consumo de combustível em quilômetros por litro (para veículos)"
     )
 
+    # Tracking de manutenção e operação
+    data_ultima_leitura = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Data da Última Leitura',
+        help_text='Data/hora da última atualização do horímetro/odômetro'
+    )
+
+    status_operacional = models.CharField(
+        max_length=20,
+        choices=[
+            ('OPERACIONAL', 'Operacional'),
+            ('EM_MANUTENCAO', 'Em Manutenção'),
+            ('PARADO', 'Parado'),
+            ('DESATIVADO', 'Desativado'),
+        ],
+        default='OPERACIONAL',
+        verbose_name='Status Operacional'
+    )
+
+    data_ultima_manutencao = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Data da Última Manutenção',
+        help_text='Data da última manutenção preventiva ou corretiva realizada'
+    )
+
+    leitura_ultima_manutencao = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Leitura na Última Manutenção',
+        help_text='Horímetro/KM registrado na última manutenção'
+    )
+
+    proxima_manutencao_leitura = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Próxima Manutenção (Leitura)',
+        help_text='Leitura prevista para próxima manutenção preventiva'
+    )
+
+    proxima_manutencao_data = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Próxima Manutenção (Data)',
+        help_text='Data prevista para próxima manutenção preventiva'
+    )
+
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
