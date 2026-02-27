@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     TipoEquipamentoViewSet, EquipamentoViewSet,
     PlanoManutencaoItemViewSet, MedicaoEquipamentoViewSet,
-    equipamento_qr_view,
+    ItemManutencaoViewSet, equipamento_qr_view,
 )
 
 # ============================================
@@ -14,6 +14,7 @@ router.register(r"tipos-equipamento", TipoEquipamentoViewSet, basename="tipos-eq
 router.register(r"equipamentos", EquipamentoViewSet, basename="equipamentos")
 router.register(r"planos-manutencao", PlanoManutencaoItemViewSet, basename="planos-manutencao")
 router.register(r"medicoes", MedicaoEquipamentoViewSet, basename="medicoes")
+router.register(r"itens-manutencao", ItemManutencaoViewSet, basename="itens-manutencao")
 
 # ============================================
 # URL Patterns

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento
+from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento, ItemManutencao
 
 class TipoEquipamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,6 +79,19 @@ class PlanoManutencaoItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlanoManutencaoItem
         fields = "__all__"
+
+class ItemManutencaoSerializer(serializers.ModelSerializer):
+    equipamento_codigo = serializers.CharField(source="equipamento.codigo", read_only=True)
+    produto_nome = serializers.CharField(source="produto.nome", read_only=True)
+    produto_codigo = serializers.CharField(source="produto.codigo", read_only=True)
+    unidade_sigla = serializers.CharField(source="produto.unidade.sigla", read_only=True)
+    categoria_display = serializers.CharField(source="get_categoria_display", read_only=True)
+
+    class Meta:
+        model = ItemManutencao
+        fields = "__all__"
+        read_only_fields = ['criado_em', 'atualizado_em']
+
 
 class MedicaoEquipamentoSerializer(serializers.ModelSerializer):
     equipamento_codigo = serializers.CharField(source="equipamento.codigo", read_only=True)

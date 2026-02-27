@@ -696,6 +696,72 @@ export const equipamentosApi = {
 };
 
 // ============================================
+// Itens de Manutenção API
+// ============================================
+
+export interface ItemManutencao {
+  id: number;
+  equipamento: number;
+  equipamento_codigo: string;
+  produto: number;
+  produto_nome: string;
+  produto_codigo: string;
+  unidade_sigla: string;
+  categoria: 'FILTRO' | 'OLEO' | 'CORREIA' | 'PNEU' | 'BATERIA' | 'FLUIDO' | 'OUTRO';
+  categoria_display: string;
+  descricao: string;
+  quantidade_necessaria: string;
+  periodicidade_km: number | null;
+  periodicidade_horas: number | null;
+  periodicidade_dias: number | null;
+  ativo: boolean;
+  observacoes: string;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export type ItemManutencaoListParams = {
+  equipamento?: number;
+  categoria?: string;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+};
+
+export const itensManutencaoApi = {
+  list: async (params: ItemManutencaoListParams = {}) => {
+    return apiFetch<{ results: ItemManutencao[]; count: number }>(
+      `/equipamentos/itens-manutencao${toQuery(params)}`
+    );
+  },
+
+  get: async (id: number) => {
+    return apiFetch<ItemManutencao>(`/equipamentos/itens-manutencao/${id}`);
+  },
+
+  create: async (data: Partial<ItemManutencao>) => {
+    return apiFetch<ItemManutencao>('/equipamentos/itens-manutencao/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: number, data: Partial<ItemManutencao>) => {
+    return apiFetch<ItemManutencao>(`/equipamentos/itens-manutencao/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: number) => {
+    return apiFetch<void>(`/equipamentos/itens-manutencao/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// ============================================
 // NR12 API (mantido conforme original)
 // ============================================
 

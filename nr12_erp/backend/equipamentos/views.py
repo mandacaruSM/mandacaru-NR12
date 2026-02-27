@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import filters
-from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento
+from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento, ItemManutencao
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from .models import Equipamento
@@ -10,7 +10,7 @@ from core.permissions import HasModuleAccess, CannotEditMasterData, filter_by_ro
 from core.plan_validators import PlanLimitValidator
 from .serializers import (
     TipoEquipamentoSerializer, EquipamentoSerializer,
-    PlanoManutencaoItemSerializer, MedicaoEquipamentoSerializer
+    PlanoManutencaoItemSerializer, MedicaoEquipamentoSerializer, ItemManutencaoSerializer
 )
 
 class BaseAuthViewSet(ModelViewSet):
@@ -76,6 +76,25 @@ class PlanoManutencaoItemViewSet(BaseAuthViewSet):
         if eq_id:
             qs = qs.filter(equipamento_id=eq_id)
         return qs
+
+class ItemManutencaoViewSet(BaseAuthViewSet):
+    queryset = ItemManutencao.objects.select_related(
+        "equipamento", "produto", "produto__unidade"
+    ).all().order_by("categoria", "produto__nome")
+    serializer_class = ItemManutencaoSerializer
+    search_fields = ["equipamento__codigo", "produto__nome", "categoria", "descricao"]
+    ordering = ["categoria", "produto__nome"]
+
+    def get_queryset(self):
+        qs = filter_by_role(super().get_queryset(), self.request.user)
+        eq_id = self.request.query_params.get("equipamento")
+        if eq_id:
+            qs = qs.filter(equipamento_id=eq_id)
+        categoria = self.request.query_params.get("categoria")
+        if categoria:
+            qs = qs.filter(categoria=categoria)
+        return qs
+
 
 class MedicaoEquipamentoViewSet(BaseAuthViewSet):
     queryset = MedicaoEquipamento.objects.select_related("equipamento").all().order_by("-criado_em")

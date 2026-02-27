@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento
+from .models import TipoEquipamento, Equipamento, PlanoManutencaoItem, MedicaoEquipamento, ItemManutencao
 
 @admin.register(TipoEquipamento)
 class TipoEquipamentoAdmin(admin.ModelAdmin):
@@ -29,6 +29,16 @@ class PlanoManutencaoItemAdmin(admin.ModelAdmin):
     list_display = ("titulo", "equipamento", "modo", "periodicidade_valor", "proxima_leitura", "proxima_data", "ativo")
     search_fields = ("titulo", "equipamento__codigo")
     list_filter = ("ativo", "modo", "equipamento")
+
+@admin.register(ItemManutencao)
+class ItemManutencaoAdmin(admin.ModelAdmin):
+    list_display = (
+        "equipamento", "categoria", "produto", "quantidade_necessaria",
+        "periodicidade_km", "periodicidade_horas", "periodicidade_dias", "ativo"
+    )
+    search_fields = ("equipamento__codigo", "produto__nome", "descricao")
+    list_filter = ("ativo", "categoria", "equipamento")
+    autocomplete_fields = ["equipamento", "produto"]
 
 @admin.register(MedicaoEquipamento)
 class MedicaoEquipamentoAdmin(admin.ModelAdmin):

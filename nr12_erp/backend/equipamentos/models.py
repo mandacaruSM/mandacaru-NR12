@@ -198,6 +198,76 @@ class PlanoManutencaoItem(models.Model):
         super().save(*args, **kwargs)
 
 
+class ItemManutencao(models.Model):
+    """Item de manutenção vinculado a um equipamento (filtros, óleos, correias, etc.)"""
+    CATEGORIA_CHOICES = [
+        ('FILTRO', 'Filtro'),
+        ('OLEO', 'Óleo/Lubrificante'),
+        ('CORREIA', 'Correia'),
+        ('PNEU', 'Pneu'),
+        ('BATERIA', 'Bateria'),
+        ('FLUIDO', 'Fluido'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    equipamento = models.ForeignKey(
+        Equipamento,
+        on_delete=models.CASCADE,
+        related_name="itens_manutencao"
+    )
+    produto = models.ForeignKey(
+        'almoxarifado.Produto',
+        on_delete=models.PROTECT,
+        related_name="itens_manutencao",
+        help_text="Produto do almoxarifado vinculado a este item"
+    )
+    categoria = models.CharField(
+        max_length=20,
+        choices=CATEGORIA_CHOICES,
+        default='OUTRO',
+        help_text="Categoria do item de manutenção"
+    )
+    descricao = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Descrição adicional ou localização do item"
+    )
+    quantidade_necessaria = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1,
+        help_text="Quantidade necessária por manutenção"
+    )
+    periodicidade_km = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Periodicidade em KM (para equipamentos com odômetro)"
+    )
+    periodicidade_horas = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Periodicidade em horas (para equipamentos com horímetro)"
+    )
+    periodicidade_dias = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Periodicidade em dias (alternativa à leitura)"
+    )
+    ativo = models.BooleanField(default=True)
+    observacoes = models.TextField(blank=True, default="")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["categoria", "produto__nome"]
+        verbose_name = "Item de Manutenção"
+        verbose_name_plural = "Itens de Manutenção"
+
+    def __str__(self):
+        return f"{self.equipamento.codigo} - {self.get_categoria_display()}: {self.produto.nome}"
+
+
 class MedicaoEquipamento(models.Model):
     ORIGEM_CHOICES = [
         ("CHECKLIST", "Checklist"),
