@@ -10,6 +10,7 @@ from .serializers import (
     OrdemServicoListSerializer,
     OrdemServicoDetailSerializer,
     OrdemServicoUpdateSerializer,
+    OrdemServicoCorrecaoSerializer,
     ItemOrdemServicoSerializer,
 )
 
@@ -176,6 +177,39 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(os)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def corrigir_equipamento(self, request, pk=None):
+        """
+        Correção administrativa para alterar equipamento em OS concluída.
+
+        Este endpoint permite corrigir erros de seleção de equipamento mesmo
+        após a OS ter sido concluída. Ele atualiza:
+        - O equipamento na OS
+        - O equipamento na(s) manutenção(ões) vinculada(s)
+
+        Importante: Use com cuidado, pois altera registros históricos.
+        """
+        os = self.get_object()
+
+        serializer = OrdemServicoCorrecaoSerializer(
+            os,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            # Retornar detalhes completos da OS atualizada
+            detail_serializer = OrdemServicoDetailSerializer(os)
+            return Response({
+                'detail': 'Equipamento corrigido com sucesso',
+                'os': detail_serializer.data
+            })
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
     def resumo(self, request):

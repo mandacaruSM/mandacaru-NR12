@@ -104,3 +104,48 @@ class OrdemServicoUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class OrdemServicoCorrecaoSerializer(serializers.ModelSerializer):
+    """
+    Serializer para correções administrativas em OS concluídas.
+    Permite alterar equipamento e outros campos críticos que normalmente
+    não podem ser editados após conclusão.
+    """
+    class Meta:
+        model = OrdemServico
+        fields = ['equipamento', 'empreendimento', 'cliente']
+
+    def validate(self, data):
+        """Validação extra para garantir consistência dos dados"""
+        equipamento = data.get('equipamento') or self.instance.equipamento
+        empreendimento = data.get('empreendimento') or self.instance.empreendimento
+
+        # Validar que o equipamento pertence ao empreendimento
+        if equipamento and empreendimento:
+            if equipamento.empreendimento_id != empreendimento.id:
+                raise serializers.ValidationError({
+                    'equipamento': 'O equipamento não pertence ao empreendimento selecionado'
+                })
+
+        return data
+
+    def update(self, instance, validated_data):
+        """Atualiza OS e também a manutenção vinculada (se existir)"""
+        from manutencao.models import Manutencao
+
+        novo_equipamento = validated_data.get('equipamento')
+
+        # Atualizar OS
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Atualizar também a manutenção vinculada (se existir)
+        if novo_equipamento:
+            manutencoes = Manutencao.objects.filter(ordem_servico=instance)
+            for manutencao in manutencoes:
+                manutencao.equipamento = novo_equipamento
+                manutencao.save()
+
+        return instance

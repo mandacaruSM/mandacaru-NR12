@@ -1548,6 +1548,13 @@ export const ordensServicoApi = {
       canceladas: number;
     }>('/ordens-servico/resumo/');
   },
+
+  corrigirEquipamento: async (id: number, data: { equipamento: number; empreendimento?: number; cliente?: number }) => {
+    return apiFetch<{ detail: string; os: OrdemServico }>(`/ordens-servico/${id}/corrigir_equipamento/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 export const itensOrdemServicoApi = {
