@@ -35,8 +35,12 @@ export default function NovoProdutoPage() {
         almoxarifadoApi.unidades.list(),
         almoxarifadoApi.categorias.list(),
       ]);
+      console.log('📦 Resposta Unidades:', unidadesResp);
+      console.log('📦 Resposta Categorias:', categoriasResp);
       setUnidades(unidadesResp.results || []);
       setCategorias(categoriasResp.results || []);
+      console.log('✅ Unidades carregadas:', unidadesResp.results?.length || 0);
+      console.log('✅ Categorias carregadas:', categoriasResp.results?.length || 0);
     } catch (err) {
       console.error('Erro ao carregar unidades e categorias:', err);
       toast?.error('Erro ao carregar dados de cadastro');
