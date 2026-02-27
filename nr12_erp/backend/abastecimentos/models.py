@@ -9,10 +9,21 @@ class Abastecimento(models.Model):
         ("OUTRO", "Outro"),
     ]
 
+    ORIGEM_CHOICES = [
+        ("ALMOXARIFADO", "Almoxarifado"),
+        ("POSTO", "Posto de Gasolina"),
+    ]
+
     equipamento = models.ForeignKey(
         "equipamentos.Equipamento",
         on_delete=models.PROTECT,
         related_name="abastecimentos"
+    )
+    origem = models.CharField(
+        max_length=20,
+        choices=ORIGEM_CHOICES,
+        default="POSTO",
+        help_text="Origem do combustível: Almoxarifado ou Posto de Gasolina"
     )
     data = models.DateField()
     horimetro_km = models.DecimalField(
@@ -99,4 +110,55 @@ class Abastecimento(models.Model):
         # Calcular valor unitário automaticamente
         if self.quantidade_litros and self.valor_total:
             self.valor_unitario = self.valor_total / self.quantidade_litros
+
+        # Se origem é almoxarifado e tem produto, buscar preços do estoque
+        if self.origem == 'ALMOXARIFADO' and self.produto and self.local_estoque:
+            from almoxarifado.models import Estoque
+            try:
+                estoque = Estoque.objects.get(
+                    produto=self.produto,
+                    local=self.local_estoque
+                )
+                # Buscar preço do produto (assumindo que existe um campo preco_venda)
+                # Se não informou valor_total, calcular baseado no preço do produto
+                if not self.valor_total and hasattr(self.produto, 'preco_venda'):
+                    self.valor_total = self.quantidade_litros * self.produto.preco_venda
+                    self.valor_unitario = self.produto.preco_venda
+            except Estoque.DoesNotExist:
+                pass
+
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+
+        # Dar baixa automática no estoque se origem for almoxarifado
+        if self.origem == 'ALMOXARIFADO' and self.produto and self.local_estoque and is_new:
+            from almoxarifado.models import MovimentoEstoque, Estoque
+            from django.db import transaction
+
+            with transaction.atomic():
+                # Criar movimento de saída
+                MovimentoEstoque.objects.create(
+                    produto=self.produto,
+                    local=self.local_estoque,
+                    tipo='SAIDA',
+                    quantidade=self.quantidade_litros,
+                    documento=f"ABAST-{self.id}",
+                    observacao=f"Abastecimento equipamento {self.equipamento.codigo}",
+                    abastecimento=self
+                )
+
+                # Atualizar saldo do estoque
+                try:
+                    estoque = Estoque.objects.get(
+                        produto=self.produto,
+                        local=self.local_estoque
+                    )
+                    estoque.saldo -= self.quantidade_litros
+                    estoque.save()
+                except Estoque.DoesNotExist:
+                    # Se não existe estoque, criar com saldo negativo (indicando falta)
+                    Estoque.objects.create(
+                        produto=self.produto,
+                        local=self.local_estoque,
+                        saldo=-self.quantidade_litros
+                    )

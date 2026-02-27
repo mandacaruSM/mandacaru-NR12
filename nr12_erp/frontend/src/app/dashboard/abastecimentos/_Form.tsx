@@ -63,6 +63,7 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
 
   const [form, setForm] = useState<any>({
     equipamento: initial?.equipamento ?? undefined,
+    origem: (initial as any)?.origem ?? 'POSTO',
     data: initial?.data ?? new Date().toISOString().slice(0, 10),
     horimetro_km: initial?.horimetro_km ?? '',
     tipo_combustivel: initial?.tipo_combustivel ?? 'DIESEL',
@@ -437,6 +438,19 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
           </label>
 
           <label className="flex flex-col gap-2">
+            <span className="text-sm font-semibold text-gray-900">Origem do Combustível *</span>
+            <select
+              value={form.origem ?? 'POSTO'}
+              onChange={e => onChange('origem', e.target.value)}
+              className="border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-black bg-white"
+              required
+            >
+              <option value="POSTO" className="text-black bg-white">Posto de Gasolina</option>
+              <option value="ALMOXARIFADO" className="text-black bg-white">Almoxarifado</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-2">
             <span className="text-sm font-semibold text-gray-900">Horímetro / KM *</span>
             <input
               type="number"
@@ -527,10 +541,16 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
               min="0"
               value={form.valor_total ?? ''}
               onChange={e => onChange('valor_total', e.target.value)}
-              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="border border-gray-300 rounded-lg p-2.5 !text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="0.00"
               required
+              disabled={form.origem === 'ALMOXARIFADO'}
             />
+            {form.origem === 'ALMOXARIFADO' && (
+              <span className="text-xs text-blue-600">
+                Valor calculado automaticamente do almoxarifado
+              </span>
+            )}
           </label>
 
           <label className="flex flex-col gap-2">
@@ -546,18 +566,30 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
         </div>
       </div>
 
-      {/* Controle de Estoque - só mostra se houver produtos ou locais */}
-      {(produtos.length > 0 || locais.length > 0) && (
+      {/* Controle de Estoque - obrigatório se origem for ALMOXARIFADO */}
+      {((produtos.length > 0 || locais.length > 0) || form.origem === 'ALMOXARIFADO') && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Controle de Estoque (Opcional)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Controle de Estoque {form.origem === 'ALMOXARIFADO' ? '(Obrigatório)' : '(Opcional)'}
+          </h3>
+          {form.origem === 'ALMOXARIFADO' && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-900">
+                ⚠️ Para abastecimento do almoxarifado, você deve selecionar o produto e o local de estoque. O sistema dará baixa automática no estoque.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {produtos.length > 0 && (
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-gray-900">Produto de Combustível</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Produto de Combustível {form.origem === 'ALMOXARIFADO' && <span className="text-red-500">*</span>}
+                </span>
                 <select
                   value={form.produto ?? ''}
                   onChange={e => onChange('produto', e.target.value ? Number(e.target.value) : undefined)}
                   className="border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-black bg-white placeholder-gray-500 appearance-none"
+                  required={form.origem === 'ALMOXARIFADO'}
                 >
                   <option value="" className="text-gray-700 bg-white">Selecione um produto...</option>
                   {produtos.map(prod => (
@@ -567,18 +599,23 @@ export default function AbastecimentoForm({ initial, id, mode }: Props) {
                   ))}
                 </select>
                 <span className="text-xs text-gray-900">
-                  Vincule a um produto do estoque para controle automático
+                  {form.origem === 'ALMOXARIFADO'
+                    ? 'Produto de combustível que terá baixa no estoque'
+                    : 'Vincule a um produto do estoque para controle automático'}
                 </span>
               </label>
             )}
 
             {locais.length > 0 && (
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-gray-900">Local de Estoque</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Local de Estoque {form.origem === 'ALMOXARIFADO' && <span className="text-red-500">*</span>}
+                </span>
                 <select
                   value={form.local_estoque ?? ''}
                   onChange={e => onChange('local_estoque', e.target.value ? Number(e.target.value) : undefined)}
                   className="border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-black bg-white placeholder-gray-500 appearance-none"
+                  required={form.origem === 'ALMOXARIFADO'}
                 >
                   <option value="" className="text-gray-700 bg-white">Selecione um local...</option>
                   {locais.map(local => (
