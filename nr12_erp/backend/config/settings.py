@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'relatorios',
     'bot_telegram.apps.BotTelegramConfig',
     'fio_diamantado.apps.FioDiamantadoConfig',
+    'servicos.apps.ServicosConfig',
 ]
 
 MIDDLEWARE = [

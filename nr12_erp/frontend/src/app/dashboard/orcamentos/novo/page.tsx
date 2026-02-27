@@ -20,6 +20,7 @@ export default function NovoOrcamentoPage() {
   const [modelosManutencao, setModelosManutencao] = useState<ModeloManutencaoPreventiva[]>([]);
   const [itensManutencao, setItensManutencao] = useState<ItemManutencao[]>([]);
   const [itensSelecionados, setItensSelecionados] = useState<number[]>([]);
+  const [searchProduto, setSearchProduto] = useState('');
 
   const [formData, setFormData] = useState({
     tipo: 'MANUTENCAO_CORRETIVA' as const,
@@ -147,6 +148,15 @@ export default function NovoOrcamentoPage() {
       }
     });
   }
+
+  // Filtrar produtos baseado na busca
+  const produtosFiltrados = produtos.filter(p => {
+    const searchLower = searchProduto.toLowerCase();
+    return (
+      p.nome.toLowerCase().includes(searchLower) ||
+      (p.codigo && p.codigo.toLowerCase().includes(searchLower))
+    );
+  });
 
   function adicionarItem() {
     if (!novoItem.descricao || novoItem.quantidade <= 0 || novoItem.valor_unitario <= 0) {
@@ -537,27 +547,41 @@ export default function NovoOrcamentoPage() {
               {(novoItem as any).tipo === 'PRODUTO' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">Produto</label>
-                  <select
-                    value={novoItem.produto || ''}
-                    onChange={(e) => {
-                      const prodId = Number(e.target.value);
-                      const prod = produtos.find(p => p.id === prodId);
-                      setNovoItem({
-                        ...novoItem,
-                        produto: prodId,
-                        descricao: prod?.nome || '',
-                        valor_unitario: (prod as any)?.preco_venda || 0,
-                      });
-                    }}
-                    className="w-full px-3 py-2 border rounded text-black bg-white"
-                  >
-                    <option value="" className="text-black bg-white">Selecione...</option>
-                    {produtos.map((p) => (
-                      <option key={p.id} value={p.id} className="text-black bg-white">
-                        {p.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Buscar produto..."
+                      value={searchProduto}
+                      onChange={(e) => setSearchProduto(e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-gray-900 bg-white placeholder-gray-400"
+                    />
+                    <select
+                      value={novoItem.produto || ''}
+                      onChange={(e) => {
+                        const prodId = Number(e.target.value);
+                        const prod = produtos.find(p => p.id === prodId);
+                        setNovoItem({
+                          ...novoItem,
+                          produto: prodId,
+                          descricao: prod?.nome || '',
+                          valor_unitario: (prod as any)?.preco_venda || 0,
+                        });
+                      }}
+                      className="w-full px-3 py-2 border rounded text-black bg-white"
+                    >
+                      <option value="" className="text-black bg-white">Selecione...</option>
+                      {produtosFiltrados.map((p) => (
+                        <option key={p.id} value={p.id} className="text-black bg-white">
+                          {p.codigo ? `${p.codigo} - ` : ''}{p.nome}
+                        </option>
+                      ))}
+                    </select>
+                    {searchProduto && (
+                      <div className="text-xs text-gray-600">
+                        {produtosFiltrados.length} produto(s) encontrado(s)
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

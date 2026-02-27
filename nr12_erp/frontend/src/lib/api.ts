@@ -1160,7 +1160,15 @@ export interface Produto {
   unidade_sigla: string;
   ativo: boolean;
   densidade_kg_l?: string | null;
-  preco_venda?: number | null;
+  preco_venda?: number;
+  preco_custo?: number | null;
+  aliquota_icms?: number;
+  aliquota_ipi?: number;
+  aliquota_pis?: number;
+  aliquota_cofins?: number;
+  total_impostos?: number;
+  valor_impostos?: number;
+  preco_liquido?: number;
 }
 
 export interface LocalEstoque {
@@ -1304,6 +1312,110 @@ export const almoxarifadoApi = {
 
     ultimos: async () => {
       return apiFetch<MovimentoEstoque[]>('/almoxarifado/movimentos/ultimos');
+    },
+  },
+};
+
+// ============================================
+// SERVICOS API
+// ============================================
+
+export interface CategoriaServico {
+  id: number;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+}
+
+export interface Servico {
+  id: number;
+  codigo: string;
+  nome: string;
+  categoria?: number;
+  categoria_nome?: string;
+  descricao_detalhada: string;
+  preco_venda: number;
+  preco_custo?: number | null;
+  aliquota_iss: number;
+  aliquota_pis: number;
+  aliquota_cofins: number;
+  aliquota_csll: number;
+  aliquota_irpj: number;
+  total_impostos?: number;
+  valor_impostos?: number;
+  preco_liquido?: number;
+  unidade: 'HORA' | 'DIA' | 'MES' | 'SERVICO' | 'VISITA';
+  tempo_estimado?: number | null;
+  ativo: boolean;
+  criado_em?: string;
+  atualizado_em?: string;
+}
+
+export const servicosApi = {
+  categorias: {
+    list: async () => {
+      return apiFetch<{ results: CategoriaServico[]; count: number }>('/servicos/categorias/');
+    },
+
+    get: async (id: number) => {
+      return apiFetch<CategoriaServico>(`/servicos/categorias/${id}/`);
+    },
+
+    create: async (data: Partial<CategoriaServico>) => {
+      return apiFetch<CategoriaServico>('/servicos/categorias/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<CategoriaServico>) => {
+      return apiFetch<CategoriaServico>(`/servicos/categorias/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    remove: async (id: number) => {
+      return apiFetch<void>(`/servicos/categorias/${id}/`, {
+        method: 'DELETE',
+      });
+    },
+  },
+
+  servicos: {
+    list: async (filters?: { categoria?: number; ativo?: boolean; unidade?: string; search?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.categoria) params.append('categoria', filters.categoria.toString());
+      if (filters?.ativo !== undefined) params.append('ativo', filters.ativo.toString());
+      if (filters?.unidade) params.append('unidade', filters.unidade);
+      if (filters?.search) params.append('search', filters.search);
+
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch<{ results: Servico[]; count: number }>(`/servicos/servicos/${query}`);
+    },
+
+    get: async (id: number) => {
+      return apiFetch<Servico>(`/servicos/servicos/${id}/`);
+    },
+
+    create: async (data: Partial<Servico>) => {
+      return apiFetch<Servico>('/servicos/servicos/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (id: number, data: Partial<Servico>) => {
+      return apiFetch<Servico>(`/servicos/servicos/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    remove: async (id: number) => {
+      return apiFetch<void>(`/servicos/servicos/${id}/`, {
+        method: 'DELETE',
+      });
     },
   },
 };
@@ -2752,6 +2864,7 @@ export default {
   tecnicos: tecnicosApi,
   abastecimentos: abastecimentosApi,
   almoxarifado: almoxarifadoApi,
+  servicos: servicosApi,
   orcamentos: orcamentosApi,
   ordensServico: ordensServicoApi,
   financeiro: financeiroApi,

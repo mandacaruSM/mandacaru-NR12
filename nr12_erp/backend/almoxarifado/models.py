@@ -18,9 +18,73 @@ class Produto(models.Model):
     categoria = models.ForeignKey(CategoriaProduto, on_delete=models.PROTECT)
     unidade = models.ForeignKey(UnidadeMedida, on_delete=models.PROTECT)
     ativo = models.BooleanField(default=True)
+
     # específico de combustível (opcional)
     densidade_kg_l = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)
+
+    # Preços
+    preco_venda = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Preço de venda do produto'
+    )
+    preco_custo = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        null=True,
+        blank=True,
+        help_text='Custo do produto (opcional)'
+    )
+
+    # Impostos (percentuais)
+    aliquota_icms = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Alíquota de ICMS (%)'
+    )
+    aliquota_ipi = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Alíquota de IPI (%)'
+    )
+    aliquota_pis = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Alíquota de PIS (%)'
+    )
+    aliquota_cofins = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Alíquota de COFINS (%)'
+    )
+
     def __str__(self): return f"{self.codigo} - {self.nome}"
+
+    @property
+    def total_impostos(self):
+        """Calcula o total de impostos em percentual"""
+        return (
+            self.aliquota_icms +
+            self.aliquota_ipi +
+            self.aliquota_pis +
+            self.aliquota_cofins
+        )
+
+    @property
+    def valor_impostos(self):
+        """Calcula o valor total de impostos sobre o preço de venda"""
+        return self.preco_venda * (self.total_impostos / 100)
+
+    @property
+    def preco_liquido(self):
+        """Preço de venda menos impostos"""
+        return self.preco_venda - self.valor_impostos
 
 class LocalEstoque(models.Model):
     TIPO = (('ALMOX','Almoxarifado'), ('TANQUE','Tanque Interno'), ('POSTO','Posto Externo'))
