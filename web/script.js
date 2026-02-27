@@ -45,7 +45,7 @@ contactForm.addEventListener('submit', async (e) => {
     const whatsappMessage = `*Nova mensagem do site*%0A%0A*Nome:* ${formData.nome}%0A*Email:* ${formData.email}%0A*Telefone:* ${formData.telefone}%0A*Mensagem:* ${formData.mensagem}`;
 
     // Abrir WhatsApp
-    window.open(`https://wa.me/5533999373648?text=${whatsappMessage}`, '_blank');
+    window.open(`https://wa.me/5533999273648?text=${whatsappMessage}`, '_blank');
 
     // Limpar formulário
     contactForm.reset();
