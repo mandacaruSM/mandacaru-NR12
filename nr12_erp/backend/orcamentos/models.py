@@ -28,6 +28,9 @@ class Orcamento(models.Model):
     empreendimento = models.ForeignKey('cadastro.Empreendimento', on_delete=models.PROTECT, related_name='orcamentos', null=True, blank=True)
     equipamento = models.ForeignKey('equipamentos.Equipamento', on_delete=models.PROTECT, related_name='orcamentos', null=True, blank=True)
 
+    # Horímetro/Odômetro no momento do orçamento
+    horimetro = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Horímetro/Odômetro', help_text='Leitura do horímetro ou odômetro no momento do orçamento')
+
     # Modelo de manutenção preventiva (obrigatório quando tipo = MANUTENCAO_PREVENTIVA)
     modelo_manutencao_preventiva = models.ForeignKey(
         'nr12.ModeloManutencaoPreventiva',

@@ -112,6 +112,9 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
 
                 os.save()
 
+                # Marcar todos os itens como executados
+                os.itens.update(executado=True)
+
                 # Atualizar horímetro do equipamento (se houver equipamento e horímetro final)
                 if os.equipamento and os.horimetro_final:
                     os.equipamento.leitura_atual = os.horimetro_final

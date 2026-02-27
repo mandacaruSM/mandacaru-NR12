@@ -32,6 +32,7 @@ export default function NovoOrcamentoPage() {
     descricao: '',
     observacoes: '',
     prazo_execucao_dias: 7,
+    horimetro: undefined as number | undefined,
   });
 
   const [itens, setItens] = useState<Partial<ItemOrcamento>[]>([]);
@@ -291,6 +292,22 @@ export default function NovoOrcamentoPage() {
                 ))}
               </select>
             </div>
+
+            {formData.equipamento && (
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Horímetro/Odômetro
+                </label>
+                <input
+                  type="number"
+                  value={formData.horimetro || ''}
+                  onChange={(e) => setFormData({ ...formData, horimetro: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-3 py-2 border rounded text-gray-900 bg-white"
+                  step="0.01"
+                  placeholder="Leitura atual do equipamento"
+                />
+              </div>
+            )}
 
             {/* Modelo de Manutenção Preventiva - aparece apenas quando tipo = MANUTENCAO_PREVENTIVA */}
             {formData.tipo === 'MANUTENCAO_PREVENTIVA' && (

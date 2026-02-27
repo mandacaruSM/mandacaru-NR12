@@ -35,6 +35,7 @@ export default function EditarOrcamentoPage() {
     descricao: '',
     observacoes: '',
     prazo_execucao_dias: 7,
+    horimetro: undefined as number | undefined,
   });
 
   const [itens, setItens] = useState<Partial<ItemOrcamento>[]>([]);
@@ -90,6 +91,7 @@ export default function EditarOrcamentoPage() {
         descricao: data.descricao || '',
         observacoes: data.observacoes || '',
         prazo_execucao_dias: data.prazo_execucao_dias || 7,
+        horimetro: (data as any).horimetro ? Number((data as any).horimetro) : undefined,
       });
 
       setItens(data.itens || []);
@@ -334,6 +336,23 @@ export default function EditarOrcamentoPage() {
                 ))}
               </select>
             </div>
+
+            {formData.equipamento && (
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Horímetro/Odômetro
+                </label>
+                <input
+                  type="number"
+                  value={formData.horimetro || ''}
+                  onChange={(e) => setFormData({ ...formData, horimetro: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-3 py-2 border rounded text-gray-900 bg-white"
+                  step="0.01"
+                  placeholder="Leitura atual do equipamento"
+                  disabled={bloqueado}
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-1">
