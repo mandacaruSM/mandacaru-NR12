@@ -87,7 +87,10 @@
       "Bash(git diff:*)",
       "Bash(Get-ChildItem -Path \"d:/mandacaru_nr12/nr12_erp/backend\" -Recurse -Filter \"*.py\")",
       "Bash(Where-Object { $_FullName -like \"*empreendimento*\" })",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)"
     ],
     "deny": [],
     "ask": [],

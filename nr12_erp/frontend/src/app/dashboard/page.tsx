@@ -54,6 +54,7 @@ export default function DashboardPage() {
     operadores: 0,
     supervisores: 0,
     osAbertas: 0,
+    orcamentos: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
@@ -91,6 +92,7 @@ export default function DashboardPage() {
         );
       }
       promises.push(ordensServicoApi.list({ status: 'ABERTA', page_size: 1 }));
+      promises.push(orcamentosApi.list({ page_size: 1 }));
 
       const results = await Promise.all(promises);
 
@@ -101,6 +103,7 @@ export default function DashboardPage() {
           operadores: 0,
           supervisores: 0,
           osAbertas: results[2].count || 0,
+          orcamentos: results[3].count || 0,
         });
       } else {
         setStatsData({
@@ -109,6 +112,7 @@ export default function DashboardPage() {
           operadores: results[2].count || 0,
           supervisores: results[3].count || 0,
           osAbertas: results[4].count || 0,
+          orcamentos: results[5].count || 0,
         });
       }
     } catch (error) {
@@ -280,6 +284,15 @@ export default function DashboardPage() {
       icon: '📝',
       changeType: 'neutral',
       color: 'from-red-500 to-red-600',
+    },
+    {
+      title: 'Orçamentos',
+      value: loading ? '...' : statsData.orcamentos.toString(),
+      change: '',
+      href: '/dashboard/orcamentos',
+      icon: '💰',
+      changeType: 'neutral',
+      color: 'from-yellow-500 to-yellow-600',
     },
   ];
 

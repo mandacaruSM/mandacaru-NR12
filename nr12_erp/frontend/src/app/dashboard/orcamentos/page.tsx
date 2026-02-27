@@ -217,12 +217,22 @@ export default function OrcamentosPage() {
                     {new Date(orc.data_emissao!).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Link
-                      href={`/dashboard/orcamentos/${orc.id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Ver Detalhes
-                    </Link>
+                    <div className="flex gap-3">
+                      <Link
+                        href={`/dashboard/orcamentos/${orc.id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Ver Detalhes
+                      </Link>
+                      {orc.status !== 'APROVADO' && (
+                        <Link
+                          href={`/dashboard/orcamentos/${orc.id}/editar`}
+                          className="text-green-600 hover:text-green-900"
+                        >
+                          Editar
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
