@@ -63,6 +63,14 @@ class Orcamento(models.Model):
     observacoes = models.TextField(blank=True, default='')
     prazo_execucao_dias = models.PositiveIntegerField(default=1, help_text='Prazo em dias para execução')
 
+    # Itens de manutenção vinculados (para orçamentos de manutenção preventiva)
+    itens_manutencao = models.ManyToManyField(
+        'equipamentos.ItemManutencao',
+        blank=True,
+        related_name='orcamentos',
+        help_text='Itens de manutenção (filtros, óleos, etc.) incluídos neste orçamento'
+    )
+
     # Controle
     criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='orcamentos_criados')
     aprovado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orcamentos_aprovados')

@@ -10,11 +10,11 @@ export const DADOS_EMPRESA = {
   cidade: 'Livramento de Nossa Senhora - BA',
   cep: '46140-000',
   celular: '(33) 99927-3648',
-  email: 'wgm.mandacaru@gamil.com',
-  site: 'www.mandacaru.com',
+  email: 'wgm.mandacaru@gmail.com',
+  site: 'www.mandacarusm.com',
 
   // Informações bancárias (opcional - para faturas)
-  banco: 'Scoob',
+  banco: 'Sicoob',
   agencia: '',
   conta: '',
   pix: '57.138.641/0001-24', // Chave PIX
