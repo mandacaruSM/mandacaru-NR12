@@ -228,10 +228,10 @@ export default function ServicosPage() {
                       {servico.categoria_nome || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                      R$ {servico.preco_venda.toFixed(2)}
+                      R$ {Number(servico.preco_venda).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600">
-                      {servico.total_impostos?.toFixed(2)}%
+                      {servico.total_impostos ? Number(servico.total_impostos).toFixed(2) : '0.00'}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
