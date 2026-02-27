@@ -379,7 +379,8 @@ class RegistroCorteViewSet(viewsets.ModelViewSet):
         """Inicia um novo corte (status EM_ANDAMENTO)"""
         serializer = IniciarCorteSerializer(data=request.data)
         if serializer.is_valid():
-            corte = serializer.save()
+            # Adicionar automaticamente o operador logado
+            corte = serializer.save(operador=request.user)
             return Response(
                 RegistroCorteListSerializer(corte).data,
                 status=status.HTTP_201_CREATED
@@ -419,6 +420,45 @@ class RegistroCorteViewSet(viewsets.ModelViewSet):
         qs = self.get_queryset().filter(status='EM_ANDAMENTO')
         serializer = CorteEmAndamentoSerializer(qs, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def verificar_maquina(self, request):
+        """
+        Verifica se existe corte em andamento para uma máquina específica.
+        Retorna o corte em andamento ou null se não houver.
+
+        Query params:
+        - maquina: ID da máquina
+        """
+        maquina_id = request.query_params.get('maquina')
+        if not maquina_id:
+            return Response(
+                {'error': 'Parâmetro maquina é obrigatório'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar corte em andamento para esta máquina
+        try:
+            corte = self.get_queryset().filter(
+                maquina_id=maquina_id,
+                status='EM_ANDAMENTO'
+            ).first()
+
+            if corte:
+                return Response({
+                    'tem_corte_andamento': True,
+                    'corte': CorteEmAndamentoSerializer(corte).data
+                })
+            else:
+                return Response({
+                    'tem_corte_andamento': False,
+                    'corte': None
+                })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['get'])
     def metricas(self, request):

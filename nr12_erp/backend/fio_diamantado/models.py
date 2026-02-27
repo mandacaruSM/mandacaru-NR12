@@ -5,6 +5,7 @@ Este modulo gerencia o ciclo de vida dos fios diamantados usados em maquinas de 
 incluindo o registro de cortes, calculos de desgaste e metricas de rendimento.
 """
 from django.db import models
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from cadastro.models import Cliente, Empreendimento
@@ -391,6 +392,14 @@ class RegistroCorte(models.Model):
         max_length=100,
         blank=True,
         verbose_name='Nome do Operador'
+    )
+    operador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cortes_fio_diamantado',
+        verbose_name='Operador (Usuário)'
     )
 
     # Campos de FINALIZACAO do corte (preenchidos posteriormente)

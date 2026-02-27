@@ -270,7 +270,7 @@ class IniciarCorteSerializer(serializers.ModelSerializer):
         fields = [
             'fio', 'maquina', 'gerador', 'empreendimento', 'fonte_energia',
             'data', 'hora_inicial', 'horimetro_inicial',
-            'diametro_inicial_mm', 'operador_nome', 'observacoes',
+            'diametro_inicial_mm', 'operador_nome', 'operador', 'observacoes',
         ]
 
     def validate(self, data):

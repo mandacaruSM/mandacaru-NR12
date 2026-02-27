@@ -11,11 +11,13 @@ import {
   equipamentosApi,
   abastecimentosApi,
   nr12Api,
+  fioDiamantadoApi,
   Equipamento,
   Abastecimento,
   ChecklistRealizado
 } from '@/lib/api';
 import type { Manutencao } from '@/types/manutencao';
+import type { CorteEmAndamento } from '@/lib/api';
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
@@ -34,6 +36,8 @@ export default function EquipamentoResumePage({ params }: PageProps) {
   const [abastecimentos, setAbastecimentos] = useState<Abastecimento[]>([]);
   const [checklists, setChecklists] = useState<ChecklistRealizado[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [corteEmAndamento, setCorteEmAndamento] = useState<CorteEmAndamento | null>(null);
+  const [isMaquinaFio, setIsMaquinaFio] = useState(false);
 
   useEffect(() => {
     if (uuid) {
@@ -59,18 +63,37 @@ export default function EquipamentoResumePage({ params }: PageProps) {
 
       setEquipamento(equip);
 
+      // Verificar se é máquina de fio diamantado (tipo ID 59)
+      const isFioMachine = equip.tipo === 59 || equip.tipo_nome?.toLowerCase().includes('fio diamantado');
+      setIsMaquinaFio(isFioMachine);
+
       // Carregar dados relacionados em paralelo
-      const [manutencoesRes, abastecimentosRes, checklistsRes] = await Promise.all([
+      const promises: Promise<any>[] = [
         api<any>(`/manutencoes/?equipamento=${equip.id}`).catch(() => ({ results: [] })),
         abastecimentosApi.list({ equipamento: equip.id }).catch(() => ({ results: [] })),
         nr12Api.checklists.list({ equipamento: equip.id }).catch(() => ({ results: [] })),
-      ]);
+      ];
+
+      // Se for máquina de fio, verificar se tem corte em andamento
+      if (isFioMachine) {
+        promises.push(
+          fioDiamantadoApi.cortes.verificarMaquina(equip.id).catch(() => ({ tem_corte_andamento: false, corte: null }))
+        );
+      }
+
+      const results = await Promise.all(promises);
+      const [manutencoesRes, abastecimentosRes, checklistsRes, corteRes] = results;
 
       // Manutenções podem vir como array ou objeto com results
       const manutencoesArray = Array.isArray(manutencoesRes) ? manutencoesRes : (manutencoesRes.results || []);
       setManutencoes(manutencoesArray.slice(0, 5));
       setAbastecimentos((abastecimentosRes.results || []).slice(0, 5));
       setChecklists((checklistsRes.results || []).slice(0, 5));
+
+      // Se for máquina de fio, atualizar estado do corte
+      if (isFioMachine && corteRes) {
+        setCorteEmAndamento(corteRes.tem_corte_andamento ? corteRes.corte : null);
+      }
 
     } catch (err: any) {
       console.error('Erro ao carregar equipamento:', err);
@@ -308,48 +331,72 @@ export default function EquipamentoResumePage({ params }: PageProps) {
 
       {/* Botoes de Acao Fixos */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
-        <div className={`grid ${userRole === 'OPERADOR' ? 'grid-cols-3' : 'grid-cols-2'} gap-3 max-w-lg mx-auto`}>
-          <Link
-            href={`/dashboard/abastecimentos/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo_medicao=${equipamento.tipo_medicao}`}
-            className="flex items-center justify-center gap-2 py-3 px-4 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
-          >
-            <span className="text-xl">⛽</span>
-            Abastecimento
-          </Link>
-          <Link
-            href={`/dashboard/nr12/checklists/novo?equipamento=${equipamento.id}&tipo=${equipamento.tipo}`}
-            className="flex items-center justify-center gap-2 py-3 px-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
-          >
-            <span className="text-xl">📋</span>
-            Checklist
-          </Link>
-          {userRole === 'OPERADOR' ? (
-            <Link
-              href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
-              className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
-            >
-              <span className="text-xl">🛠️</span>
-              Manutencao
-            </Link>
-          ) : (
-            <>
+        {isMaquinaFio ? (
+          /* Botões para Máquina de Fio Diamantado */
+          <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+            {corteEmAndamento ? (
               <Link
-                href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=preventiva`}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                href={`/dashboard/fio-diamantado/cortes/${corteEmAndamento.id}/finalizar?maquina=${equipamento.id}`}
+                className="flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg"
               >
-                <span className="text-xl">🔧</span>
-                Preventiva
+                <span className="text-2xl">✅</span>
+                Finalizar Corte #{corteEmAndamento.id}
               </Link>
+            ) : (
+              <Link
+                href={`/dashboard/fio-diamantado/cortes/iniciar?maquina=${equipamento.id}&empreendimento=${equipamento.empreendimento}`}
+                className="flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg"
+              >
+                <span className="text-2xl">▶️</span>
+                Iniciar Corte
+              </Link>
+            )}
+          </div>
+        ) : (
+          /* Botões para equipamentos normais */
+          <div className={`grid ${userRole === 'OPERADOR' ? 'grid-cols-3' : 'grid-cols-2'} gap-3 max-w-lg mx-auto`}>
+            <Link
+              href={`/dashboard/abastecimentos/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo_medicao=${equipamento.tipo_medicao}`}
+              className="flex items-center justify-center gap-2 py-3 px-4 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
+            >
+              <span className="text-xl">⛽</span>
+              Abastecimento
+            </Link>
+            <Link
+              href={`/dashboard/nr12/checklists/novo?equipamento=${equipamento.id}&tipo=${equipamento.tipo}`}
+              className="flex items-center justify-center gap-2 py-3 px-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
+            >
+              <span className="text-xl">📋</span>
+              Checklist
+            </Link>
+            {userRole === 'OPERADOR' ? (
               <Link
                 href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
                 className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
               >
                 <span className="text-xl">🛠️</span>
-                Corretiva
+                Manutencao
               </Link>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <Link
+                  href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=preventiva`}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                >
+                  <span className="text-xl">🔧</span>
+                  Preventiva
+                </Link>
+                <Link
+                  href={`/dashboard/manutencoes/novo?equipamento=${equipamento.id}&codigo=${equipamento.codigo}&leitura=${equipamento.leitura_atual}&tipo=corretiva`}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+                >
+                  <span className="text-xl">🛠️</span>
+                  Corretiva
+                </Link>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

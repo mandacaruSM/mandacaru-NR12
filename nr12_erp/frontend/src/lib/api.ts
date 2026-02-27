@@ -2745,6 +2745,14 @@ export const fioDiamantadoApi = {
       return apiFetch<CorteEmAndamento[]>('/fio-diamantado/cortes/em_andamento/');
     },
 
+    // Verificar se existe corte em andamento para uma máquina
+    verificarMaquina: async (maquinaId: number) => {
+      return apiFetch<{
+        tem_corte_andamento: boolean;
+        corte: CorteEmAndamento | null;
+      }>(`/fio-diamantado/cortes/verificar_maquina/?maquina=${maquinaId}`);
+    },
+
     metricas: async (filters?: { data_inicio?: string; data_fim?: string }) => {
       const params = new URLSearchParams();
       if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
