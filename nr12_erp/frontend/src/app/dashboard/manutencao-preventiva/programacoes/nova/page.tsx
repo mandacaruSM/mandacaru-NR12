@@ -13,7 +13,7 @@ import type {
   ProgramacaoManutencaoFormData,
   ModeloManutencaoPreventiva,
 } from '@/types/manutencao-preventiva'
-import { equipamentosApi, clientesApi, empreendimentosApi, type Equipamento, type Cliente, type Empreendimento } from '@/lib/api'
+import { equipamentosApi, clientesApi, empreendimentosApi, itensManutencaoApi, type Equipamento, type Cliente, type Empreendimento, type ItemManutencao } from '@/lib/api'
 
 export default function NovaProgramacaoManutencao() {
   const router = useRouter()
@@ -24,6 +24,8 @@ export default function NovaProgramacaoManutencao() {
   const [empreendimentos, setEmpreendimentos] = useState<Empreendimento[]>([])
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([])
   const [modelos, setModelos] = useState<ModeloManutencaoPreventiva[]>([])
+  const [itensManutencao, setItensManutencao] = useState<ItemManutencao[]>([])
+  const [itensSelecionados, setItensSelecionados] = useState<number[]>([])
 
   const [selectedCliente, setSelectedCliente] = useState<number>(0)
   const [selectedEmpreendimento, setSelectedEmpreendimento] = useState<number>(0)
@@ -98,7 +100,7 @@ export default function NovaProgramacaoManutencao() {
     }
   }
 
-  const handleEquipamentoChange = (equipamentoId: number) => {
+  const handleEquipamentoChange = async (equipamentoId: number) => {
     const equipamento = equipamentos.find((e) => e.id === equipamentoId)
     setSelectedEquipamento(equipamento || null)
     setFormData((prev) => ({
@@ -106,6 +108,22 @@ export default function NovaProgramacaoManutencao() {
       equipamento: equipamentoId,
       leitura_inicial: equipamento?.leitura_atual ? Number(equipamento.leitura_atual) : 0,
     }))
+
+    // Limpar itens selecionados ao trocar de equipamento
+    setItensSelecionados([])
+
+    // Carregar itens de manutenção do equipamento
+    if (equipamentoId) {
+      try {
+        const response = await itensManutencaoApi.list({ equipamento: equipamentoId })
+        setItensManutencao(response.results)
+      } catch (err: any) {
+        console.error('Erro ao carregar itens de manutenção:', err)
+        setItensManutencao([])
+      }
+    } else {
+      setItensManutencao([])
+    }
 
     // Filtrar modelos compatíveis com o tipo do equipamento
     if (equipamento) {
@@ -125,6 +143,16 @@ export default function NovaProgramacaoManutencao() {
         setSelectedModelo(null)
       }
     }
+  }
+
+  const toggleItemManutencao = (itemId: number) => {
+    setItensSelecionados(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId)
+      } else {
+        return [...prev, itemId]
+      }
+    })
   }
 
   const handleModeloChange = (modeloId: number) => {
@@ -172,6 +200,7 @@ export default function NovaProgramacaoManutencao() {
         ...formData,
         leitura_ultima_manutencao: leituraInicial,
         leitura_proxima_manutencao: leituraInicial + intervalo,
+        itens_manutencao: itensSelecionados.length > 0 ? itensSelecionados : undefined,
       }
 
       const programacao = await createProgramacaoManutencao(dadosParaEnviar)
@@ -333,6 +362,93 @@ export default function NovaProgramacaoManutencao() {
             </div>
           )}
         </div>
+
+        {/* Itens de Manutenção */}
+        {selectedEquipamento && itensManutencao.length > 0 && (
+          <div className="border border-gray-300 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-900">
+                Itens de Manutenção
+              </label>
+              <Link
+                href={`/dashboard/equipamentos/${selectedEquipamento.id}/manutencao`}
+                target="_blank"
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Gerenciar itens →
+              </Link>
+            </div>
+            <p className="text-sm text-gray-500 mb-3">
+              Selecione os itens que serão executados nesta manutenção preventiva
+            </p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {itensManutencao.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    id={`item-${item.id}`}
+                    checked={itensSelecionados.includes(item.id)}
+                    onChange={() => toggleItemManutencao(item.id)}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`item-${item.id}`} className="ml-3 flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                        {item.categoria_display}
+                      </span>
+                      <span className="font-medium text-gray-900">
+                        {item.produto_nome}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {item.quantidade_necessaria} {item.unidade_sigla}
+                      {item.descricao && ` • ${item.descricao}`}
+                    </div>
+                    {(item.periodicidade_km || item.periodicidade_horas || item.periodicidade_dias) && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        Periodicidade:
+                        {item.periodicidade_km && ` ${item.periodicidade_km} km`}
+                        {item.periodicidade_horas && ` ${item.periodicidade_horas} horas`}
+                        {item.periodicidade_dias && ` ${item.periodicidade_dias} dias`}
+                      </div>
+                    )}
+                  </label>
+                </div>
+              ))}
+            </div>
+            {itensSelecionados.length > 0 && (
+              <div className="mt-3 p-2 bg-green-50 rounded text-sm text-green-800">
+                {itensSelecionados.length} {itensSelecionados.length === 1 ? 'item selecionado' : 'itens selecionados'}
+              </div>
+            )}
+          </div>
+        )}
+
+        {selectedEquipamento && itensManutencao.length === 0 && (
+          <div className="border border-yellow-300 bg-yellow-50 rounded-lg p-4">
+            <div className="flex items-start">
+              <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="ml-3">
+                <h4 className="text-sm font-medium text-yellow-800">Nenhum item de manutenção cadastrado</h4>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Este equipamento ainda não possui itens de manutenção (filtros, óleos, correias, etc.).{' '}
+                  <Link
+                    href={`/dashboard/equipamentos/${selectedEquipamento.id}/manutencao`}
+                    target="_blank"
+                    className="font-medium underline"
+                  >
+                    Cadastrar itens agora
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modelo */}
         <div>

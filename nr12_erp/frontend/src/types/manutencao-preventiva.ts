@@ -162,6 +162,7 @@ export interface ProgramacaoManutencaoFormData {
   leitura_ultima_manutencao: number
   leitura_proxima_manutencao: number
   ativo: boolean
+  itens_manutencao?: number[] // IDs dos itens de manutenção a serem executados
 }
 
 export interface RespostaItemManutencaoFormData {

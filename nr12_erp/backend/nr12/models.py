@@ -549,6 +549,15 @@ class ProgramacaoManutencao(models.Model):
         default=True,
         help_text="Programação ativa no sistema"
     )
+
+    # Itens de manutenção vinculados
+    itens_manutencao = models.ManyToManyField(
+        'equipamentos.ItemManutencao',
+        blank=True,
+        related_name='programacoes',
+        help_text="Itens de manutenção (filtros, óleos, etc.) a serem executados"
+    )
+
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
