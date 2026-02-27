@@ -515,10 +515,10 @@ export default function EditarOrcamentoPage() {
                     <td className="px-4 py-2 text-sm text-gray-900">{item.descricao}</td>
                     <td className="px-4 py-2 text-sm text-gray-900">{item.quantidade}</td>
                     <td className="px-4 py-2 text-sm text-gray-900">
-                      R$ {item.valor_unitario?.toFixed(2)}
+                      R$ {Number(item.valor_unitario || 0).toFixed(2)}
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-900">
-                      R$ {((item.quantidade || 0) * (item.valor_unitario || 0)).toFixed(2)}
+                      R$ {(Number(item.quantidade || 0) * Number(item.valor_unitario || 0)).toFixed(2)}
                     </td>
                     {!bloqueado && (
                       <td className="px-4 py-2 text-sm">
