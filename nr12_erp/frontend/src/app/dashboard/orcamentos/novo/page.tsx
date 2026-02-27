@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { orcamentosApi, cadastroApi, empreendimentosApi, equipamentosApi, almoxarifadoApi } from '@/lib/api';
+import { orcamentosApi, cadastroApi, empreendimentosApi, equipamentosApi, almoxarifadoApi, itensManutencaoApi } from '@/lib/api';
 import { getModelosManutencaoPreventiva } from '@/services/manutencao-preventiva-service';
-import type { Cliente, Empreendimento, Equipamento, ItemOrcamento, Produto } from '@/lib/api';
+import type { Cliente, Empreendimento, Equipamento, ItemOrcamento, Produto, ItemManutencao } from '@/lib/api';
 import type { ModeloManutencaoPreventiva } from '@/types/manutencao-preventiva';
 import { useToast } from '@/contexts/ToastContext';
+import Link from 'next/link';
 
 export default function NovoOrcamentoPage() {
   const router = useRouter();
@@ -17,6 +18,8 @@ export default function NovoOrcamentoPage() {
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [modelosManutencao, setModelosManutencao] = useState<ModeloManutencaoPreventiva[]>([]);
+  const [itensManutencao, setItensManutencao] = useState<ItemManutencao[]>([]);
+  const [itensSelecionados, setItensSelecionados] = useState<number[]>([]);
 
   const [formData, setFormData] = useState({
     tipo: 'MANUTENCAO_CORRETIVA' as const,
@@ -68,6 +71,16 @@ export default function NovoOrcamentoPage() {
     }
   }, [formData.equipamento, formData.tipo]);
 
+  // Carregar itens de manutenção quando equipamento for selecionado
+  useEffect(() => {
+    if (formData.equipamento) {
+      loadItensManutencao(formData.equipamento);
+    } else {
+      setItensManutencao([]);
+      setItensSelecionados([]);
+    }
+  }, [formData.equipamento]);
+
   async function loadOptions() {
     try {
       const [clientsData, prodsData] = await Promise.all([
@@ -116,6 +129,25 @@ export default function NovoOrcamentoPage() {
     }
   }
 
+  async function loadItensManutencao(equipamentoId: number) {
+    try {
+      const data = await itensManutencaoApi.list({ equipamento: equipamentoId });
+      setItensManutencao(data.results || []);
+    } catch (error) {
+      console.error('Erro ao carregar itens de manutenção:', error);
+    }
+  }
+
+  function toggleItemManutencao(itemId: number) {
+    setItensSelecionados(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId);
+      } else {
+        return [...prev, itemId];
+      }
+    });
+  }
+
   function adicionarItem() {
     if (!novoItem.descricao || novoItem.quantidade <= 0 || novoItem.valor_unitario <= 0) {
       alert('Preencha todos os campos do item');
@@ -150,8 +182,20 @@ export default function NovoOrcamentoPage() {
     const valorItens = itens.reduce((sum, item) => {
       return sum + (item.quantidade || 0) * (item.valor_unitario || 0);
     }, 0);
+
+    // Adicionar valor dos itens de manutenção selecionados
+    const valorItensManutencao = itensSelecionados.reduce((sum, itemId) => {
+      const itemManutencao = itensManutencao.find(i => i.id === itemId);
+      if (itemManutencao) {
+        const produto = produtos.find(p => p.id === itemManutencao.produto);
+        const precoVenda = (produto as any)?.preco_venda || 0;
+        return sum + (itemManutencao.quantidade_necessaria * precoVenda);
+      }
+      return sum;
+    }, 0);
+
     const valorDeslocamento = calcularValorDeslocamento();
-    return valorItens + valorDeslocamento - formData.valor_desconto;
+    return valorItens + valorItensManutencao + valorDeslocamento - formData.valor_desconto;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -174,12 +218,36 @@ export default function NovoOrcamentoPage() {
 
     try {
       setLoading(true);
+
+      // Adicionar itens de manutenção selecionados aos itens do orçamento
+      const itensFinais = [...itens];
+
+      // Para cada item de manutenção selecionado, adicionar como produto no orçamento
+      for (const itemId of itensSelecionados) {
+        const itemManutencao = itensManutencao.find(i => i.id === itemId);
+        if (itemManutencao) {
+          // Buscar o produto para pegar o preço de venda
+          const produto = produtos.find(p => p.id === itemManutencao.produto);
+          const precoVenda = (produto as any)?.preco_venda || 0;
+
+          itensFinais.push({
+            tipo: 'PRODUTO',
+            produto: itemManutencao.produto,
+            descricao: itemManutencao.produto_nome || '',
+            quantidade: itemManutencao.quantidade_necessaria,
+            valor_unitario: precoVenda,
+            observacao: `Item de manutenção: ${itemManutencao.categoria}`,
+          });
+        }
+      }
+
       const payload = {
         ...formData,
         empreendimento: formData.empreendimento || null,
         equipamento: formData.equipamento || null,
         valor_deslocamento: calcularValorDeslocamento(),
-        itens: itens as ItemOrcamento[],
+        itens: itensFinais as ItemOrcamento[],
+        itens_manutencao: itensSelecionados.length > 0 ? itensSelecionados : undefined,
       };
       console.log('Payload enviado:', JSON.stringify(payload, null, 2));
       await orcamentosApi.create(payload as any);
@@ -381,6 +449,71 @@ export default function NovoOrcamentoPage() {
             />
           </div>
         </div>
+
+        {/* Itens de Manutenção */}
+        {formData.equipamento && itensManutencao.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Itens de Manutenção do Equipamento</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Selecione os itens que serão incluídos neste orçamento ({itensSelecionados.length} selecionados)
+                </p>
+              </div>
+              <Link
+                href={`/dashboard/equipamentos/${formData.equipamento}/manutencao`}
+                target="_blank"
+                className="text-blue-600 hover:underline text-sm"
+              >
+                Gerenciar itens do equipamento
+              </Link>
+            </div>
+
+            <div className="space-y-2">
+              {itensManutencao.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start gap-3 p-3 border rounded hover:bg-gray-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={itensSelecionados.includes(item.id)}
+                    onChange={() => toggleItemManutencao(item.id)}
+                    className="mt-1 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        item.categoria === 'FILTRO' ? 'bg-blue-100 text-blue-800' :
+                        item.categoria === 'OLEO' ? 'bg-amber-100 text-amber-800' :
+                        item.categoria === 'CORREIA' ? 'bg-purple-100 text-purple-800' :
+                        item.categoria === 'PNEU' ? 'bg-gray-100 text-gray-800' :
+                        item.categoria === 'BATERIA' ? 'bg-green-100 text-green-800' :
+                        item.categoria === 'FLUIDO' ? 'bg-cyan-100 text-cyan-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {item.categoria}
+                      </span>
+                      <span className="font-medium text-gray-900">{item.produto_nome}</span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-4 text-sm text-gray-600">
+                      <span>Quantidade: {item.quantidade_necessaria}</span>
+                      {item.periodicidade_km && (
+                        <span>Trocar a cada {item.periodicidade_km.toLocaleString('pt-BR')} km</span>
+                      )}
+                      {item.periodicidade_horas && (
+                        <span>Trocar a cada {item.periodicidade_horas.toLocaleString('pt-BR')} horas</span>
+                      )}
+                      {item.periodicidade_dias && (
+                        <span>Trocar a cada {item.periodicidade_dias} dias</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Itens */}
         <div className="bg-white p-6 rounded-lg shadow">
