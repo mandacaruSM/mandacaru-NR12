@@ -27,9 +27,22 @@ CSRF_TRUSTED_ORIGINS = [
     for o in CORS_ALLOWED_ORIGINS
 ]
 
-# --- Banco (PostgreSQL recomendado em produção) ---
-# Defina as variáveis no ambiente: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
-if all(os.environ.get(k) for k in ["DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST"]):
+# --- Banco (PostgreSQL via DATABASE_URL ou variáveis individuais) ---
+import dj_database_url
+
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    # Prioridade 1: DATABASE_URL (Supabase/Fly.io)
+    # Ex.: postgresql://user:password@host:5432/dbname
+    DATABASES = {
+        "default": dj_database_url.parse(
+            _database_url,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+elif all(os.environ.get(k) for k in ["DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST"]):
+    # Prioridade 2: variáveis individuais (compatibilidade Railway)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -40,7 +53,7 @@ if all(os.environ.get(k) for k in ["DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST
             "PORT": os.environ.get("DB_PORT", "5432"),
         }
     }
-# Se não definir, cai no SQLite do settings base. (Não recomendado para produção)
+# Se não definir nenhum, cai no SQLite do settings base. (Não usar em produção)
 
 # --- JWT (2h access, 30d refresh) ---
 SIMPLE_JWT = {
@@ -58,10 +71,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# --- Segurança atrás de proxy/NGINX (se estiver atrás de um proxy que termina TLS) ---
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+# --- Segurança atrás de proxy (Fly.io termina TLS no proxy) ---
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # --- Logging simples para produção ---
 LOGGING = {
