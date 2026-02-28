@@ -34,13 +34,13 @@ _database_url = os.environ.get("DATABASE_URL")
 if _database_url:
     # Prioridade 1: DATABASE_URL (Supabase/Fly.io)
     # Ex.: postgresql://user:password@host:5432/dbname
-    DATABASES = {
-        "default": dj_database_url.parse(
-            _database_url,
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
+    _db_config = dj_database_url.parse(_database_url, conn_max_age=600)
+    # Supabase pooler (porta 6543) usa SSL mas não exige sslmode=require na URL
+    # Fly.io direct (porta 5432) precisa de SSL
+    _port = str(_db_config.get("PORT", "5432"))
+    if _port != "6543":
+        _db_config.setdefault("OPTIONS", {})["sslmode"] = "require"
+    DATABASES = {"default": _db_config}
 elif all(os.environ.get(k) for k in ["DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST"]):
     # Prioridade 2: variáveis individuais (compatibilidade Railway)
     DATABASES = {
