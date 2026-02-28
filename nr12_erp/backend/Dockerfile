@@ -20,11 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o código
 COPY . .
 
-# Coleta estáticos
-RUN python manage.py collectstatic --noinput --settings=config.settings_prod
-
 # Porta padrão do Fly.io
 EXPOSE 8000
 
-# Start: migrate + gunicorn
-CMD ["sh", "-c", "python manage.py migrate --settings=config.settings_prod && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"]
+# Start: collectstatic + migrate + gunicorn (secrets disponíveis em runtime)
+CMD ["sh", "-c", "python manage.py collectstatic --noinput --settings=config.settings_prod && python manage.py migrate --settings=config.settings_prod && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"]
