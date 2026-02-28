@@ -119,7 +119,9 @@ class Equipamento(models.Model):
 
     @property
     def qr_payload(self) -> str:
-        return f"eq:{self.uuid}"
+        from django.conf import settings
+        base_url = getattr(settings, 'ERP_PUBLIC_BASE_URL', 'https://erp.mandacaru.com.br').rstrip('/')
+        return f"{base_url}/dashboard/equipamento/{self.uuid}"
 
     def gerar_qr_code(self):
         """Gera e salva o QR code do equipamento"""

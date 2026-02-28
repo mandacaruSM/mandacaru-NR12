@@ -2,6 +2,7 @@
 """
 Modelos e configurações de planos de assinatura do sistema
 """
+from decimal import Decimal
 from django.db import models
 
 
@@ -30,6 +31,13 @@ class Plano(models.Model):
         max_digits=10,
         decimal_places=2,
         verbose_name="Valor Mensal (R$)"
+    )
+    preco_por_equipamento = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Preço por Equipamento (R$/mês)",
+        help_text="Valor cobrado por equipamento ativo por mês"
     )
 
     # Limites

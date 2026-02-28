@@ -156,6 +156,7 @@ class PlanoSerializer(serializers.ModelSerializer):
             'bot_telegram', 'qr_code_equipamento', 'checklist_mobile',
             'backups_automaticos', 'suporte_prioritario', 'suporte_whatsapp',
             'multiempresa', 'customizacoes', 'hospedagem_dedicada',
+            'preco_por_equipamento',
             'ativo', 'ordem'
         ]
         read_only_fields = ['features_resumo']
@@ -167,6 +168,15 @@ class AssinaturaClienteSerializer(serializers.ModelSerializer):
     plano_valor = serializers.DecimalField(source='plano.valor_mensal', max_digits=10, decimal_places=2, read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome_razao', read_only=True)
     esta_ativa = serializers.ReadOnlyField()
+    valor_mensal_estimado = serializers.SerializerMethodField(read_only=True)
+
+    def get_valor_mensal_estimado(self, obj):
+        """Retorna qtd_equipamentos_ativos × preco_por_equipamento do plano"""
+        from equipamentos.models import Equipamento
+        from decimal import Decimal
+        qtd = Equipamento.objects.filter(cliente=obj.cliente, ativo=True).count()
+        preco = obj.plano.preco_por_equipamento or Decimal('0.00')
+        return float(preco * qtd)
 
     class Meta:
         model = AssinaturaCliente
@@ -174,6 +184,7 @@ class AssinaturaClienteSerializer(serializers.ModelSerializer):
             'id', 'cliente', 'cliente_nome', 'plano', 'plano_nome', 'plano_valor',
             'status', 'esta_ativa', 'data_inicio', 'data_fim_trial',
             'data_proximo_pagamento', 'data_cancelamento', 'observacoes',
+            'valor_mensal_estimado',
             'criado_em', 'atualizado_em'
         ]
-        read_only_fields = ['esta_ativa', 'criado_em', 'atualizado_em']
+        read_only_fields = ['esta_ativa', 'valor_mensal_estimado', 'criado_em', 'atualizado_em']

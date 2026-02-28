@@ -97,12 +97,14 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
         # Obter dados do request
         horimetro_final = request.data.get('horimetro_final')
         observacoes_manutencao = request.data.get('observacoes_manutencao', '')
+        prazo_pagamento = request.data.get('prazo_pagamento', 'A_VISTA')
 
         try:
             with transaction.atomic():
                 # Atualizar OS
                 os.status = 'CONCLUIDA'
                 os.concluido_por = request.user
+                os._prazo_pagamento = prazo_pagamento  # passado ao signal via atributo temporário
 
                 if not os.data_conclusao:
                     os.data_conclusao = timezone.now().date()

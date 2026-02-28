@@ -33,24 +33,64 @@ def processar_os_concluida(sender, instance, created, **kwargs):
         # 2. Criar Conta a Receber (se ainda não existe)
         if not instance.contas_receber.exists():
             from django.utils import timezone
-            data_vencimento = instance.data_conclusao or timezone.now().date()
-            data_vencimento = data_vencimento + timedelta(days=30)
+            from financeiro.models import Pagamento
+
+            data_base = instance.data_conclusao or timezone.now().date()
+            prazo = getattr(instance, '_prazo_pagamento', 'A_VISTA')
+
+            # Mapeamento de prazo → lista de dias para vencimento de cada parcela
+            PRAZOS = {
+                'A_VISTA':  [0],
+                '30':       [30],
+                '60':       [60],
+                '90':       [90],
+                '30_60':    [30, 60],
+                '30_60_90': [30, 60, 90],
+            }
+            dias_parcelas = PRAZOS.get(prazo, [0])
+            total_parcelas = len(dias_parcelas)
 
             descricao_os = (instance.descricao or '')[:100]
             descricao_conta = f"Ordem de Serviço {instance.numero}"
             if descricao_os:
                 descricao_conta += f" - {descricao_os}"
 
-            ContaReceber.objects.create(
+            # Primeiro vencimento determina o data_vencimento da ContaReceber
+            data_vencimento_principal = data_base + timedelta(days=dias_parcelas[0])
+
+            conta = ContaReceber.objects.create(
                 tipo='ORDEM_SERVICO',
                 ordem_servico=instance,
                 orcamento=instance.orcamento,
                 cliente=instance.cliente,
-                data_vencimento=data_vencimento,
+                data_vencimento=data_vencimento_principal,
                 valor_original=instance.valor_final,
                 descricao=descricao_conta,
                 criado_por=instance.concluido_por,
             )
+
+            # Criar parcelas pendentes (a pagar) para prazos múltiplos
+            if total_parcelas > 1:
+                from decimal import Decimal, ROUND_HALF_UP
+                valor_parcela = (instance.valor_final / Decimal(total_parcelas)).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                # Ajuste de centavos na última parcela
+                valor_ultima = instance.valor_final - (valor_parcela * (total_parcelas - 1))
+
+                for i, dias in enumerate(dias_parcelas, start=1):
+                    valor = valor_parcela if i < total_parcelas else valor_ultima
+                    Pagamento.objects.create(
+                        conta_receber=conta,
+                        tipo_pagamento='PARCIAL',
+                        status='PENDENTE',
+                        valor=valor,
+                        forma_pagamento='PIX',  # padrão; pode ser alterado depois
+                        data_pagamento=data_base + timedelta(days=dias),
+                        numero_parcela=i,
+                        total_parcelas=total_parcelas,
+                        registrado_por=instance.concluido_por,
+                    )
 
         # 3. Se for manutenção preventiva, criar/atualizar ProgramacaoManutencao
         criar_programacao_manutencao_preventiva(instance)

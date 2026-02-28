@@ -146,15 +146,18 @@ export default function QRCodeScanner({ isOpen, onClose, onScan }: QRCodeScanner
     stopScanner();
 
     // Processar resultado do QR Code
-    if (data.startsWith('eq:')) {
-      // QR Code de equipamento - extrair UUID
-      const uuid = data.replace('eq:', '');
-      // Navegar para pagina de resumo do equipamento
+    // Suporta formato antigo "eq:{uuid}" e novo formato URL "/dashboard/equipamento/{uuid}"
+    const uuidFromEq = data.startsWith('eq:') ? data.replace('eq:', '') : null;
+    const uuidFromUrl = (() => {
+      const match = data.match(/\/dashboard\/equipamento\/([a-f0-9-]{36})/i);
+      return match ? match[1] : null;
+    })();
+    const uuid = uuidFromEq || uuidFromUrl;
+
+    if (uuid) {
       if (onScan) {
         onScan(data);
       } else {
-        // Redirecionar para pagina de resumo do equipamento
-        // Usa window.location para garantir navegação correta
         onClose();
         window.location.href = `/dashboard/equipamento/${uuid}`;
       }

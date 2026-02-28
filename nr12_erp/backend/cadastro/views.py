@@ -294,3 +294,37 @@ class AssinaturaClienteViewSet(viewsets.ModelViewSet):
             "detail": "Assinatura cancelada",
             "assinatura": AssinaturaClienteSerializer(assinatura).data
         })
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def fatura_mensal(self, request, pk=None):
+        """
+        Calcula a fatura mensal estimada da assinatura baseada em qtd_equipamentos × preco_por_equipamento.
+
+        GET /api/v1/cadastro/assinaturas/{id}/fatura_mensal/
+        """
+        from equipamentos.models import Equipamento
+        from decimal import Decimal
+
+        assinatura = self.get_object()
+
+        # Apenas admin ou o próprio cliente pode acessar
+        user = request.user
+        is_admin = hasattr(user, 'profile') and user.profile.role == 'ADMIN'
+        is_own = hasattr(user, 'cliente_profile') and user.cliente_profile == assinatura.cliente
+
+        if not is_admin and not is_own:
+            return Response({"detail": "Acesso negado."}, status=status.HTTP_403_FORBIDDEN)
+
+        qtd = Equipamento.objects.filter(cliente=assinatura.cliente, ativo=True).count()
+        preco = assinatura.plano.preco_por_equipamento or Decimal('0.00')
+        total = preco * qtd
+
+        return Response({
+            "cliente_nome": assinatura.cliente.nome_razao,
+            "plano_nome": assinatura.plano.nome,
+            "qtd_equipamentos": qtd,
+            "preco_por_equipamento": float(preco),
+            "valor_total": float(total),
+            "status_assinatura": assinatura.status,
+            "data_proximo_pagamento": assinatura.data_proximo_pagamento,
+        })

@@ -63,8 +63,9 @@ export default function EquipamentoResumePage({ params }: PageProps) {
 
       setEquipamento(equip);
 
-      // Verificar se é máquina de fio diamantado (tipo ID 59)
-      const isFioMachine = equip.tipo === 59 || equip.tipo_nome?.toLowerCase().includes('fio diamantado');
+      // Verificar se é máquina de fio diamantado pelo nome do tipo
+      const tipoNome = equip.tipo_nome?.toLowerCase() || '';
+      const isFioMachine = tipoNome.includes('fio') || tipoNome.includes('diamantado') || tipoNome.includes('wire');
       setIsMaquinaFio(isFioMachine);
 
       // Carregar dados relacionados em paralelo

@@ -26,6 +26,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
   });
   const [showConclusaoModal, setShowConclusaoModal] = useState(false);
   const [horimetroFinal, setHorimetroFinal] = useState<number | undefined>();
+  const [prazoPagamento, setPrazoPagamento] = useState('A_VISTA');
 
   useEffect(() => {
     loadOrdemServico();
@@ -204,7 +205,7 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
         horimetro_final: horimetroFinal,
       });
 
-      await ordensServicoApi.concluir(Number(id));
+      await ordensServicoApi.concluir(Number(id), prazoPagamento);
       setShowConclusaoModal(false);
       loadOrdemServico();
       alert('Ordem de serviço concluída! Uma conta a receber foi criada automaticamente.');
@@ -848,6 +849,24 @@ export default function OrdemServicoDetalhesPage({ params }: { params: Promise<{
                 </p>
               </div>
             )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Prazo de Pagamento *
+              </label>
+              <select
+                value={prazoPagamento}
+                onChange={(e) => setPrazoPagamento(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              >
+                <option value="A_VISTA">À Vista (vencimento hoje)</option>
+                <option value="30">30 dias</option>
+                <option value="60">60 dias</option>
+                <option value="90">90 dias</option>
+                <option value="30_60">30/60 dias (2 parcelas)</option>
+                <option value="30_60_90">30/60/90 dias (3 parcelas)</option>
+              </select>
+            </div>
 
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
               <div className="flex">

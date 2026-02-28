@@ -1639,9 +1639,10 @@ export const ordensServicoApi = {
     });
   },
 
-  concluir: async (id: number) => {
+  concluir: async (id: number, prazo_pagamento?: string) => {
     return apiFetch<OrdemServico>(`/ordens-servico/${id}/concluir/`, {
       method: 'POST',
+      body: JSON.stringify({ prazo_pagamento: prazo_pagamento || 'A_VISTA' }),
     });
   },
 
