@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Fornecedor, PedidoCompra, ItemPedidoCompra, LocalEntrega
+from almoxarifado.models import Produto
 
 
 class FornecedorSerializer(serializers.ModelSerializer):
@@ -141,13 +142,24 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
     def get_criado_por_nome(self, obj):
         return str(obj.criado_por) if obj.criado_por else None
 
+    def _resolve_item_data(self, item_data):
+        """Converte produto ID (int) para instância do modelo, se necessário."""
+        item_data = dict(item_data)
+        item_data.pop('id', None)
+        item_data.pop('pedido', None)
+        produto = item_data.get('produto')
+        if produto is not None and not isinstance(produto, Produto):
+            try:
+                item_data['produto'] = Produto.objects.get(pk=int(produto))
+            except (Produto.DoesNotExist, ValueError, TypeError):
+                item_data['produto'] = None
+        return item_data
+
     def create(self, validated_data):
         itens_data = validated_data.pop('itens_data', [])
         pedido = PedidoCompra.objects.create(**validated_data)
         for item_data in itens_data:
-            item_data.pop('id', None)
-            item_data.pop('pedido', None)
-            ItemPedidoCompra.objects.create(pedido=pedido, **item_data)
+            ItemPedidoCompra.objects.create(pedido=pedido, **self._resolve_item_data(item_data))
         pedido.recalcular_total()
         return pedido
 
@@ -162,9 +174,7 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
             # Deleta itens antigos e recria
             instance.itens.all().delete()
             for item_data in itens_data:
-                item_data.pop('id', None)
-                item_data.pop('pedido', None)
-                ItemPedidoCompra.objects.create(pedido=instance, **item_data)
+                ItemPedidoCompra.objects.create(pedido=instance, **self._resolve_item_data(item_data))
             instance.recalcular_total()
 
         return instance
