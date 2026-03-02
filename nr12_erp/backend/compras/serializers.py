@@ -144,16 +144,29 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         return str(obj.criado_por) if obj.criado_por else None
 
     def _resolve_item_data(self, item_data):
-        """Converte produto ID (int) para instância do modelo, se necessário."""
+        """Converte tipos dos campos do item: produto ID -> instância, strings -> Decimal."""
+        from decimal import Decimal, InvalidOperation
         item_data = dict(item_data)
         item_data.pop('id', None)
         item_data.pop('pedido', None)
+
+        # Converte produto ID para instância
         produto = item_data.get('produto')
         if produto is not None and not isinstance(produto, Produto):
             try:
                 item_data['produto'] = Produto.objects.get(pk=int(produto))
             except (Produto.DoesNotExist, ValueError, TypeError):
                 item_data['produto'] = None
+
+        # Converte campos numéricos de string para Decimal
+        for campo in ('quantidade', 'valor_unitario'):
+            val = item_data.get(campo)
+            if val is not None and not isinstance(val, Decimal):
+                try:
+                    item_data[campo] = Decimal(str(val))
+                except (InvalidOperation, TypeError):
+                    pass
+
         return item_data
 
     def create(self, validated_data):
