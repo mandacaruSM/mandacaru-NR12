@@ -59,10 +59,19 @@ async function apiFetchBase<T>(
       const response = await fetch(`${baseUrl}${endpoint}`, config);
       console.log('📥 API Response:', response.status, response.statusText, response.url);
 
-      // ✅ Retry em caso de cold start (502/503/504)
-      if ([502, 503, 504].includes(response.status) && attempt < maxRetries) {
-        console.warn(`⚠️ Backend iniciando (${response.status}). Aguardando...`);
-        continue; // Próxima tentativa
+      // ✅ Retry em caso de cold start (500/502/503/504)
+      // 500 pode ser erro de proxy quando o backend ainda está iniciando (Fly.io auto-start)
+      if ([500, 502, 503, 504].includes(response.status) && attempt < maxRetries) {
+        let isProxyError = false;
+        try {
+          const clone = response.clone();
+          const body = await clone.json();
+          if (body?.error && typeof body.error === 'string') isProxyError = true;
+        } catch { isProxyError = true; } // não é JSON = é HTML de erro = cold start
+        if (isProxyError) {
+          console.warn(`⚠️ Backend iniciando (${response.status}). Aguardando...`);
+          continue; // Próxima tentativa
+        }
       }
 
       // ✅ Bloqueia redirects - se acontecer, é um erro de configuração
