@@ -1639,10 +1639,10 @@ export const ordensServicoApi = {
     });
   },
 
-  concluir: async (id: number, prazo_pagamento?: string) => {
+  concluir: async (id: number) => {
     return apiFetch<OrdemServico>(`/ordens-servico/${id}/concluir/`, {
       method: 'POST',
-      body: JSON.stringify({ prazo_pagamento: prazo_pagamento || 'A_VISTA' }),
+      body: JSON.stringify({}),
     });
   },
 
@@ -1868,6 +1868,13 @@ export const financeiroApi = {
         total_vencido: number;
         total_recebido: number;
       }>('/financeiro/contas-receber/resumo/');
+    },
+
+    parcelar: async (id: number, data: { prazo: string; forma_pagamento: string }) => {
+      return apiFetch(`/financeiro/contas-receber/${id}/parcelar/`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     },
   },
 

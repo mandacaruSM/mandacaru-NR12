@@ -13,6 +13,10 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
+  const [showParcelamentoModal, setShowParcelamentoModal] = useState(false);
+  const [prazoParcela, setPrazoParcela] = useState('A_VISTA');
+  const [formaParcelamento, setFormaParcelamento] = useState('PIX');
+  const [parcelamentoLoading, setParcelamentoLoading] = useState(false);
 
   useEffect(() => {
     loadConta();
@@ -73,6 +77,25 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
     } catch (error) {
       console.error('Erro ao cancelar pagamento:', error);
       alert('Erro ao cancelar pagamento');
+    }
+  }
+
+  async function handleParcelar() {
+    if (!conta) return;
+    setParcelamentoLoading(true);
+    try {
+      await financeiroApi.contasReceber.parcelar(conta.id!, {
+        prazo: prazoParcela,
+        forma_pagamento: formaParcelamento,
+      });
+      setShowParcelamentoModal(false);
+      alert('Parcelamento criado com sucesso!');
+      loadConta();
+    } catch (error) {
+      console.error('Erro ao parcelar:', error);
+      alert('Erro ao criar parcelamento');
+    } finally {
+      setParcelamentoLoading(false);
     }
   }
 
@@ -160,12 +183,20 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
             Imprimir Fatura
           </button>
           {(conta.status === 'ABERTA' || conta.status === 'VENCIDA') && (
-            <button
-              onClick={() => setShowPagamentoModal(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Registrar Pagamento
-            </button>
+            <>
+              <button
+                onClick={() => setShowParcelamentoModal(true)}
+                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+              >
+                Parcelar
+              </button>
+              <button
+                onClick={() => setShowPagamentoModal(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Registrar Pagamento
+              </button>
+            </>
           )}
           <button
             onClick={() => router.back()}
@@ -183,6 +214,68 @@ export default function ContaReceberDetalhesPage({ params }: { params: Promise<{
         onClose={() => setShowPagamentoModal(false)}
         onSuccess={handlePagamentoSuccess}
       />
+
+      {/* Modal de Parcelamento */}
+      {showParcelamentoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Definir Parcelamento</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Valor total: <strong>R$ {Number(conta.valor_final || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">Prazo *</label>
+              <select
+                value={prazoParcela}
+                onChange={(e) => setPrazoParcela(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              >
+                <option value="A_VISTA">À Vista (vencimento hoje)</option>
+                <option value="30">30 dias</option>
+                <option value="60">60 dias</option>
+                <option value="90">90 dias</option>
+                <option value="30_60">30/60 dias (2 parcelas)</option>
+                <option value="30_60_90">30/60/90 dias (3 parcelas)</option>
+              </select>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-900 mb-2">Forma de Pagamento *</label>
+              <select
+                value={formaParcelamento}
+                onChange={(e) => setFormaParcelamento(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              >
+                <option value="PIX">PIX</option>
+                <option value="BOLETO">Boleto</option>
+                <option value="TRANSFERENCIA">Transferência</option>
+                <option value="CARTAO_CREDITO">Cartão de Crédito</option>
+                <option value="CARTAO_DEBITO">Cartão de Débito</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="DINHEIRO">Dinheiro</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowParcelamentoModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-900 rounded hover:bg-gray-400"
+                disabled={parcelamentoLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleParcelar}
+                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+                disabled={parcelamentoLoading}
+              >
+                {parcelamentoLoading ? 'Criando...' : 'Confirmar Parcelamento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status */}
       <div className="mb-6">

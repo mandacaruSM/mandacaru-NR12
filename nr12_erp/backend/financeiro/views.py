@@ -75,6 +75,92 @@ class ContaReceberViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(conta)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def parcelar(self, request, pk=None):
+        """
+        Define o parcelamento de uma ContaReceber criando Pagamentos PENDENTE.
+        POST /api/v1/financeiro/contas-receber/{id}/parcelar/
+        Body: { "prazo": "30_60_90", "forma_pagamento": "PIX" }
+        Prazos: A_VISTA, 30, 60, 90, 30_60, 30_60_90
+        """
+        from decimal import Decimal, ROUND_HALF_UP
+        from datetime import timedelta
+        from django.utils import timezone
+
+        conta = self.get_object()
+
+        if conta.status not in ['ABERTA', 'VENCIDA']:
+            return Response(
+                {"detail": "Só é possível parcelar contas abertas ou vencidas."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        prazo = request.data.get('prazo', 'A_VISTA')
+        forma_pagamento = request.data.get('forma_pagamento', 'PIX')
+
+        PRAZOS = {
+            'A_VISTA':  [0],
+            '30':       [30],
+            '60':       [60],
+            '90':       [90],
+            '30_60':    [30, 60],
+            '30_60_90': [30, 60, 90],
+        }
+
+        dias_parcelas = PRAZOS.get(prazo)
+        if not dias_parcelas:
+            return Response({"detail": "Prazo inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Cancelar parcelas pendentes anteriores (se existirem)
+        conta.pagamentos.filter(status='PENDENTE').update(status='CANCELADO')
+
+        data_base = timezone.now().date()
+        total_parcelas = len(dias_parcelas)
+        valor = conta.valor_final or conta.valor_original
+
+        pagamentos_criados = []
+
+        if total_parcelas == 1:
+            pag = Pagamento.objects.create(
+                conta_receber=conta,
+                tipo_pagamento='TOTAL',
+                status='PENDENTE',
+                valor=valor,
+                forma_pagamento=forma_pagamento,
+                data_pagamento=data_base + timedelta(days=dias_parcelas[0]),
+                registrado_por=request.user,
+            )
+            pagamentos_criados.append(pag)
+        else:
+            valor_parcela = (valor / Decimal(total_parcelas)).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            valor_ultima = valor - (valor_parcela * (total_parcelas - 1))
+
+            for i, dias in enumerate(dias_parcelas, start=1):
+                v = valor_parcela if i < total_parcelas else valor_ultima
+                pag = Pagamento.objects.create(
+                    conta_receber=conta,
+                    tipo_pagamento='PARCIAL',
+                    status='PENDENTE',
+                    valor=v,
+                    forma_pagamento=forma_pagamento,
+                    data_pagamento=data_base + timedelta(days=dias),
+                    numero_parcela=i,
+                    total_parcelas=total_parcelas,
+                    registrado_por=request.user,
+                )
+                pagamentos_criados.append(pag)
+
+        # Atualizar data_vencimento da conta para o primeiro vencimento
+        conta.data_vencimento = data_base + timedelta(days=dias_parcelas[0])
+        conta.save(update_fields=['data_vencimento'])
+
+        return Response({
+            "detail": f"{total_parcelas} parcela(s) criada(s) com sucesso.",
+            "pagamentos": PagamentoListSerializer(pagamentos_criados, many=True).data
+        }, status=status.HTTP_201_CREATED)
+
     @action(detail=False, methods=['get'])
     def resumo(self, request):
         """Retorna resumo de contas a receber"""
