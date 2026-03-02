@@ -111,8 +111,8 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         return obj.equipamento.descricao if obj.equipamento else None
 
     def get_equipamento_tipo(self, obj):
-        if obj.equipamento and obj.equipamento.tipo_equipamento:
-            return obj.equipamento.tipo_equipamento.nome
+        if obj.equipamento:
+            return obj.equipamento.get_tipo_display() if hasattr(obj.equipamento, 'get_tipo_display') else obj.equipamento.tipo
         return None
 
     def get_orcamento_numero(self, obj):
@@ -128,7 +128,8 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         return obj.ordem_servico.get_status_display() if obj.ordem_servico else None
 
     def get_ordem_servico_tipo(self, obj):
-        return obj.ordem_servico.get_tipo_display() if obj.ordem_servico else None
+        # OrdemServico não tem campo 'tipo', retorna None
+        return None
 
     def get_local_estoque_nome(self, obj):
         return obj.local_estoque.nome if obj.local_estoque else None
