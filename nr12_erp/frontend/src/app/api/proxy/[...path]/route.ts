@@ -99,12 +99,21 @@ async function proxyRequest(request: NextRequest, path: string[], method: string
     }
 
     // ✅ Seguir redirects automaticamente (Render pode redirecionar HTTP → HTTPS)
-    const response = await fetch(targetUrl, {
-      method,
-      headers,
-      body,
-      redirect: 'follow',
-    });
+    // Timeout de 25s para evitar que o Vercel function (30s) expire sem resposta
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    let response: Response;
+    try {
+      response = await fetch(targetUrl, {
+        method,
+        headers,
+        body,
+        redirect: 'follow',
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     console.log(`📨 [Proxy] Response status: ${response.status}`);
 
