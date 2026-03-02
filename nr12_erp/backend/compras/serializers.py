@@ -102,7 +102,7 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         return obj.cliente.nome_razao if obj.cliente else None
 
     def get_cliente_cnpj(self, obj):
-        return obj.cliente.cnpj_cpf if obj.cliente else None
+        return obj.cliente.documento if obj.cliente else None
 
     def get_equipamento_codigo(self, obj):
         return obj.equipamento.codigo if obj.equipamento else None
