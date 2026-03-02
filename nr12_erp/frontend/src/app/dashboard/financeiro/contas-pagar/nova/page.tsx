@@ -7,8 +7,7 @@ import { financeiroApi } from '@/lib/api';
 interface Fornecedor {
   id: number;
   nome: string;
-  cpf_cnpj?: string;
-  tipo_pessoa: 'F' | 'J';
+  cnpj_cpf?: string;
 }
 
 export default function NovaContaPagarPage() {
@@ -32,13 +31,11 @@ export default function NovaContaPagarPage() {
 
   const [novoFornecedor, setNovoFornecedor] = useState({
     nome: '',
-    cpf_cnpj: '',
-    tipo_pessoa: 'J' as 'F' | 'J',
+    cnpj_cpf: '',
     telefone: '',
     email: '',
-    endereco: '',
     cidade: '',
-    estado: '',
+    uf: '',
     cep: '',
   });
 
@@ -48,7 +45,7 @@ export default function NovaContaPagarPage() {
 
   async function loadFornecedores() {
     try {
-      const response = await fetch('/api/proxy/clientes/', {
+      const response = await fetch('/api/proxy/compras/fornecedores/?page_size=200', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -96,7 +93,7 @@ export default function NovaContaPagarPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/proxy/clientes/', {
+      const response = await fetch('/api/proxy/compras/fornecedores/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,37 +103,32 @@ export default function NovaContaPagarPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao criar fornecedor');
+        const errData = await response.json().catch(() => ({}));
+        const msg = errData.detail || Object.entries(errData).map(([k, v]) => `${k}: ${v}`).join(' | ') || 'Erro ao criar fornecedor';
+        throw new Error(msg);
       }
 
       const fornecedorCriado = await response.json();
 
-      // Atualizar lista de fornecedores
+      // Atualizar lista e selecionar o fornecedor recém-criado
       await loadFornecedores();
-
-      // Selecionar o fornecedor recém-criado
       setFormData({ ...formData, fornecedor: fornecedorCriado.nome });
 
-      // Fechar modal
       setShowFornecedorModal(false);
-
-      // Limpar formulário do modal
       setNovoFornecedor({
         nome: '',
-        cpf_cnpj: '',
-        tipo_pessoa: 'J',
+        cnpj_cpf: '',
         telefone: '',
         email: '',
-        endereco: '',
         cidade: '',
-        estado: '',
+        uf: '',
         cep: '',
       });
 
       alert('Fornecedor criado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar fornecedor:', error);
-      alert('Erro ao criar fornecedor');
+      alert(error.message || 'Erro ao criar fornecedor');
     } finally {
       setLoading(false);
     }
@@ -195,7 +187,7 @@ export default function NovaContaPagarPage() {
               <datalist id="fornecedores-list">
                 {fornecedores.map((f) => (
                   <option key={f.id} value={f.nome}>
-                    {f.cpf_cnpj && `(${f.cpf_cnpj})`}
+                    {f.cnpj_cpf && `(${f.cnpj_cpf})`}
                   </option>
                 ))}
               </datalist>
@@ -362,36 +354,6 @@ export default function NovaContaPagarPage() {
 
             <form onSubmit={handleCriarFornecedor}>
               <div className="grid grid-cols-2 gap-4">
-                {/* Tipo de Pessoa */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Tipo <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={novoFornecedor.tipo_pessoa}
-                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, tipo_pessoa: e.target.value as 'F' | 'J' })}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
-                    required
-                  >
-                    <option value="F">Pessoa Física</option>
-                    <option value="J">Pessoa Jurídica</option>
-                  </select>
-                </div>
-
-                {/* CPF/CNPJ */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    {novoFornecedor.tipo_pessoa === 'F' ? 'CPF' : 'CNPJ'}
-                  </label>
-                  <input
-                    type="text"
-                    value={novoFornecedor.cpf_cnpj}
-                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, cpf_cnpj: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
-                    placeholder={novoFornecedor.tipo_pessoa === 'F' ? '000.000.000-00' : '00.000.000/0000-00'}
-                  />
-                </div>
-
                 {/* Nome */}
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -406,11 +368,21 @@ export default function NovaContaPagarPage() {
                   />
                 </div>
 
+                {/* CNPJ/CPF */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">CNPJ/CPF</label>
+                  <input
+                    type="text"
+                    value={novoFornecedor.cnpj_cpf}
+                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, cnpj_cpf: e.target.value })}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
+                    placeholder="00.000.000/0000-00"
+                  />
+                </div>
+
                 {/* Telefone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Telefone
-                  </label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Telefone</label>
                   <input
                     type="text"
                     value={novoFornecedor.telefone}
@@ -422,9 +394,7 @@ export default function NovaContaPagarPage() {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Email</label>
                   <input
                     type="email"
                     value={novoFornecedor.email}
@@ -433,24 +403,9 @@ export default function NovaContaPagarPage() {
                   />
                 </div>
 
-                {/* Endereço */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Endereço
-                  </label>
-                  <input
-                    type="text"
-                    value={novoFornecedor.endereco}
-                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, endereco: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
-                  />
-                </div>
-
                 {/* Cidade */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Cidade
-                  </label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">Cidade</label>
                   <input
                     type="text"
                     value={novoFornecedor.cidade}
@@ -459,26 +414,22 @@ export default function NovaContaPagarPage() {
                   />
                 </div>
 
-                {/* Estado */}
+                {/* UF */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Estado
-                  </label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">UF</label>
                   <input
                     type="text"
-                    value={novoFornecedor.estado}
-                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, estado: e.target.value })}
+                    value={novoFornecedor.uf}
+                    onChange={(e) => setNovoFornecedor({ ...novoFornecedor, uf: e.target.value })}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
-                    placeholder="UF"
+                    placeholder="MG"
                     maxLength={2}
                   />
                 </div>
 
                 {/* CEP */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    CEP
-                  </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">CEP</label>
                   <input
                     type="text"
                     value={novoFornecedor.cep}
