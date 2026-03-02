@@ -56,18 +56,20 @@ class ContaReceberViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        from decimal import Decimal
+        from django.utils import timezone
+
         valor_pago = request.data.get('valor_pago', conta.valor_final)
         forma_pagamento = request.data.get('forma_pagamento', '')
         comprovante = request.data.get('comprovante', '')
 
-        conta.valor_pago = float(valor_pago)
+        conta.valor_pago = Decimal(str(valor_pago))
         conta.forma_pagamento = forma_pagamento
         conta.comprovante = comprovante
         conta.recebido_por = request.user
 
         if conta.valor_pago >= conta.valor_final:
             conta.status = 'PAGA'
-            from django.utils import timezone
             conta.data_pagamento = timezone.now().date()
 
         conta.save()
@@ -240,18 +242,20 @@ class ContaPagarViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        from decimal import Decimal
+        from django.utils import timezone
+
         valor_pago = request.data.get('valor_pago', conta.valor_final)
         forma_pagamento = request.data.get('forma_pagamento', '')
         comprovante = request.data.get('comprovante', '')
 
-        conta.valor_pago = float(valor_pago)
+        conta.valor_pago = Decimal(str(valor_pago))
         conta.forma_pagamento = forma_pagamento
         conta.comprovante = comprovante
         conta.pago_por = request.user
 
         if conta.valor_pago >= conta.valor_final:
             conta.status = 'PAGA'
-            from django.utils import timezone
             conta.data_pagamento = timezone.now().date()
 
         conta.save()

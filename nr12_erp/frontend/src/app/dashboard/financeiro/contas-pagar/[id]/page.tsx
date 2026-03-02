@@ -25,10 +25,10 @@ export default function ContaPagarDetalhesPage({ params }: { params: Promise<{ i
       setLoading(true);
       const contaData = await financeiroApi.contasPagar.get(Number(id));
       setConta(contaData);
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         valor_pago: Number(contaData.valor_final || 0),
-      });
+      }));
     } catch (error) {
       console.error('Erro ao carregar conta:', error);
     } finally {
