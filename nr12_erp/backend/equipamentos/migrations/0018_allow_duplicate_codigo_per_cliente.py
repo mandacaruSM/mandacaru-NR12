@@ -11,66 +11,75 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='equipamento',
-            name='data_ultima_leitura',
-            field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
+        # Estes campos já existem no banco de produção (foram aplicados manualmente).
+        # Usamos SeparateDatabaseAndState para atualizar apenas o estado do Django
+        # sem tentar executar o ALTER TABLE no banco.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='data_ultima_leitura',
+                    field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
+                ),
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='data_ultima_manutencao',
+                    field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
+                ),
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='leitura_ultima_manutencao',
+                    field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
+                ),
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='proxima_manutencao_data',
+                    field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
+                ),
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='proxima_manutencao_leitura',
+                    field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
+                ),
+                migrations.AddField(
+                    model_name='equipamento',
+                    name='status_operacional',
+                    field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='data_ultima_leitura',
+                    field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='data_ultima_manutencao',
+                    field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='leitura_ultima_manutencao',
+                    field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='proxima_manutencao_data',
+                    field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='proxima_manutencao_leitura',
+                    field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
+                ),
+                migrations.AddField(
+                    model_name='historicalequipamento',
+                    name='status_operacional',
+                    field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
+                ),
+            ],
         ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='data_ultima_manutencao',
-            field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='leitura_ultima_manutencao',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='proxima_manutencao_data',
-            field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='proxima_manutencao_leitura',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
-        ),
-        migrations.AddField(
-            model_name='equipamento',
-            name='status_operacional',
-            field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='data_ultima_leitura',
-            field=models.DateTimeField(blank=True, help_text='Data/hora da última atualização do horímetro/odômetro', null=True, verbose_name='Data da Última Leitura'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='data_ultima_manutencao',
-            field=models.DateField(blank=True, help_text='Data da última manutenção preventiva ou corretiva realizada', null=True, verbose_name='Data da Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='leitura_ultima_manutencao',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Horímetro/KM registrado na última manutenção', max_digits=12, null=True, verbose_name='Leitura na Última Manutenção'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='proxima_manutencao_data',
-            field=models.DateField(blank=True, help_text='Data prevista para próxima manutenção preventiva', null=True, verbose_name='Próxima Manutenção (Data)'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='proxima_manutencao_leitura',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Leitura prevista para próxima manutenção preventiva', max_digits=12, null=True, verbose_name='Próxima Manutenção (Leitura)'),
-        ),
-        migrations.AddField(
-            model_name='historicalequipamento',
-            name='status_operacional',
-            field=models.CharField(choices=[('OPERACIONAL', 'Operacional'), ('EM_MANUTENCAO', 'Em Manutenção'), ('PARADO', 'Parado'), ('DESATIVADO', 'Desativado')], default='OPERACIONAL', max_length=20, verbose_name='Status Operacional'),
-        ),
+        # Estas operações SÃO executadas no banco (removem unique global e adicionam unique_together)
         migrations.AlterField(
             model_name='equipamento',
             name='codigo',
