@@ -24,7 +24,7 @@ class Equipamento(models.Model):
     empreendimento = models.ForeignKey("cadastro.Empreendimento", on_delete=models.PROTECT, related_name="equipamentos")
     tipo = models.ForeignKey(TipoEquipamento, on_delete=models.PROTECT, related_name="equipamentos")
 
-    codigo = models.CharField(max_length=50, unique=True)  # patrimônio/placa/prefixo
+    codigo = models.CharField(max_length=50)  # patrimônio/placa/prefixo
     descricao = models.CharField(max_length=150, blank=True, default="")
     fabricante = models.CharField(max_length=100, blank=True, default="")
     modelo = models.CharField(max_length=100, blank=True, default="")
@@ -146,6 +146,7 @@ class Equipamento(models.Model):
 
     class Meta:
         ordering = ["codigo"]
+        unique_together = [("cliente", "codigo")]
 
     def __str__(self):
         return f"{self.codigo} - {self.descricao or self.modelo}"
