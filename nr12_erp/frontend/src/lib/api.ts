@@ -85,7 +85,19 @@ async function apiFetchBase<T>(
           error = { detail: `Erro HTTP ${response.status}: ${response.statusText}` };
           console.error('Erro da API (não-JSON):', error);
         }
-        const errorMessage = error.detail || JSON.stringify(error) || `Erro ${response.status}`;
+        let errorMessage: string;
+        if (error.detail) {
+          errorMessage = error.detail;
+        } else if (typeof error === 'object') {
+          // Erros de validação DRF: { campo: ["mensagem"], ... }
+          const parts = Object.entries(error).map(([field, msgs]) => {
+            const msg = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+            return field === 'non_field_errors' ? msg : `${field}: ${msg}`;
+          });
+          errorMessage = parts.join(' | ') || `Erro ${response.status}`;
+        } else {
+          errorMessage = `Erro ${response.status}`;
+        }
         throw new Error(errorMessage);
       }
 
