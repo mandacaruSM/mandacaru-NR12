@@ -111,8 +111,8 @@ class PedidoCompraSerializer(serializers.ModelSerializer):
         return obj.equipamento.descricao if obj.equipamento else None
 
     def get_equipamento_tipo(self, obj):
-        if obj.equipamento:
-            return obj.equipamento.get_tipo_display() if hasattr(obj.equipamento, 'get_tipo_display') else obj.equipamento.tipo
+        if obj.equipamento and obj.equipamento.tipo:
+            return obj.equipamento.tipo.nome
         return None
 
     def get_orcamento_numero(self, obj):
