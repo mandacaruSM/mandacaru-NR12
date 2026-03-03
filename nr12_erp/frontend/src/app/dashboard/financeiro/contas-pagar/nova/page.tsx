@@ -186,9 +186,7 @@ export default function NovaContaPagarPage() {
               />
               <datalist id="fornecedores-list">
                 {fornecedores.map((f) => (
-                  <option key={f.id} value={f.nome}>
-                    {f.cnpj_cpf && `(${f.cnpj_cpf})`}
-                  </option>
+                  <option key={f.id} value={f.nome} />
                 ))}
               </datalist>
               <button
