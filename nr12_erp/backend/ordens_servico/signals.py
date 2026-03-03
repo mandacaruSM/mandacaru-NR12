@@ -117,7 +117,7 @@ def atualizar_equipamento_apos_conclusao(os_instance):
 
             # Próxima manutenção por data (estimar com base no intervalo)
             # Assumindo uso médio, calcular data aproximada
-            if equipamento.data_conclusao and modelo.intervalo:
+            if os_instance.data_conclusao and modelo.intervalo:
                 # Estimar dias até próxima manutenção (assumir 8h/dia de operação ou 100km/dia)
                 dias_estimados = 30  # Default de 1 mês
                 if equipamento.tipo_medicao == 'HORA':
