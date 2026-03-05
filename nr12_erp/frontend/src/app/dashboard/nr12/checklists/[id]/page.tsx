@@ -16,8 +16,10 @@ import {
   MapPin,
   Camera,
   ExternalLink,
+  Printer,
 } from "lucide-react";
 import { nr12Api, ChecklistRealizado } from "@/lib/api";
+import { gerarImpressaoChecklist } from "@/components/ImpressaoProfissional";
 
 export default function ChecklistDetailPage() {
   const router = useRouter();
@@ -167,7 +169,16 @@ export default function ChecklistDetailPage() {
             <p className="text-gray-900 mt-1">{checklist.modelo_nome}</p>
           </div>
         </div>
-        {getStatusBadge(checklist.status)}
+        <div className="flex items-center gap-3">
+          {getStatusBadge(checklist.status)}
+          <button
+            onClick={() => gerarImpressaoChecklist(checklist)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <Printer className="w-4 h-4" />
+            Imprimir
+          </button>
+        </div>
       </div>
 
       {/* Cards de Informação */}

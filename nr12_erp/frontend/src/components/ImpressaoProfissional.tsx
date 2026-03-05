@@ -5,6 +5,226 @@
 
 import { DADOS_EMPRESA, LOGO_PATH } from '@/config/empresa';
 
+export function gerarImpressaoChecklist(checklist: any) {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Bloqueador de pop-ups ativo. Permita pop-ups para imprimir.');
+    return null;
+  }
+
+  const html = gerarHTMLChecklist(checklist);
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  const images = printWindow.document.querySelectorAll('img');
+  let loadedImages = 0;
+  const totalImages = images.length;
+
+  if (totalImages === 0) {
+    setTimeout(() => printWindow.print(), 300);
+  } else {
+    images.forEach((img) => {
+      const handleLoad = () => {
+        loadedImages++;
+        if (loadedImages === totalImages) setTimeout(() => printWindow.print(), 300);
+      };
+      if (img.complete) handleLoad();
+      else { img.onload = handleLoad; img.onerror = handleLoad; }
+    });
+  }
+
+  return printWindow;
+}
+
+function gerarHTMLChecklist(cl: any) {
+  const resultadoMap: Record<string, { label: string; cor: string; bg: string }> = {
+    APROVADO:          { label: 'APROVADO',                cor: '#065f46', bg: '#d1fae5' },
+    APROVADO_RESTRICAO:{ label: 'APROVADO C/ RESTRIÇÃO',   cor: '#92400e', bg: '#fef3c7' },
+    REPROVADO:         { label: 'REPROVADO',               cor: '#991b1b', bg: '#fee2e2' },
+  };
+  const resultado = cl.resultado_geral ? resultadoMap[cl.resultado_geral] : null;
+
+  const categoriaLabel: Record<string, string> = {
+    SEGURANCA: 'Segurança', FUNCIONAL: 'Funcional', VISUAL: 'Visual',
+    MEDICAO: 'Medição', LIMPEZA: 'Limpeza', LUBRIFICACAO: 'Lubrificação',
+    DOCUMENTACAO: 'Documentação', OUTROS: 'Outros',
+  };
+
+  const respostaLabel: Record<string, string> = {
+    CONFORME: 'CONFORME', NAO_CONFORME: 'NÃO CONFORME',
+    SIM: 'SIM', NAO: 'NÃO', NA: 'N/A',
+  };
+  const respostaCor: Record<string, string> = {
+    CONFORME: '#065f46', NAO_CONFORME: '#991b1b',
+    SIM: '#065f46', NAO: '#991b1b', NA: '#6b7280',
+  };
+  const respostaBg: Record<string, string> = {
+    CONFORME: '#d1fae5', NAO_CONFORME: '#fee2e2',
+    SIM: '#d1fae5', NAO: '#fee2e2', NA: '#f3f4f6',
+  };
+
+  const respostas: any[] = cl.respostas || [];
+  const totalConformes = respostas.filter(r => ['CONFORME', 'SIM'].includes(r.resposta)).length;
+  const totalNaoConformes = respostas.filter(r => ['NAO_CONFORME', 'NAO'].includes(r.resposta)).length;
+
+  const linhasRespostas = respostas.map((r: any, i: number) => {
+    const resp = r.resposta || 'NA';
+    const cor = respostaCor[resp] || '#6b7280';
+    const bg = respostaBg[resp] || '#f3f4f6';
+    return `
+      <tr>
+        <td class="text-center" style="color:#6b7280">${i + 1}</td>
+        <td><span class="badge-cat">${categoriaLabel[r.item_categoria] || r.item_categoria}</span></td>
+        <td>${r.item_pergunta || '-'}${r.observacao ? `<br><small style="color:#78350f"><em>Obs: ${r.observacao}</em></small>` : ''}</td>
+        <td class="text-center">
+          <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:7pt;font-weight:700;background:${bg};color:${cor}">
+            ${respostaLabel[resp] || resp}
+          </span>
+        </td>
+        ${r.foto ? `<td class="text-center"><img src="${r.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb" /></td>` : '<td class="text-center" style="color:#d1d5db">—</td>'}
+      </tr>
+    `;
+  }).join('');
+
+  const dataInicio = cl.data_hora_inicio ? new Date(cl.data_hora_inicio).toLocaleString('pt-BR') : '-';
+  const dataFim = cl.data_hora_fim ? new Date(cl.data_hora_fim).toLocaleString('pt-BR') : '-';
+
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Checklist NR12 #${cl.id}</title>
+  <style>
+    ${getEstilosProfissionais()}
+    .badge-cat {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 6.5pt;
+      font-weight: 600;
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+    .resultado-box {
+      padding: 10px 16px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12pt;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat-box {
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .stat-num { font-size: 20pt; font-weight: 700; }
+    .stat-label { font-size: 7.5pt; color: #6b7280; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  ${gerarCabecalho('CHECKLIST NR12', { numero: String(cl.id) })}
+
+  <div class="secao">
+    <h2 class="secao-titulo">Informações do Checklist</h2>
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-item">
+          <div class="info-label">Modelo</div>
+          <div class="info-value">${cl.modelo_nome || '-'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Equipamento</div>
+          <div class="info-value">${cl.equipamento_codigo || '-'} — ${cl.equipamento_descricao || ''}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Operador</div>
+          <div class="info-value">${cl.operador_nome_display || cl.operador_nome || 'Não informado'}</div>
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-item">
+          <div class="info-label">Início</div>
+          <div class="info-value">${dataInicio}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Fim</div>
+          <div class="info-value">${dataFim}</div>
+        </div>
+        ${cl.leitura_equipamento ? `
+        <div class="info-item">
+          <div class="info-label">Leitura do Equipamento</div>
+          <div class="info-value">${cl.leitura_equipamento}</div>
+        </div>` : ''}
+        <div class="info-item">
+          <div class="info-label">Origem</div>
+          <div class="info-value">${cl.origem}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  ${resultado ? `
+  <div class="resultado-box" style="background:${resultado.bg};color:${resultado.cor}">
+    <span style="font-size:16pt">&#9654;</span>
+    <span>Resultado: ${resultado.label}</span>
+  </div>` : ''}
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-num" style="color:#1e40af">${respostas.length}</div>
+      <div class="stat-label">Total de Itens</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:#065f46">${totalConformes}</div>
+      <div class="stat-label">Conformes</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:#991b1b">${totalNaoConformes}</div>
+      <div class="stat-label">Não Conformidades</div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2 class="secao-titulo">Itens Verificados</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30px">#</th>
+          <th style="width:90px">Categoria</th>
+          <th>Pergunta / Observação</th>
+          <th style="width:110px" class="text-center">Resposta</th>
+          <th style="width:65px" class="text-center">Foto</th>
+        </tr>
+      </thead>
+      <tbody>${linhasRespostas}</tbody>
+    </table>
+  </div>
+
+  ${cl.observacoes_gerais ? gerarObservacoes(cl.observacoes_gerais) : ''}
+
+  <div class="rodape">
+    <p>Checklist NR12 gerado em ${new Date().toLocaleString('pt-BR')}</p>
+    <div class="assinatura-box">
+      <div class="info-label">Assinatura do Responsável pelo Checklist</div>
+      <div style="margin-top:5px;color:#1a1a1a">Nome: _________________________________</div>
+      <div style="color:#1a1a1a">Cargo: _________________________________</div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 export function gerarImpressaoProfissional(
   tipo: 'orcamento' | 'ordem_servico' | 'fatura',
   dados: any
