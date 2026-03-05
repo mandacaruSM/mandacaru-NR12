@@ -61,7 +61,10 @@ async function apiFetchBase<T>(
 
       // ✅ Retry em caso de cold start (500/502/503/504)
       // 500 pode ser erro de proxy quando o backend ainda está iniciando (Fly.io auto-start)
-      if ([500, 502, 503, 504].includes(response.status) && attempt < maxRetries) {
+      // IMPORTANTE: Para POST/PUT/PATCH não repetir - pode criar dados duplicados
+      const method = (fetchOptions.method || 'GET').toUpperCase();
+      const isMutating = ['POST', 'PUT', 'PATCH'].includes(method);
+      if ([500, 502, 503, 504].includes(response.status) && attempt < maxRetries && !isMutating) {
         let isProxyError = false;
         try {
           const clone = response.clone();

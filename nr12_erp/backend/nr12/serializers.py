@@ -54,6 +54,7 @@ class ModeloChecklistDetailSerializer(serializers.ModelSerializer):
 
 
 class RespostaItemChecklistSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(read_only=True)
     item_pergunta = serializers.CharField(source='item.pergunta', read_only=True)
     item_categoria = serializers.CharField(source='item.categoria', read_only=True)
 
