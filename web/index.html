@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Mandacaru - Soluções em Segurança do Trabalho NR12">
-    <meta name="keywords" content="NR12, Segurança do Trabalho, Máquinas, Equipamentos, Manutenção">
-    <title>Mandacaru - Segurança do Trabalho NR12</title>
+    <meta name="description" content="Mandacaru ERP - Gestão de manutenção, controle de abastecimento e monitoramento em conformidade com a NR12 para mineração de rochas ornamentais.">
+    <meta name="keywords" content="NR12, ERP mineração, gestão manutenção, rochas ornamentais, fio diamantado, controle equipamentos">
+    <title>Mandacaru ERP - A força da gestão que mantém seus ativos em movimento</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <!-- Header -->
-    <header class="header">
+    <header class="header" id="header">
         <div class="container">
             <div class="logo">
-                <img src="logo.png" alt="Mandacaru Logo">
+                <img src="logo.png" alt="Mandacaru Soluções em Mineração">
             </div>
-            <nav class="nav">
-                <a href="#home" class="nav-link">Início</a>
-                <a href="#servicos" class="nav-link">Serviços</a>
-                <a href="#sobre" class="nav-link">Sobre</a>
+            <nav class="nav" id="nav">
+                <a href="#inicio" class="nav-link">Início</a>
+                <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+                <a href="#diferenciais" class="nav-link">Diferenciais</a>
                 <a href="#contato" class="nav-link">Contato</a>
+                <a href="https://erp.mandacaru.com.br" class="btn-nav-erp" target="_blank">Acessar ERP</a>
             </nav>
             <div class="menu-toggle" id="menuToggle">
                 <span></span>
@@ -30,90 +32,246 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero" id="home">
+    <section class="hero" id="inicio">
+        <div class="hero-bg"></div>
         <div class="container">
             <div class="hero-content">
-                <h1 class="hero-title">Segurança do Trabalho NR12</h1>
-                <p class="hero-subtitle">Soluções completas para adequação e manutenção de máquinas e equipamentos</p>
+                <div class="hero-badge">✦ Software especializado em mineração</div>
+                <h1 class="hero-title">
+                    Mandacaru: A força da gestão que mantém seus ativos em movimento.
+                </h1>
+                <p class="hero-subtitle">
+                    Gestão de manutenção, controle de abastecimento e monitoramento de fio diamantado.
+                    Tudo em conformidade com a NR12, por quem entende de extração de rochas.
+                </p>
                 <div class="hero-buttons">
-                    <a href="#contato" class="btn btn-primary">Entre em Contato</a>
-                    <a href="#servicos" class="btn btn-secondary">Nossos Serviços</a>
+                    <a href="#contato" class="btn btn-primary">Solicitar Demonstração</a>
+                    <a href="https://erp.mandacaru.com.br" class="btn btn-outline" target="_blank">
+                        Já sou cliente — Fazer Login
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">25+</span>
+                        <span class="hero-stat-label">Anos de experiência no setor</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">100%</span>
+                        <span class="hero-stat-label">Conformidade NR12</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">360°</span>
+                        <span class="hero-stat-label">Visão da operação</span>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Serviços -->
-    <section class="servicos" id="servicos">
+    <!-- Pilares de Operação -->
+    <section class="pilares" id="funcionalidades">
         <div class="container">
-            <h2 class="section-title">Nossos Serviços</h2>
-            <p class="section-subtitle">Oferecemos soluções completas para sua empresa</p>
+            <div class="section-header">
+                <span class="section-tag">Funcionalidades</span>
+                <h2 class="section-title">Tudo que sua mineradora precisa, em um único sistema</h2>
+                <p class="section-subtitle">Do chão de pedreira ao escritório, controle total da sua operação</p>
+            </div>
 
-            <div class="servicos-grid">
-                <div class="servico-card">
-                    <div class="servico-icon">🛠️</div>
-                    <h3>Adequação NR12</h3>
-                    <p>Adequação de máquinas e equipamentos às normas de segurança NR12</p>
+            <div class="pilares-grid">
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                    </div>
+                    <h3>Gestão de Manutenção</h3>
+                    <p>Ordens de serviço, manutenção preventiva e corretiva com controle completo de histórico, técnicos e custos por equipamento.</p>
+                    <ul class="pilar-lista">
+                        <li>Ordens de serviço com workflow completo</li>
+                        <li>Planos de manutenção preventiva</li>
+                        <li>Alertas de vencimento por horímetro ou data</li>
+                        <li>Checklists de segurança NR12</li>
+                    </ul>
                 </div>
 
-                <div class="servico-card">
-                    <div class="servico-icon">⚙️</div>
-                    <h3>Manutenção Preventiva</h3>
-                    <p>Programas de manutenção preventiva para garantir a segurança e eficiência</p>
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                    </div>
+                    <h3>Controle de Abastecimento</h3>
+                    <p>Registro e rastreio completo do consumo de combustível por equipamento, com controle de horímetro e análise de desempenho.</p>
+                    <ul class="pilar-lista">
+                        <li>Registro de abastecimentos via app</li>
+                        <li>Consumo por equipamento e período</li>
+                        <li>Alertas de consumo anormal</li>
+                        <li>Relatórios de custo por operação</li>
+                    </ul>
                 </div>
 
-                <div class="servico-card">
-                    <div class="servico-icon">🔧</div>
-                    <h3>Manutenção Corretiva</h3>
-                    <p>Reparos e correções em máquinas e equipamentos industriais</p>
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <h3>Monitoramento de Fio Diamantado</h3>
+                    <p>Gestão especializada do consumo e vida útil de fios diamantados, otimizando o custo por metro quadrado extraído.</p>
+                    <ul class="pilar-lista">
+                        <li>Controle de metros rodados por fio</li>
+                        <li>Custo por m² extraído</li>
+                        <li>Previsão de substituição</li>
+                        <li>Histórico por máquina e pedreira</li>
+                    </ul>
                 </div>
 
-                <div class="servico-card">
-                    <div class="servico-icon">📋</div>
-                    <h3>Laudos Técnicos</h3>
-                    <p>Elaboração de laudos e documentação técnica completa</p>
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                    </div>
+                    <h3>Conformidade NR12</h3>
+                    <p>Checklists digitais de segurança, laudos, documentação técnica e controle de adequação de equipamentos — tudo rastreável e auditável.</p>
+                    <ul class="pilar-lista">
+                        <li>Checklists com foto e GPS</li>
+                        <li>Controle de laudos e validades</li>
+                        <li>Histórico de inspeções</li>
+                        <li>Relatórios para auditoria</li>
+                    </ul>
                 </div>
 
-                <div class="servico-card">
-                    <div class="servico-icon">🎓</div>
-                    <h3>Treinamentos</h3>
-                    <p>Capacitação de equipes para operação segura de máquinas</p>
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <h3>Almoxarifado e Compras</h3>
+                    <p>Controle de estoque de peças e insumos integrado com ordens de serviço, pedidos de compra e movimentações automáticas.</p>
+                    <ul class="pilar-lista">
+                        <li>Estoque em tempo real</li>
+                        <li>Pedidos de compra integrados</li>
+                        <li>Recebimento e baixa automática</li>
+                        <li>Alerta de estoque mínimo</li>
+                    </ul>
                 </div>
 
-                <div class="servico-card">
-                    <div class="servico-icon">📊</div>
-                    <h3>Consultoria</h3>
-                    <p>Assessoria técnica especializada em segurança do trabalho</p>
+                <div class="pilar-card">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <h3>Financeiro</h3>
+                    <p>Contas a receber e a pagar integradas com orçamentos e ordens de serviço, com parcelamento, vencimentos e visão de fluxo.</p>
+                    <ul class="pilar-lista">
+                        <li>Contas a receber automáticas</li>
+                        <li>Parcelamento de OS</li>
+                        <li>Controle de vencimentos</li>
+                        <li>Integração com orçamentos</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Sobre -->
-    <section class="sobre" id="sobre">
+    <!-- Seção de Autoridade -->
+    <section class="autoridade" id="diferenciais">
         <div class="container">
-            <div class="sobre-content">
-                <div class="sobre-text">
-                    <h2 class="section-title">Sobre a Mandacaru</h2>
-                    <p>A Mandacaru é especializada em soluções de segurança do trabalho, com foco em adequação e manutenção de máquinas e equipamentos conforme a norma regulamentadora NR12.</p>
-                    <p>Nossa equipe técnica qualificada oferece serviços completos, desde a adequação inicial até a manutenção preventiva e corretiva, garantindo a segurança dos operadores e a conformidade legal da sua empresa.</p>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-number">100+</div>
-                            <div class="stat-label">Clientes Atendidos</div>
+            <div class="autoridade-content">
+                <div class="autoridade-text">
+                    <span class="section-tag">Por que Mandacaru</span>
+                    <h2>25 anos de chão de pedreira transformados em tecnologia.</h2>
+                    <p>
+                        O Mandacaru ERP não é apenas um software; é a sistematização da experiência prática em extração de rochas ornamentais.
+                    </p>
+                    <p>
+                        Cada funcionalidade foi construída a partir de problemas reais — do controle de fio diamantado que se perdia em planilhas, às ordens de serviço que chegavam incompletas, aos checklists de NR12 que nunca eram preenchidos no campo.
+                    </p>
+                    <p>
+                        Sabemos que na pedreira não há tempo a perder. Por isso o sistema foi projetado para ser rápido, funcionar no celular em campo, e dar ao gestor a visão completa da operação em qualquer lugar.
+                    </p>
+                    <div class="diferenciais-lista">
+                        <div class="diferencial-item">
+                            <div class="diferencial-check">✓</div>
+                            <div>
+                                <strong>Especializado em mineração</strong>
+                                <span>Desenvolvido para extração de rochas ornamentais, não adaptado de outro setor</span>
+                            </div>
                         </div>
-                        <div class="stat">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Equipamentos Adequados</div>
+                        <div class="diferencial-item">
+                            <div class="diferencial-check">✓</div>
+                            <div>
+                                <strong>Funciona no celular em campo</strong>
+                                <span>Operadores registram abastecimentos, checklists e OS direto do smartphone</span>
+                            </div>
                         </div>
-                        <div class="stat">
-                            <div class="stat-number">5+</div>
-                            <div class="stat-label">Anos de Experiência</div>
+                        <div class="diferencial-item">
+                            <div class="diferencial-check">✓</div>
+                            <div>
+                                <strong>NR12 nativa</strong>
+                                <span>Checklists com foto, GPS e assinatura digital — prontos para auditoria</span>
+                            </div>
+                        </div>
+                        <div class="diferencial-item">
+                            <div class="diferencial-check">✓</div>
+                            <div>
+                                <strong>Implantação assistida</strong>
+                                <span>Suporte técnico de quem conhece o setor do início ao fim</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="sobre-image">
-                    <img src="logo.png" alt="Mandacaru">
+                <div class="autoridade-visual">
+                    <div class="autoridade-card-principal">
+                        <div class="autoridade-icon-grande">⛏️</div>
+                        <div class="autoridade-stat-grande">
+                            <span>25+</span>
+                            <p>anos de experiência no setor de extração de rochas</p>
+                        </div>
+                    </div>
+                    <div class="autoridade-cards-pequenos">
+                        <div class="autoridade-card-pequeno">
+                            <span class="ac-numero">NR12</span>
+                            <span class="ac-label">Conformidade garantida</span>
+                        </div>
+                        <div class="autoridade-card-pequeno">
+                            <span class="ac-numero">360°</span>
+                            <span class="ac-label">Visão da operação</span>
+                        </div>
+                        <div class="autoridade-card-pequeno">
+                            <span class="ac-numero">100%</span>
+                            <span class="ac-label">Web e Mobile</span>
+                        </div>
+                        <div class="autoridade-card-pequeno">
+                            <span class="ac-numero">1</span>
+                            <span class="ac-label">Sistema integrado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="cta-banner">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Pronto para colocar ordem na sua operação?</h2>
+                <p>Solicite uma demonstração gratuita e veja o sistema funcionando com dados da sua própria mineradora.</p>
+                <div class="cta-buttons">
+                    <a href="#contato" class="btn btn-white">Solicitar Demonstração</a>
+                    <a href="https://erp.mandacaru.com.br" class="btn btn-outline-white" target="_blank">Acessar ERP</a>
                 </div>
             </div>
         </div>
@@ -122,21 +280,33 @@
     <!-- Contato -->
     <section class="contato" id="contato">
         <div class="container">
-            <h2 class="section-title">Entre em Contato</h2>
-            <p class="section-subtitle">Estamos prontos para atender sua empresa</p>
+            <div class="section-header">
+                <span class="section-tag">Contato</span>
+                <h2 class="section-title">Fale com a gente</h2>
+                <p class="section-subtitle">Estamos prontos para mostrar como o sistema pode funcionar na sua operação</p>
+            </div>
 
             <div class="contato-grid">
                 <div class="contato-info">
                     <div class="contato-item">
-                        <div class="contato-icon">📱</div>
+                        <div class="contato-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l1.27-.45a2 2 0 0 1 2.11.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                        </div>
                         <div class="contato-details">
                             <h3>WhatsApp / Telefone</h3>
-                            <a href="https://wa.me/5533999373648" target="_blank">(33) 99937-3648</a>
+                            <a href="https://wa.me/5533999273648" target="_blank">(33) 99927-3648</a>
                         </div>
                     </div>
 
                     <div class="contato-item">
-                        <div class="contato-icon">✉️</div>
+                        <div class="contato-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </div>
                         <div class="contato-details">
                             <h3>E-mail</h3>
                             <a href="mailto:wgm.mandacaru@gmail.com">wgm.mandacaru@gmail.com</a>
@@ -144,11 +314,21 @@
                     </div>
 
                     <div class="contato-item">
-                        <div class="contato-icon">📍</div>
+                        <div class="contato-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </div>
                         <div class="contato-details">
                             <h3>Localização</h3>
-                            <p>Livramento de Nossa Senhora - BA<br>CEP: 46140-000</p>
+                            <p>Livramento de Nossa Senhora — BA</p>
                         </div>
+                    </div>
+
+                    <div class="contato-erp-box">
+                        <p>Já é cliente?</p>
+                        <a href="https://erp.mandacaru.com.br" class="btn btn-primary" target="_blank">Acessar o ERP →</a>
                     </div>
                 </div>
 
@@ -156,25 +336,28 @@
                     <form id="contactForm">
                         <div class="form-group">
                             <label for="nome">Nome Completo</label>
-                            <input type="text" id="nome" name="nome" required>
+                            <input type="text" id="nome" name="nome" placeholder="Seu nome" required>
                         </div>
-
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefone">WhatsApp</label>
+                                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" required>
+                            </div>
+                        </div>
                         <div class="form-group">
-                            <label for="email">E-mail</label>
-                            <input type="email" id="email" name="email" required>
+                            <label for="empresa">Empresa / Mineradora</label>
+                            <input type="text" id="empresa" name="empresa" placeholder="Nome da sua empresa">
                         </div>
-
-                        <div class="form-group">
-                            <label for="telefone">Telefone</label>
-                            <input type="tel" id="telefone" name="telefone" required>
-                        </div>
-
                         <div class="form-group">
                             <label for="mensagem">Mensagem</label>
-                            <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
+                            <textarea id="mensagem" name="mensagem" rows="4" placeholder="Conte um pouco sobre sua operação e o que precisa resolver..." required></textarea>
                         </div>
-
-                        <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+                        <button type="submit" class="btn btn-primary btn-full">Enviar Mensagem</button>
+                        <p class="form-obs">Respondemos em até 1 dia útil via WhatsApp ou e-mail.</p>
                     </form>
                 </div>
             </div>
@@ -185,30 +368,45 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="logo.png" alt="Mandacaru Logo">
-                    <p>Mandacaru S M</p>
+                <div class="footer-brand">
+                    <img src="logo.png" alt="Mandacaru">
+                    <p class="footer-brand-nome">Mandacaru Soluções em Mineração</p>
+                    <p class="footer-brand-slogan">A força da gestão que mantém<br>seus ativos em movimento.</p>
                 </div>
                 <div class="footer-info">
-                    <p>CNPJ: 57.138.641/0001-24</p>
-                    <p>Av. Desembargador Antonio Carlos Souto, 80</p>
-                    <p>Livramento de Nossa Senhora - BA</p>
+                    <h4>Contato</h4>
+                    <p><a href="https://wa.me/5533999273648">(33) 99927-3648</a></p>
+                    <p><a href="mailto:wgm.mandacaru@gmail.com">wgm.mandacaru@gmail.com</a></p>
+                    <p>Livramento de Nossa Senhora — BA</p>
+                    <p class="footer-cnpj">CNPJ: 57.138.641/0001-24</p>
                 </div>
                 <div class="footer-links">
-                    <a href="#home">Início</a>
-                    <a href="#servicos">Serviços</a>
-                    <a href="#sobre">Sobre</a>
+                    <h4>Menu</h4>
+                    <a href="#inicio">Início</a>
+                    <a href="#funcionalidades">Funcionalidades</a>
+                    <a href="#diferenciais">Diferenciais</a>
                     <a href="#contato">Contato</a>
+                    <a href="https://erp.mandacaru.com.br" target="_blank" class="footer-link-erp">Acessar ERP →</a>
+                    <div class="footer-social">
+                        <a href="https://instagram.com/mandacarusm" target="_blank" class="footer-instagram" title="Instagram @mandacarusm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                <circle cx="12" cy="12" r="4"/>
+                                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+                            </svg>
+                            @mandacarusm
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 Mandacaru S M. Todos os direitos reservados.</p>
+                <p>&copy; 2026 Mandacaru Soluções em Mineração. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
     <!-- WhatsApp Float Button -->
-    <a href="https://wa.me/5533999373648" class="whatsapp-float" target="_blank" title="Fale conosco no WhatsApp">
+    <a href="https://wa.me/5533999273648?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20o%20Mandacaru%20ERP." class="whatsapp-float" target="_blank" title="Fale conosco no WhatsApp">
         <svg viewBox="0 0 32 32" fill="currentColor">
             <path d="M16 0C7.164 0 0 7.164 0 16c0 2.832.756 5.49 2.073 7.799L.035 31.653l8.156-2.014A15.922 15.922 0 0016 32c8.836 0 16-7.164 16-16S24.836 0 16 0zm9.446 22.746c-.419 1.18-2.073 2.164-3.396 2.458-.892.196-2.05.353-5.958-1.278-5.002-2.087-8.233-7.146-8.48-7.476-.246-.329-2.008-2.672-2.008-5.094 0-2.423 1.27-3.615 1.722-4.107.451-.492 1.008-.615 1.344-.615.337 0 .673.007.968.02.31.013.724-.118 1.132 1.082.419 1.23 1.426 3.483 1.551 3.737.125.254.21.552.042.881-.168.329-.252.534-.5.822-.246.287-.518.641-.738.862-.246.246-.5.515-.215.969.287.452 1.266 2.088 2.717 3.384 1.87 1.672 3.445 2.194 3.932 2.443.492.246.782.205 1.07-.124.287-.329 1.238-1.443 1.568-1.936.329-.492.658-.41 1.113-.246.454.164 2.892 1.364 3.388 1.615.492.246.821.369.941.574.125.205.125 1.18-.294 2.36z"/>
         </svg>

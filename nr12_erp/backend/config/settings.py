@@ -170,6 +170,38 @@ if not DEBUG:
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# ============================================================================
+# STORAGE - Supabase S3 (produção) ou local (desenvolvimento)
+# ============================================================================
+SUPABASE_S3_BUCKET = os.environ.get("SUPABASE_S3_BUCKET", "media")
+SUPABASE_S3_ENDPOINT = os.environ.get("SUPABASE_S3_ENDPOINT", "")
+SUPABASE_S3_ACCESS_KEY = os.environ.get("SUPABASE_S3_ACCESS_KEY", "")
+SUPABASE_S3_SECRET_KEY = os.environ.get("SUPABASE_S3_SECRET_KEY", "")
+SUPABASE_PROJECT_REF = os.environ.get("SUPABASE_PROJECT_REF", "")
+
+if SUPABASE_S3_ENDPOINT and SUPABASE_S3_ACCESS_KEY:
+    # Produção: Supabase Storage (compatível com S3)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "bucket_name": SUPABASE_S3_BUCKET,
+                "endpoint_url": SUPABASE_S3_ENDPOINT,
+                "access_key": SUPABASE_S3_ACCESS_KEY,
+                "secret_key": SUPABASE_S3_SECRET_KEY,
+                "region_name": "sa-east-1",
+                "default_acl": "public-read",
+                "querystring_auth": False,
+                "file_overwrite": False,
+                "custom_domain": f"{SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object/public/{SUPABASE_S3_BUCKET}" if SUPABASE_PROJECT_REF else None,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    MEDIA_URL = f"https://{SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object/public/{SUPABASE_S3_BUCKET}/"
+
 # Templates (admin requer este backend)
 TEMPLATES = [
     {
